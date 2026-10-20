@@ -1,3092 +1,969 @@
 # Awesome DeepSeek Harness Plugins
 
-<!-- 本文件由 scripts/build-readme.mjs 从 deepseek1024.com 目录 API 自动生成，请勿手工编辑。 -->
-
-面向 [DeepSeek Harness](https://github.com/deepseek-ai/DeepSeek-Harness)（`dsh`）生态的社区插件目录，共收录 **13827** 个插件（含 PR 收录与 GitHub `dsh-plugin` topic 自动发现），目录数据更新于 2026-10-20。
-
-> 📦 **仓库拆分公告**：自 2026-08-25 起，deepseek1024.com 网站与 `dsh1024` CLI 的源码已拆分至独立仓库 [imsai-sh/dsh-1024store](https://github.com/imsai-sh/dsh-1024store)。本仓库从此专注插件目录（awesome 清单）与收录流程；网站与 CLI 相关的 issue / PR 请移步新仓库，插件收录照旧在这里提交。
-
-**但这个项目不只是一份 awesome list。** 它还包括一个在线插件市场、一个把市场装进 `dsh` 本体的插件，以及一套免费的公开查询 API——这些应用代码开源在姊妹仓库 [dsh-1024store](https://github.com/imsai-sh/dsh-1024store)；本仓库专注目录本身：经静态校验的 PR 收录流水线与自动生成的目录 README，目录数据另有自动收集服务持续喂入。全部代码 MIT 协议，fork 之后就能部署成你自己的插件市场。
-
-[![DSH 1024Store 插件市场首页](https://raw.githubusercontent.com/imsai-sh/awesome-deepseek-harness-plugins/assets/homepage.zh.png?v=6a9da56920f9)](https://deepseek1024.com/)
-
-[在线网站](https://deepseek1024.com/) · [API 文档](https://github.com/imsai-sh/dsh-1024store/blob/main/web/docs/api.md) · [英文目录](catalog/README.md) · [提交插件](CONTRIBUTING.md) · [网站与 CLI 源码](https://github.com/imsai-sh/dsh-1024store)
-
-[![GitHub Stars](https://img.shields.io/github/stars/imsai-sh/awesome-deepseek-harness-plugins?style=social)](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/stargazers)
-
-<div align="center">
-  <strong>DSH插件社区</strong><br><br>
-  <img src="docs/assets/wechat-group.jpg" alt="DSH插件社区微信二维码" width="280">
-</div>
-
-## 项目亮点
-
-### 在线插件市场（开源 · 可一键自部署）
-
-[deepseek1024.com](https://deepseek1024.com/) 提供搜索、分类筛选、安装排行榜、插件详情与 GitHub 活跃度数据。整站跑在 Cloudflare Workers + D1 + KV 上，源码在 [dsh-1024store](https://github.com/imsai-sh/dsh-1024store) 的 [`web`](https://github.com/imsai-sh/dsh-1024store/tree/main/web)。
-
-想要一个完全属于自己的插件市场：fork [dsh-1024store](https://github.com/imsai-sh/dsh-1024store)，把 `web/wrangler.jsonc` 里的 `routes` 换成你自己的域名，创建 D1 数据库与 KV 命名空间，配齐 `secrets.required` 列出的 Worker secret，然后本地执行 `npm run db:migrate:remote` 和 `npm run deploy` 完成部署（部署是显式的本地操作，push 不会自动上线）。完整步骤见该仓库的[部署文档](https://github.com/imsai-sh/dsh-1024store/blob/main/web/docs/deployment.md)。
-
-### 把插件市场装进 dsh 本体
-
-不想切浏览器，就把市场本身作为插件装进 DeepSeek Harness：
-
-```bash
-dsh plugin --profile web add dsh1024@latest
-```
-
-重启后「设置」里会出现独立的 **1024 Store** 入口，「设置 → 插件」下也会多出一个 **1024 Store（数量）** 标签页，可以直接搜索目录、按分类筛选、识别已安装状态、安装与卸载，并显示操作进度。安装器只接受目录 API 返回并通过严格语法校验的结构化目标：优先使用已发布 npm 包，否则使用与插件 ID、仓库 URL 一致的 GitHub 源码规格；展示命令不会被直接执行。源码见 [`plugin`](https://github.com/imsai-sh/dsh-1024store/tree/main/plugin)。
-
-### 定时自动收集 + 格式校验
-
-这是本目录与多数插件市场最大的区别：**目录不靠人肉维护，收录前一定过校验。**
-
-- **定时收集**：自动收录带 `dsh-plugin` topic 的 GitHub 仓库，增量抓取新建与新推送的仓库，并定期全量对账——长期不活跃的仓库不会被漏收，掉了 topic 也只在一次成功的全量对账后才下架。
-- **格式校验**：每个候选仓库都要通过静态校验——读取默认分支的 Git tree，检查 `package.json`、`dsh.bundle.patch` 字段，以及 patch 文件在同一棵 tree 中确实存在。**全程只读文件，绝不安装依赖、绝不执行仓库代码。** 校验不通过就不进目录。
-- **自动同步**：PR 合并后由 CI 自动同步目录到网站数据库并刷新本 README，贡献者和维护者都不需要手工改任何生成文件。
-
-数据来源与校验语义见 [目录数据来源文档](docs/plugin-discovery.md)。
-
-### 免费查询 API
-
-目录数据免费开放，匿名即可调用：
-
-```bash
-curl 'https://api.deepseek1024.com/v1/plugins/search?q=memory'
-```
-
-匿名调用每天 50 次、每分钟 10 次；用 GitHub 账号登录网站创建 API Key 后提升到每天 500 次、每分钟 30 次。另有 `/api/v1/registry` 返回按安装热度排序的精简目录快照（至多 500 条）。完整端点、参数与错误码见 [API 参考](https://github.com/imsai-sh/dsh-1024store/blob/main/web/docs/api.md)。
-
-## 参与进来
-
-这个项目由社区维护，下面每一种参与都真的有用：
-
-- **点个 Star** — [Star 本仓库](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/stargazers)是成本最低、帮助最大的支持，能让更多 DeepSeek Harness 用户找到这里。
-- **提 Issue** — 插件信息有误、分类不合理、网站或 API 有问题、想要新功能，都欢迎[提 Issue](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/issues/new)。
-- **发 PR** — [提交你自己的插件](CONTRIBUTING.md)或改进目录流水线，欢迎直接发 [Pull Request](https://github.com/imsai-sh/awesome-deepseek-harness-plugins/pulls)；网站、CLI 与市场插件的改进请发到 [dsh-1024store](https://github.com/imsai-sh/dsh-1024store)。
-- **Fork 自建** — 想要自己的插件市场，[Fork dsh-1024store](https://github.com/imsai-sh/dsh-1024store/fork) 之后按上面的步骤配置即可，MIT 协议，随便改。
-
-## 安装插件并计入统计
-
-1024 Store 只提供 npm 安装：插件详情页展示的命令安装的是作者发布到 npm、声明 `dsh.bundle` 的包；尚未发布 npm 包的插件以浏览模式收录（有仓库链接，无安装命令）。网站优先提供开源包装 CLI；它会调用官方 DeepSeek Harness 插件命令、校验 profile 的真实安装结果，并把匿名安装结果可靠地上报到排行榜：
-
-```bash
-dsh1024 plugin --profile web add <npm-package>
-```
-
-首次使用先一次性全局安装：`npm install -g dsh1024`。它与官方命令只差一个名字——`plugin` 之后的参数原样转发给官方 CLI，不增删、不改写、不重排，包装器只负责在结束后核对 profile 并记录一条匿名安装结果。参数不会写入遥测或本地 receipt。
-
-monorepo 子目录插件的标识形如 `owner/repo/packages/foo`，每个子包发布并安装自己的 npm 包，同仓库的兄弟插件各自独立计数。
-
-统计身份是保存在 `$DSH_HOME/.dsh-1024store/` 的随机安装实例 ID，不是实名用户或账号。CLI 不上传命令输出、路径、用户名、环境变量、会话内容或原始错误；可用 `npx dsh1024 telemetry disable`、`DO_NOT_TRACK=1` 或 `DSH1024_TELEMETRY=0`（旧变量名 `DSH_1024STORE_TELEMETRY` 仍兼容）关闭。直接使用官方 `dsh plugin` 命令仍然可用，但不会计入 DSH 1024Store 安装统计。详细字段、口径、存储和部署方式见 [安装统计设计](https://github.com/imsai-sh/dsh-1024store/blob/main/web/docs/install-analytics.md)，CLI 源码见 [`plugin`](https://github.com/imsai-sh/dsh-1024store/tree/main/plugin)。
-
-## 提交插件
-
-### 使用 Agent Skill 提交（推荐）
-
-如果你使用 Codex、Claude Code、Cursor 或其他兼容 Agent Skills 的编程助手，可以安装本仓库提供的提交 Skill：
-
-```bash
-npx skills add imsai-sh/awesome-deepseek-harness-plugins --skill submit-dsh-plugin -g
-```
-
-安装后告诉助手：
-
-```text
-使用 $submit-dsh-plugin 检查并提交我的 DeepSeek Harness 插件。
-```
-
-该 Skill 会检查插件仓库、生成唯一允许提交的目录 JSON、验证变更范围，并在获得授权后创建 PR。新增条目的非草稿 PR 通过静态审查后会自动合并；修改或删除既有条目的 PR 同样会跑静态审查，但不会自动合并，需要维护者人工审核后手动合并。合并后 CI 自动同步目录到网站数据库并刷新本 README，贡献者和维护者都不需要手工更新任何生成文件。查看 [Skill 源码](skills/submit-dsh-plugin/SKILL.md)。
-
-### 手动提交
-
-欢迎把你的 DeepSeek Harness 插件提交到本目录。请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，通过 PR 提交一个新的结构化插件文件；自动审查将验证提交范围和最基础的 DeepSeek Harness 插件配置，通过后自动合并，并由 CI 自动同步到网站与本 README。需要修正或下架既有条目时也可以发 PR，静态审查照常运行，但这类 PR 由维护者人工审核后合并。
-
-安装命令以插件详情页展示的 npm 包为准：`dsh1024 plugin --profile web add <npm-package>`（首次使用先 `npm install -g dsh1024`）。
-
-## 项目定位
-
-本项目与 [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) 都服务于 DeepSeek Harness 插件生态。在继承其目录数据与社区整理思路的基础上，本项目把「一份人工维护的列表」扩展成一套开源、可自部署的插件市场基建：在线市场网站、dsh 内置市场插件、静态校验的 PR 收录流水线与免费查询 API，并由自动收集服务持续补充目录数据，具体见上文[项目亮点](#项目亮点)。
-
-## 项目结构
-
-```text
-catalog/plugins/    插件提交表单与 curated 元数据（每个插件一个 JSON）
-catalog/categories.json  分类定义（唯一分类信源）
-catalog/schema/     插件提交 JSON Schema
-skills/             面向贡献者的可安装 Agent Skills
-scripts/            提交审查、目录同步与 README 生成脚本
-docs/               目录数据模型文档
-```
-
-网站与 CLI 的源码（`web` 与 `plugin`）在姊妹仓库 [dsh-1024store](https://github.com/imsai-sh/dsh-1024store)。线上目录数据的唯一信源是 Cloudflare D1；本 README 与 [catalog/README.md](catalog/README.md) 由 CI 从目录 API 全量生成，职责划分见 [仓库布局](docs/repository-layout.md)。
-
-## 网站与 CLI 的本地运行与部署
-
-网站与 CLI 的本地开发、D1 迁移与 Cloudflare 部署流程都在 [dsh-1024store](https://github.com/imsai-sh/dsh-1024store)：见其 [README](https://github.com/imsai-sh/dsh-1024store#readme) 与[部署文档](https://github.com/imsai-sh/dsh-1024store/blob/main/web/docs/deployment.md)。本仓库只需要 Node.js 22+ 与 `npm ci && npm test` 即可参与目录流水线开发。
-
-## 致谢
-
-感谢以下项目为本目录提供基础与参考：
-
-- [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)：提供插件系统、`dsh.bundle` 规范和插件开发文档。
-- [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin)：提供初始插件目录数据和社区目录设计参考。
-
-## 插件分类
-
-分组默认折叠，点开即可展开。GitHub 对单个文件的渲染长度有上限，条目较多的分类只列出其中一部分（分类标题会写明列出了多少），完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。
-
-- [UI 增强](#ui) (2647)
-- [主题与外观](#theme) (498)
-- [会话与消息](#session) (880)
-- [记忆](#memory) (438)
-- [工具与能力](#tools) (4009)
-- [技能包](#skill) (1049)
-- [工作流与自动化](#workflow) (778)
-- [通知与集成](#notify) (504)
-- [模型与账号接入](#model) (826)
-- [开发与运行时](#dev) (1636)
-- [娱乐](#fun) (562)
-
-<a id="ui"></a>
-
-<details>
-<summary><strong>UI 增强</strong> · 显示 234 / 共 2647 个</summary>
-
-- [01_content](https://github.com/Aisland-SJL/dsh-worktable/tree/HEAD/01_content) — 为控制台增加侧边栏应用抽屉和可停靠拆分工作区，形成项目实时控制台。
-- [a2ui-render-in-dsh](https://github.com/baihui-ai/a2ui-render-in-dsh) — 在聊天中内联渲染交互式卡片，支持测验、表单、图表等并回传操作。
-- [account-card](https://github.com/picoaide/picoaide-harness/tree/HEAD/packages/client/account-card) — 在客户端界面中显示账户信息。
-- [acp-app](https://github.com/ChisaAlter/Deepseek-Harness-Desktop/tree/HEAD/vendor/deepseek-harness/packages/bundle/acp-app) — 为 DeepSeek Harness 提供可定制主题和背景图的桌面外壳。
-- [acp-app](https://github.com/See-Sol-Lab/DeepSeekGUI/tree/HEAD/packages/bundle/acp-app) — 将 DeepSeek Harness 的 Web 界面封装为 Windows 桌面客户端。
-- [acp-app](https://github.com/whitelonng/dshcode/tree/HEAD/packages/bundle/acp-app) — 将 DeepSeek Harness 桌面伴侣打包为 macOS 和 Windows 的可安装 Electron 应用。
-- [adaptive-update](https://github.com/niushuanan/xiaozhuang-dsh/tree/HEAD/plugins/adaptive-update) — 自动更新客户端界面至最新版本，过程流畅自适应。
-- [adhdgofly-dsh-ext](https://github.com/zuoguyoupan2023/adhdgofly-dsh-ext) — 在渲染的Markdown中高亮词性：名词绿色、动词红色、形容词紫色、其他灰色。
-- [Agent Deck](https://github.com/asun-labs/dsh-plugin-agent-deck) — 在右侧面板中通过 agent-switch 运行多个独立的编程 CLI 交互终端，并支持页签和网格布局。
-- [Agent Switch](https://github.com/asun-labs/dsh-plugin-agent-switch) — Agent Switch 在 DSH 会话中显示 Codex 委派任务卡片，并在原生右侧面板查看实时与历史 CLI 输出。支持账号和模型配置，以及页签或网格布局的 agent-switch 交互终端；切换侧边页签时终端继续运行。
-- [agent-preset-sections](https://github.com/jo32/DeepDeck/tree/HEAD/plugins/agent-preset-sections) — 为智能体界面添加预设分区，便于快速访问和整理。
-- [agent-store](https://github.com/fan969690/dsh-web-plugins/tree/HEAD/agent-store) — 提供模块化桌面宫格，摆放任意组件并接入插件与 Agent 社区。
-- [agent-teams-pixel](https://github.com/eternalnight996/agent-teams-pixel) — 为 DeepSeek Harness Web 主窗口新增「工作角色」页签与像素办公室浮层：内置 508 张完整角色卡（The Agency 255 + agency-agents-zh 253），支持按章节分部分类浏览、搜索与中英切换；Canvas 2D 像素小人具有站立 / 打字 / 踱步三态，浮层可拖动 / 折叠 / 缩放，选人即入列；闲聊台词可走内置 AI（复用 dsh 自配模型）或外部接口，控制在 20 字内中文。需 dsh ≥ 0.1.1-rc.x；自带 cordis bundle 补丁与浏览器客户端 row，挂载 slots 服务后才渲染 UI。
-- [aggregate-better-sidebar](https://github.com/Islulua/dsh-code-navigator/tree/HEAD/packages/better-sidebar/tests/fixtures/aggregate-better-sidebar) — 增强侧边栏，便于快速访问 C/C++、Python 和 TypeScript 代码导航功能。
-- [aggregate-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar/tree/HEAD/tests/fixtures/aggregate-better-sidebar) — 扩展 DSH 侧边栏，支持第三方页面，内置文件编辑、终端、Git 与子代理视图。
-- [ansi-render](https://github.com/CH4ACKO3/dsh-render-engine/tree/HEAD/packages/ansi-render) — 在 DSH 消息中渲染 ANSI 彩色文本和格式，提升视觉清晰度。
-- [aportfolio](https://github.com/huyang218/dsh-plugins/tree/HEAD/packages/aportfolio) — 提供资产或项目组合的展示视图。
-- [app](https://github.com/edabchann/dsh-neotui/tree/HEAD/app) — 提供鼠标驱动的终端界面客户端，用于交互。
-- [arcana](https://github.com/GooodWei/arcana) — DeepSeek Harness 的悬浮命令甲板：把所有斜杠命令列成可执行按钮，并按使用次数排序。
-- [artifacts](https://github.com/Very12345/sai-dsh-plugins/tree/HEAD/packages/artifacts) — 渲染编码会话中生成的工件。
-- [astock-chart](https://github.com/huyang218/dsh-plugins/tree/HEAD/packages/astock-chart) — 展示股票图表和可视化数据。
-- [attach-plus](https://github.com/BaihaWhite/attach-plus) — 增强附件上传按钮，为图片、文档和其他文件提供分离选项。
-- [auth-app](https://github.com/KeepLost/harniverse/tree/HEAD/packages/bundle/auth-app) — 通用编码代理包中认证相关子包，具体 UI 角色不明确。
-- [awesome-dsh-background-plugin](https://github.com/leavestring/awesome-dsh-background-plugin) — DSH Web 背景个性化插件：上传自己的图片（JPG / PNG / WEBP / GIF，浏览器端自动压缩到 1600px 以内）或一键切换极光、余烬、宣纸三种预设氛围；实时预览所见即所得，支持细调图像存在感、暗色遮罩、柔焦、适配方式与焦点位置；上传即自动保存到 DSH 设置，重启后原样恢复，浅色 / 深色主题均正常；侧栏、消息气泡、输入框保持原样不遮挡，浮层菜单不受影响；全程本地处理不上传任何服务器，关闭开关或一键恢复默认即可完全移除；内置中英文双语界面。
-- [background-plugin](https://github.com/cjz-wr/background-plugin) — 修改DSH的背景，支持静态动态背景，支持网页图片视频，支持修改透明度
-- [balance-dock](https://github.com/Cao-zhi-hao/balance-dock) — 在界面中平衡和排列面板或窗口的停靠栏。
-- [balance-widget](https://github.com/Azhe0306/dsh-connectors/tree/HEAD/packages/balance-widget) — 在会话标题栏右上角显示账户可用余额（充值余额与赠金余额合并），每 2 分钟刷新一次；未登录或查询失败时不显示。
-- [base](https://github.com/Astra-Ursae-Majoris/Deepseek-Harness-Local-UI/tree/HEAD/harness/packages/bundle/base) — 增强桌面界面，提供对话大纲导航、重新生成与回退功能。
-- [base](https://github.com/ayuanwong/deepseek-harness-ux/tree/HEAD/packages/bundle/base) — 长任务进度聚焦显示，完成后自动折叠，细节按需展开。
-- [base](https://github.com/bloodtmai-cmyk/dsh-harness-enterprise/tree/HEAD/packages/bundle/base) — 作为企业内部管控的统一智能工作台入口。
-- [base](https://github.com/BLueMooneer/dsh-tracelens/tree/HEAD/packages/bundle/base) — 将当前会话的可视化执行轨迹以交互式地图呈现。
-- [base](https://github.com/CharlesLiuZC/deepseek-harness-voice-context/tree/HEAD/packages/bundle/base) — 提供语音上下文插件包的基础 UI 组件，支持语音转文字。
-- [base](https://github.com/ChisaAlter/Deepseek-Harness-Desktop/tree/HEAD/vendor/deepseek-harness/packages/bundle/base) — 桌面客户端的基础包，包含核心界面组件与运行时。
-- [base](https://github.com/chiyulogg-commits/deepseek-harness-sentence-reasoning/tree/HEAD/packages/bundle/base) — 在聊天界面将推理摘要逐句完整显示，便于阅读。
-- [base](https://github.com/chiyulogg-commits/deepseek-harness-zh-tw/tree/HEAD/packages/bundle/base) — 将聊天界面本地化为繁体中文，调整界面标签和文字。
-- [base](https://github.com/hccccc01333/dsh-report-card/tree/HEAD/packages/bundle/base) — 在会话内直接渲染交互式 HTML 报告卡片，提供丰富查看体验。
-- [base](https://github.com/hypergraphdev/deepseek-harness-extension/tree/HEAD/packages/bundle/base) — 为浏览器扩展提供带页面上下文感知的侧边栏。
-- [base](https://github.com/KaichenCurry/dsh-design-mode/tree/HEAD/packages/bundle/base) — 提供智能图像设计模式的基础包，含画布与工具。
-- [base](https://github.com/Missher12/deepseek-harness-desktop/tree/HEAD/packages/bundle/base) — 桌面应用的基础 UI 包，提供核心界面组件。
-- [base](https://github.com/oykb58246/dsh-desktop/tree/HEAD/deepseek-harness/packages/bundle/base) — 桌面端集成包，包含视觉、远程控制、会话导入及 API 适配等交互增强功能。
-- [base](https://github.com/Shonean/deepseek-harness-vscode-desktop/tree/HEAD/packages/bundle/base) — 增强 VS Code 插件，提供内联差异、提及、选区上下文、审批界面、计划模式和全局快捷键。
-- [base](https://github.com/soolaugust/deepseek-harness-cli/tree/HEAD/packages/bundle/base) — 提供终端Agent界面的核心UI组件。
-- [base](https://github.com/whitelonng/dshcode/tree/HEAD/packages/bundle/base) — 桌面伴侣的基础包，包含核心界面组件与运行时。
-- [base](https://github.com/WJZ-P/deepseek-harness-desktop/tree/HEAD/harness/packages/bundle/base) — 桌面版 DeepSeek Harness 的基础包，提供核心界面组件。
-- [Better_Deepseek_Harness](https://github.com/silencieuxzero/Better_Deepseek_Harness) — 扩展Web界面与框架功能，增强用户界面体验。
-- [better-basicfun](https://github.com/CDeZT/dsh-default-workspace) — 提供默认工作区，分页只读访问插件、技能、记忆、会话及设置文件。
-- [better-sidebar](https://github.com/Islulua/dsh-code-navigator/tree/HEAD/packages/better-sidebar) — 增强侧边栏，为 C/C++、Python 和 TypeScript 提供持久代码导航。
-- [better-sidebar](https://github.com/niushuanan/xiaozhuang-dsh/tree/HEAD/plugins/better-sidebar) — 改进侧边栏布局与导航，提升用户体验与操作便利性。
-- [better-sidebar](https://github.com/picoaide/picoaide-harness/tree/HEAD/packages/client/better-sidebar) — 增强客户端的侧边栏布局和可用性。
-- [better-sidebar](https://github.com/snzhi000-sys/harness-macos-desktop-plugin-suite/tree/HEAD/plugins/better-sidebar) — 优化侧边栏布局与导航，提升交互体验。
-- [better-sidebar](https://github.com/StarPivotNet/dsh-plugins-public/tree/HEAD/packages/better-sidebar) — 优化 DeepSeek Harness 侧边栏的布局和可用性。
-- [blue](https://github.com/dsh-blue/blue) — 插件树式终端界面：流式 markdown 会话流、工具卡片、模糊命令补全与主题热切换，每个界面组件都是可热替换的 Cordis 插件。
-- [blue](https://github.com/dsh-blue/blue/tree/HEAD/packages/bundle/blue) — 为 DeepSeek Harness 提供现代终端界面，支持可热插拔的渲染、交互和命令插件。
-- [blue-ecosystem](https://github.com/dsh-blue/blue/tree/HEAD/examples/blue-ecosystem) — 提供一组可热插拔的终端界面组件，作为 Blue 界面生态的示例。
-- [bottom-log](https://github.com/dsh-blue/blue/tree/HEAD/examples/bottom-log) — 在终端界面中展示日志面板，呈现近期活动或输出消息。
-- [brainstorm-visualizer](https://github.com/Shizuku-keop/dsh-plugin-brainstorm-visualizer/tree/HEAD/brainstorm-visualizer) — 结合 AI 发散思维与可视化交互，辅助用户通过头脑风暴解决复杂问题。
-- [brand](https://github.com/harness-home/harness-ai-desktop/tree/HEAD/plugins/brand) — 桌面客户端品牌插件，启动运行时并提供托管会话界面。
-- [bridge-preview](https://github.com/xing666173/dsh-vision-hub/tree/HEAD/bridge-preview) — 在聊天界面中提供内联预览和拖拽文件上传功能。
-- [browser-plugin](https://github.com/See-Sol-Lab/DeepCode/tree/HEAD/apps/desktop/browser-plugin) — 提供浏览器界面，用于检查和操作 DeepCode 环境，支持用户探索和控制。
-- [browser-settings](https://github.com/Short-Arm-Ape/dsh-browser-unified/tree/HEAD/upstream/dsh-browser-xylt369/packages/browser-settings) — 为 DeepSeek Harness 插件配置浏览器相关设置。
-- [browser-settings](https://github.com/xylt369/dsh-browser/tree/HEAD/packages/browser-settings) — 配置自动化工具的浏览器设置，包括提供方选项和权限管理。
-- [bundle](https://github.com/ayahunter/dsh-trail/tree/HEAD/packages/bundle) — 将原始事件流转换为故事化的时间线，便于理解轨迹页签内容。
-- [bundle](https://github.com/bentong-chain/dsh-plugin-dir-tree/tree/HEAD/bundle) — 为 DeepSeek Harness 提供带拖放、懒加载和搜索功能的浮动目录树插件。
-- [bundle](https://github.com/Blackman99/codsh/tree/HEAD/packages/bundle) — 打包终端编码代理界面，采用现代CLI交互设计。
-- [bundle](https://github.com/ethan0084/dsh-cockpit/tree/HEAD/packages/bundle) — 提供桌面风格的项目与 AI 工作台界面，用于管理工作内容。
-- [bundle](https://github.com/mel0nyrame/deepseek-harness-desktop/tree/HEAD/packages/bundle) — 提供原生桌面应用，为 DeepSeek Harness 代理运行时打造图形化交互界面。
-- [bundle](https://github.com/my-dsh/dsh-session-attention/tree/HEAD/bundle) — 会话等待用户操作时显示角色跳舞动画。
-- [bundle](https://github.com/my-dsh/dsh-token-usage-dashboard/tree/HEAD/bundle) — 提供跨会话token用量仪表盘，以SQLite存储数据。
-- [bundle](https://github.com/ohoyour/dsh-file-mention/tree/HEAD/packages/bundle) — 在输入框输入 @ 加文件名即可搜索并插入引用。
-- [bundle](https://github.com/ph4310822/dsh-edex-jarvis-ui/tree/HEAD/packages/bundle) — 提供 JARVIS 风格的电光青色 HUD 界面，包含生命体征、实时监控和日志显示。
-- [bundle](https://github.com/ph4310822/dsh-edex-ui/tree/HEAD/packages/bundle) — 为DeepSeek Harness生态提供UI组件，可能打包用于部署。
-- [bundle](https://github.com/rbelem/dsh-tui/tree/HEAD/bundle) — 为 harness 环境提供终端用户界面。
-- [bundle](https://github.com/s3yf1337/dsh-desktop/tree/HEAD/bundle) — 在 Harness 网页界面之上提供原生 Tauri 桌面窗口，含托盘、通知与原生对话框。
-- [bundle](https://github.com/Yisan0429/dsh-itranslation/tree/HEAD/packages/itranslation/bundle) — 在插件界面内提供消息的即时翻译功能。
-- [bundle](https://github.com/zgxaxdd/dsh-html-render/tree/HEAD/bundle) — 在聊天消息中使用沙箱 iframe 渲染内联 HTML 和 KaTeX 公式，并适配主题样式。
-- [bundle-main](https://github.com/A-G-guy/dsh-plugins/tree/HEAD/packages/bundle-main) — 打包移动端窄屏适配、任务完成邮件通知、子代理独立模型和自定义路由等多项功能。
-- [busy-enter-steer](https://github.com/StarPivotNet/dsh-plugins-public/tree/HEAD/packages/busy-enter-steer) — 调整忙碌时的行为，可能重定向输入或显示通知。
-- [captain](https://github.com/bLueriVerLHR/dsh-better-webui/tree/HEAD/packages/captain) — 为 Web 界面增加船长控制条，提供常用操作的快捷入口，提升整体可用性。
-- [channel-config](https://github.com/mapan0424/deepseek-harness-channels/tree/HEAD/packages/channel-config) — 为DeepSeek Harness通道提供可视化配置界面，方便用户调整设置。
-- [chart](https://github.com/SparkElf/dsh-plugins-plus/tree/HEAD/packages/chart) — 在界面中渲染交互式图表，帮助直观呈现数据。
-- [chat-pace](https://github.com/TheGoodMorty/chat-pace) — 为聊天界面提供可配置的自动滚动，优化阅读体验。
-- [chatlab](https://github.com/Liyuk/dsh-skin-chatlab/tree/HEAD/packages/chatlab) — 为 Web 界面注册聊天皮肤，提供即插即用的气泡样式而不改动聊天逻辑。
-- [chenw2759-wq-dsh-mindmap](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/chenw2759-wq-dsh-mindmap) — 在聊天界面中渲染思维导图，可视化想法和关系。
-- [chicheng-stats](https://github.com/534119219/chicheng-stats) — dsh 全局用量统计插件：侧边栏展示今日/总请求数与今日/总 Token 数（跨所有会话）
-- [citeciter](https://github.com/kirkchinese/CiteCiter/tree/HEAD/packages/citeciter) — 为 DeepSeek Harness 会话提供选中内容解释的侧边栏。
-- [cli](https://github.com/cofy-x/dsh-console/tree/HEAD/apps/cli) — 基于TypeScript和React/Ink的终端前端，用于交互式操作DeepSeek Harness。
-- [cli](https://github.com/soolaugust/deepseek-harness-cli/tree/HEAD/packages/bundle/cli) — 实现命令行界面，支持全屏渲染和会话统计。
-- [client](https://github.com/shijunan126-creator/dsh-subagent-effort/tree/HEAD/packages/client) — 提供图形界面设置卡片，配置子代理模型和推理强度。
-- [client](https://github.com/sweatybear12138/dsh-collection/tree/HEAD/projects/shortcut-icons/packages/client) — 将图片转换为快捷方式图标并生成 .lnk 文件。
-- [client-cot-summary-overlay](https://github.com/shenjackyuanjie/dsh-cot-summary/tree/HEAD/packages/client-cot-summary-overlay) — 在客户端界面叠加显示思维链推理摘要，便于查看。
-- [client-plugin](https://github.com/renat3u/tonghuashun-webui/tree/HEAD/client-plugin) — 提供仿同花顺股票应用的网页UI，为Harness呈现熟悉的金融界面。
-- [client-plugin](https://github.com/vibe-any/awesome-skills/tree/HEAD/dsh-plugin-helper/templates/client-plugin) — 客户端插件模板，为在 DSH 中构建用户界面提供起点。
-- [client-ui-aside](https://github.com/ywzhang1031/dsh-aside/tree/HEAD/packages/client-ui-aside) — 在聊天界面中提供查看和操作锚定旁注对话的界面。
-- [clock](https://github.com/fan969690/dsh-module-center/tree/HEAD/library/clock) — 提供可放置在模块化桌面网格中的时钟组件。
-- [clock](https://github.com/whyitsy/dsh-plugins/tree/HEAD/packages/clock) — 在界面中显示时钟组件，帮助用户查看时间。
-- [clutch-dsh-title](https://github.com/Cerbur/clutch-dsh/tree/HEAD/packages/clutch-dsh-title) — 为界面添加可定制的标题栏，增强布局与用户体验。
-- [code-frame-render](https://github.com/CH4ACKO3/dsh-render-engine/tree/HEAD/packages/code-frame-render) — 在 DSH 界面中渲染带语法高亮的代码框架，改善代码展示效果。
-- [code-render](https://github.com/CH4ACKO3/dsh-render-engine/tree/HEAD/packages/code-render) — 使用 Shiki 在 DSH 中渲染带语法高亮的代码，提升可读性。
-- [coins](https://github.com/fan969690/dsh-module-center/tree/HEAD/library/coins) — 提供用于模块化桌面的金币计数组件，适合游戏化追踪。
-- [companion](https://github.com/sincerity711/dsh-remote-desktop/tree/HEAD/packages/companion) — 远程桌面功能的配套包，可能提供界面集成。
-- [config-dashboard](https://github.com/charlzyx/dshwork/tree/HEAD/packages/config-dashboard) — 提供可视化仪表盘来管理配置。
-- [consumer](https://github.com/CH4ACKO3/dsh-render-engine/tree/HEAD/integration/consumer) — 集成 Shiki 语法高亮和代码渲染服务，提升 DSH 中代码展示质量。
-- [context-graph-deepseek-harness](https://github.com/Mshir0/context-graph-deepseek-harness) — 可视化上下文图并预算感知编译。
-- [context-vista](https://github.com/GooodWei/context-vista) — 为 DeepSeek Harness 提供右侧悬浮栏以及 /context 命令，用环形图实时展示当前上下文 token 用量与分配，compact指令效果，同时支持估算费用消耗，对标 Claude Code 的 /context。
-- [conversation-browser](https://github.com/intpfx/OpenFX/tree/HEAD/domains/dsh-openfx/packages/conversation-browser) — 在 DSH 界面中浏览历史会话的组件。
-- [conversation-ui](https://github.com/DamonBao/dsh-codex-suite/tree/HEAD/packages/conversation-ui) — 提供会话交互的用户界面组件。
-- [cordis](https://github.com/Sparrived/DSH-Deeptop/tree/HEAD/cordis) — 提供轻量级原生桌面客户端，优化用户操作界面。
-- [cordis-plugin](https://github.com/miracle-ai-studio/deepseek-harness-desktop/tree/HEAD/packages/cordis-plugin) — DeepSeek Harness 的原生 macOS 桌面应用，提供专用界面。
-- [core](https://github.com/Liyuk/dsh-skin-chatlab/tree/HEAD/packages/core) — 为 DeepSeek Harness 网页界面提供可插拔聊天皮肤的基础注册表，便于自定义外观。
-- [cot-fold](https://github.com/KhalilHsu/dsh-plugins/tree/HEAD/cot-fold) — 折叠客户端界面中的思维链内容，使显示更简洁。
-- [creator](https://github.com/openma-ai/deepseek-harness-tui/tree/HEAD/npm/creator) — 为 TUI 添加创建者覆盖层界面，增强交互体验。
-- [dal-modes](https://github.com/lunarmoon26/dsh-adaptive-loop/tree/HEAD/plugins/dal-modes) — 切换不同界面模式，让显示适配各种使用场景。
-- [dash](https://github.com/realchenwenqiao/dash) — 为 DeepSeek Harness 提供全屏终端入口，支持命令行交互操作。
-- [dash](https://github.com/songqikong/dash) — 为 DeepSeek Harness 提供 TUI 界面，支持文本化服务管理。
-- [ddw-teams-panel](https://github.com/ccch713/deepddw/tree/HEAD/plugins/ddw-teams-panel) — 为 DSH 添加团队面板，查看局域网内跨设备的共享记忆与知识。
-- [deepseeh-harness-ultra-slash](https://github.com/loadingvx/deepseeh-harness-ultra-slash) — 通过超强变体增强 DSH 中的斜杠命令体验。
-- [DeepSeek Workbench](https://github.com/gulagala001/dsh-deepseek-workbench) — 在 DeepSeek Harness 中使用 DeepSeek 网页聊天、临时侧栏聊天和 API 开放平台，并将网页历史迁移为可继续的 DSH 会话。
-- [DeepSeek_Harness_Balance_Banner](https://github.com/iskshadow195563/DeepSeek_Harness_Balance_Banner) — 💵 DeepSeek 余额横幅(dsh 插件):页面顶部右侧(主题切换按钮左侧)同时显示 USD/CNY 余额,负值高亮,60s 自动刷新,一条命令安装
-- [DeepSeek_Harness_Files_Panel](https://github.com/iskshadow195563/DeepSeek_Harness_Files_Panel) — 📁 右侧可折叠的 DeepSeek 上传文件管理面板(dsh 插件):列出/复制/清理 DeepSeek Files API 上传的图片,密钥零暴露,一条命令安装
-- [deepseek-balance-floating](https://github.com/yhPrime/deepseek-balance-floating) — DeepSeek Harness 左下角余额/用量悬浮窗插件：余额血条 + 估算剩余token环 + 今日消耗横条。数据基于 dsh-cost-meter。（GitHub 不允许中文仓库名，故用此 ASCII 名）
-- [DeepSeek-Balance-Whale-Widget-Bowl](https://github.com/Witherwithwinter/DeepSeek-Balance-Whale-Widget-Bowl) — DeepSeek Harness（DSH）Web 界面右下角的常驻余额挂件。基于 MeteorNOX/DeepSeek-Balance-Whale-Widget 修改的 铁盆鲸鱼娘版。
-- [deepseek-cost-usage-status-plugin](https://github.com/Zenjibad/deepseek-cost-usage-status-plugin) — 在 Web UI 中显示实时 DeepSeek API 成本、使用量和余额状态，含会话成本和消耗率。
-- [deepseek-desk-rsi](https://github.com/huchunlinnk/deepseek-desk-rsi) — 在桌面界面轮播背景图片，缓解重复性劳损。
-- [deepseek-harness](https://github.com/CoaseEdge/AgentNavi/tree/HEAD/integrations/deepseek-harness) — 在界面内提供导航系统，帮助用户浏览和定位 AI 代理的功能和视图。
-- [Deepseek-Harness-branch-map-plugin](https://github.com/useful-money/Deepseek-Harness-branch-map-plugin) — 显示并管理仓库的分支图，提供可视化导航和分支管理功能。
-- [deepseek-harness-button-plugin](https://github.com/chenshutian9610/deepseek-harness-plugin-list/tree/HEAD/packages/deepseek-harness-button-plugin) — 在 Harness 界面添加一个可自定义的按钮，便于快速操作。
-- [deepseek-harness-chat-plugin](https://github.com/chenshutian9610/deepseek-harness-plugin-list/tree/HEAD/packages/deepseek-harness-chat-plugin) — 可视化聊天处理流程，实时显示各步骤的进度和状态。
-- [deepseek-harness-compaction-ui](https://github.com/preflower/deepseek-harness-compaction-ui) — 为官方压缩功能提供可视化的百分比和 Token 设置，使上下文压缩配置更直观。
-- [deepseek-harness-desktop](https://github.com/Evan1u/deepseek-harness-desktop) — 为DeepSeek Harness提供轻量级桌面应用外壳。
-- [DeepSeek-Harness-Desktop](https://github.com/Muelsysel/DeepSeek-Harness-Desktop) — 在DSH网页界面上提供原生桌面窗口，方便访问。
-- [deepseek-harness-flowchart](https://github.com/lizhecome/deepseek-harness-flowchart) — 生成美观主题的SVG流程图，用于可视化表示。
-- [deepseek-harness-genui](https://github.com/pengyue-polaron/deepseek-harness-genui) — 通过代码描述生成用户界面，实现代码优先的 UI 构建方式。
-- [deepseek-harness-gui](https://github.com/oodzchen/deepseek-harness-gui) — Open DeepSeek Harness UI in native window. 在系统原生窗口中打开 DeepSeek Harness 界面。
-- [deepseek-harness-header-overflow](https://github.com/chenshutian9610/deepseek-harness-plugin-list/tree/HEAD/packages/deepseek-harness-header-overflow) — 为头部区域增加溢出菜单，改善导航体验。
-- [deepseek-harness-locale-ru](https://github.com/warment/deepseek-harness-locale-ru) — DSH 网页界面的俄语语言包：通过官方 dsh-client-locale 插件 API 注册 33 个命名空间、1061 条界面字符串（100% 覆盖）；并通过配置层本地化权限预设显示名。
-- [DeepSeek-harness-marketplace](https://github.com/Viveksssss/DeepSeek-harness-marketplace) — 提供插件市场，供浏览和安装 Harness 插件。
-- [deepseek-harness-mermaid-plugin](https://github.com/chenshutian9610/deepseek-harness-plugin-list/tree/HEAD/packages/deepseek-harness-mermaid-plugin) — 在 Web 界面直接渲染 Mermaid 图表，支持流程和架构可视化。
-- [deepseek-harness-picture-in-picture](https://github.com/syncended/deepseek-harness-picture-in-picture) — 为 DeepSeek Harness 提供画中画模式，支持浮动内容视图。
-- [deepseek-harness-quota-monitor](https://github.com/marisa-4219/deepseek-harness-quota-monitor) — DeepSeek Harness 多供应商额度监控插件：余额型 API 查询 + 限额型本地用量计量，侧边栏实时卡片 + 可视化配置。
-- [deepseek-harness-split-screen](https://github.com/syncended/deepseek-harness-split-screen) — 增加分屏视图功能，支持并排显示多个界面。
-- [deepseek-harness-terminal-plugin](https://github.com/chenshutian9610/deepseek-harness-plugin-list/tree/HEAD/packages/deepseek-harness-terminal-plugin) — 在 Web 界面嵌入终端模拟器，支持在浏览器中直接执行命令。
-- [deepseek-harness-tui](https://github.com/gxinxing/deepseek-harness-tui) — 提供基于 Ink 和 React 的终端交互界面，方便浏览 DeepSeek Harness。
-- [deepseek-harness-tui](https://github.com/hoobooyoo/deepseek-harness-tui) — 为DeepSeek Harness提供终端界面，支持基于文本的交互。
-- [deepseek-harness-tui](https://github.com/openma-ai/deepseek-harness-tui) — Rust/ratatui 终端客户端，直接使用 DSH SDK JSON-RPC 协议，支持独立运行或作为 profile bundle 加载。
-- [deepseek-harness-zh_pro](https://github.com/magian1127/deepseek-harness-zh_pro) — 为 DSH 提供中文增强与本地化改进。
-- [deepseek-herness-login](https://github.com/javaxiaov/deepseek-herness-login) — 为 DeepSeek Harness WebUI 提供登录门界面，可能添加认证屏幕。
-- [deepseek-plugin-liangwengu](https://github.com/VinciBeans/deepseek-plugin-liangwengu) — 梁文谷 DSH 插件：在 Web GUI 右上角显示当前算力错峰时段（已适配deepseek 2026.08.22 公布的最新峰谷收费政策，工作日 09:00–12:00 与 14:00–18:00 为梁文峰，其余时间含整个周末为梁文谷），并实时倒计时当前时段剩余时间；谷期跨天计算，直达下一工作日 09:00。
-- [deepseek-plugin-store](https://github.com/Ericwong5021/deepseek-plugin-store) — DeepSeek Harness 独立社区插件商店：发现、安装并提交经过验证的插件、工具与扩展。 | Independent community plugin directory.
-- [deepseek-status-monitor](https://github.com/rison114514/deepseek-status-monitor) — DSH 对话页时段状态显示器：按收费低谷/过渡/高峰显示对应插画,引导低谷时段使用。
-- [DeepSeek-TUI](https://github.com/TheMcSwift/DeepSeek-TUI) — 为 DSH 提供终端交互客户端，实现文本模式用户界面。
-- [deepseek-visual-plugin](https://github.com/zhangzhimou78-code/deepseek-visual-plugin) — 为 DeepSeek Harness 提供可视化界面增强。
-- [deepseek-whale-wallpaper](https://github.com/HeShen-1/deepseek-whale-wallpaper) — 为网页界面添加点阵鲸鱼动态壁纸，支持呼吸动画、指针漩涡交互和明暗主题。
-- [DeepSeekHarness-community-index](https://github.com/RiRi9909/DeepSeekHarness-community-index) — 在界面中呈现情绪仪表盘，帮助用户直观了解当前情绪分析结果。
-- [demo-clock](https://github.com/fan969690/dsh-module-center/tree/HEAD/demos/demo-clock) — 演示模块化桌面中的时钟模块，支持网格调整大小。
-- [demo-cordis](https://github.com/modelbus/deepseek-harness-pro/tree/HEAD/app/demo-cordis) — 增强界面，添加任务看板、系统管理与插件中心。
-- [demo-quicklaunch](https://github.com/fan969690/dsh-module-center/tree/HEAD/demos/demo-quicklaunch) — 演示模块化桌面中的快速启动模块，支持网格调整大小。
-- [design-annotations](https://github.com/intpfx/OpenFX/tree/HEAD/domains/dsh-openfx/packages/design-annotations) — 为 DSH 界面添加设计标注功能。
-- [design-app](https://github.com/KaichenCurry/dsh-design-mode/tree/HEAD/packages/bundle/design-app) — 实现智能图像编辑与评论的设计应用界面。
-- [design-playbook](https://github.com/Bandersnatch0x/design-playbook/tree/HEAD/packages/design-playbook) — 提供设计声明与契约，约束并审查 UI 生成，提升输出一致性。
-- [desktop](https://github.com/picoaide/picoaide-harness/tree/HEAD/packages/host/desktop) — 为 Harness 平台提供桌面客户端界面。
-- [desktop-chrome](https://github.com/jo32/DeepDeck/tree/HEAD/plugins/desktop-chrome) — 为网页界面添加桌面风格的窗口边框，营造原生体验。
-- [desktop-experience](https://github.com/z-time-007/whale-desktop-kit/tree/HEAD/plugins/desktop-experience) — 桌面增强套件，含壁纸、桌宠、透明度、快捷栏和个人助理等功能。
-- [desktop-launcher-plugin](https://github.com/Ch0uHuaZ1/DeepSeek-Harness-Desktop/tree/HEAD/packages/desktop-launcher-plugin) — 一键启动DeepSeek Harness网页界面，并在系统托盘运行。
-- [desktop-layer](https://github.com/ptonlix/dsh-forge/tree/HEAD/packages/bundles/desktop-layer) — 将DeepSeek Harness集成到桌面环境，提供原生应用体验。
-- [desktop-plugin](https://github.com/ningbainb/deepseek-harness-desktop/tree/HEAD/docs/examples/desktop-plugin) — 为 DeepSeek Harness 提供 Windows 桌面图形界面，包含安装器、皮肤和远程访问功能。
-- [desktop-workbench](https://github.com/Missher12/deepseek-harness-desktop/tree/HEAD/packages/extensions/desktop-workbench) — 为 Intel Mac 用户提供 DeepSeek Harness 的桌面界面，改善终端操作体验。
-- [diff-render](https://github.com/CH4ACKO3/dsh-render-engine/tree/HEAD/packages/diff-render) — 在 DSH 中渲染可视化的差异视图，展示代码变更并高亮语法，便于对比。
-- [dock](https://github.com/AKS1st/dock) — DSH 生态中最好的工作台基座插件：VSCode 风格布局外壳（活动栏/侧边栏/编辑器区/面板/状态栏）+ ctx.workbench 开放注册表，功能插件即插即用；推荐搭配 dock-files/dock-editor/dock-git | The best workbench base plugin for DSH: VSCode-style layout shell with the open ctx.workbench registry for plug-and-play plugins; pair with dock-files/dock-editor/dock-git
-- [dock-editor](https://github.com/AKS1st/dock-editor) — DSH 生态中最好的文本编辑插件：撤销重做、Ctrl+S 保存、未保存确认、二进制检测、悬浮窗几何记忆，dock-files 的默认文本查看器；依赖 dock 与 dock-files | The best text editor for DSH: undo/redo, Ctrl+S save, unsaved-change confirmation, binary detection, window geometry memory; the default dock-files viewer; requires dock and dock-files
-- [dock-files](https://github.com/AKS1st/dock-files) — DSH 生态中最好的文件浏览插件：VSCode 资源管理器级目录树、新建/重命名/复制粘贴/删除、拖放导入、粘贴本地文件与剪贴板图片、上传进度条与右键菜单；依赖 dock 基座 | The best file explorer for DSH: VSCode-level directory tree with new/rename/copy-paste/delete, drag-and-drop import, paste local files and clipboard images, upload progress and context menus; requires the dock base
-- [dock-git](https://github.com/AKS1st/dock-git) — DSH 生态中最好的 Git 历史可视化插件：泳道式提交图、分支/标签徽标、三栏 diff、暂存/提交/推送、远端管理；依赖 dock 基座 | The best Git history viewer for DSH: swimlane commit graph, branch/tag badges, three-column diff, stage/commit/push, remote management; requires the dock base
-- [dock-images](https://github.com/AKS1st/dock-images) — DSH 图片查看器，支持 PNG、JPEG、GIF、WebP 等八种格式，SVG 仅安全渲染。
-- [dock-markdown](https://github.com/AKS1st/dock-markdown) — DSH 的 Markdown 查看器，提供 GFM 渲染、DOMPurify 消毒、文档大纲和相对路径解析。
-- [dock-media](https://github.com/AKS1st/dock-media) — 在 DSH 停靠栏中添加全屏媒体播放器，支持播放经 HTTP Range 流式传输的音频和视频。
-- [dph-taskboard](https://github.com/1070296335-create/dph-taskboard) — 提供任务面板界面，用于管理和可视化任务。
-- [DragView](https://github.com/anzhaohao/DragView) — 为 DSH 添加拖拽文件附件和安全的应用内预览功能。
-- [ds-api-usage](https://github.com/Sev7een/ds-api-usage) — 在设置页展示 DeepSeek API 余额与最近 24 小时用量，包括估算消费、Token、请求次数和按小时时间线。
-- [ds-balance](https://github.com/JovanHE/ds-balance) — 在DSH网页界面显示简洁的DeepSeek账户余额小部件。
-- [ds-whale-send-button](https://github.com/AsILAnn/ds-whale-send-button) — 在网页界面添加发送按钮，用于发起消息提交。
-- [dsDragPasteALL](https://github.com/balue8246-maker/dsDragPasteALL) — 通过拖放粘贴文件或内容到聊天中，增强 DeepSeek Harness 的交互。
-- [dsh](https://github.com/Cheeserackery/deepseek-time/tree/HEAD/adapters/dsh) — 实时显示DeepSeek当前收费时段状态，直观展示是否处于计费时间。
-- [dsh](https://github.com/iqingyoung/search2chart-mcp/tree/HEAD/dsh) — 在对话中基于搜索结果或表格数据生成内联图表，增强数据可视化。
-- [dsh](https://github.com/opencues/opencues/tree/HEAD/integrations/dsh) — 将任意文本框变成双向大模型通道，读取输入并自动填充回答，无需聊天窗口。
-- [dsh](https://github.com/zhm20001/dsh-notes-kanban/tree/HEAD/dsh) — 在 DeepSeek Harness 界面中提供看板，用于管理笔记和任务。
-- [DSH Mobile UI](https://github.com/Canary-Builds/dsh-mobile-ui) — 在现有 DeepSeek Harness 网页界面中增强触屏导航和独立 PWA 模式布局。
-- [dsh_ark_plan_usage](https://github.com/Barry-Liu-001/dsh_ark_plan_usage) — DeepSeek Harness (DSH) 侧边栏插件：实时展示火山方舟 Agent Plan 用量（5h/周/月），数据来自本机 arkcli
-- [dsh_center-column-shift](https://github.com/xiaozhengdeng/dsh_center-column-shift) — 添加可拖拽对话列以调整布局，为侧边栏腾出空间。
-- [dsh_chat_index](https://github.com/Barry-Liu-001/dsh_chat_index) — DeepSeek Harness (DSH) 对话索引插件：在对话区右边缘显示一列小圆点，每个点代表一条用户发送的消息。圆点等间距、紧凑、纵向居中排列（消息过多放不下时间距自动压缩以适应高度）；当前阅读位置的点高亮为品牌色。
-- [dsh_hud_plugin](https://github.com/lauytgary/dsh_hud_plugin) — 在界面中显示实时统计信息的面板。
-- [dsh_kline](https://github.com/FTShare-Lab/dsh_kline) — 面向 DeepSeek Harness 的交互式 K 线分析插件，支持多市场行情、技术指标、支撑压力位、新闻与基本面分析，并在原生侧栏中直接展示。
-- [dsh_plugin_file_attach](https://github.com/TestTheBoy/dsh_plugin_file_attach) — 添加客户端界面以将文件附加到对话上下文。
-- [dsh_token_usage](https://github.com/xbyzzZ/dsh_token_usage) — 在设置上方放用量入口，从本地会话 JSONL 汇总最近 30 天热力图和按模型表。新产生为 input + output + cache write，没有 usage 的会话不估算。
-- [DSH_VsCodeMode](https://github.com/Lenonss/DSH_VsCodeMode) — 为 Harness 网页界面添加类似 VS Code 的模式，增强可用性。
-- [dsh-101](https://github.com/bill9109/dsh-101) — DSH 文档阅读模式。
-- [dsh-7d-tray-win](https://github.com/7dgroup-ai/dsh-7d-tray-win) — DeepSeek Harness（dsh）的 `Windows 专属` 系统托盘插件。在 `dsh web` 运行期间，系统托盘会自动出现 DeepSeek 鲸鱼图标；服务停止后，托盘图标 3 秒内自动消失——托盘与服务同生命周期。同时自动维护一个静默桌面启动器 `DSH.lnk`，双击即可无窗口启动服务并打开浏览器。
-- [dsh-a2a](https://github.com/kouyichi/dsh-plugins/tree/HEAD/dsh-a2a) — 提供终端界面组件与工具，如看板与塔视图，增强DeepSeek Harness的交互体验。
-- [dsh-about](https://github.com/1010n111/dsh-about) — 为 DeepSeek Harness Web 设置面板添加“关于”页，展示当前运行的 DSH 版本、插件版本与项目主页。
-- [dsh-about](https://github.com/EricXu20266/dsh-gui/tree/HEAD/plugins/dsh-about) — 在 GUI 中显示 DSH 应用信息、版本详情和致谢。
-- [dsh-about](https://github.com/lihuu/dsh-plugins/tree/HEAD/plugins/dsh-about) — 在界面中展示关于面板，显示插件详情和版本信息。
-- [dsh-about-updater](https://github.com/archyciao/dsh-about-updater) — DeepSeek Harness (dsh) 插件：设置页「关于」- 版本显示/检查更新/一键重启
-- [dsh-abyss](https://github.com/Zongwei9888/dsh-abyss) — 🌊 深海事务所 · Abyss — 把 DeepSeek Harness 的多 agent 运行画成一间看得见的事务所：委派谱系、每个 agent 的成本与失败归因、上下文水位、考勤时间线，历史案子可回放并一键导出 Markdown 复盘。A DeepSeek Harness plugin that turns an agent fleet into an office you can watch.
-- [dsh-accessibility](https://github.com/mattheliu/dsh-accessibility) — 提供屏幕阅读器指导和应用内无障碍诊断功能。
-- [dsh-account-balance](https://github.com/305037991x-pixel/dsh-balance) — 在网页界面添加余额徽章，每3分钟自动刷新，显示总额、充值额和赠送额。
-- [dsh-account-balance](https://github.com/ls-cool-123/dsh-account-balance) — 在聊天窗口上方显示 DeepSeek API 账户余额仪表盘。
-- [dsh-activity-bell](https://github.com/minivv/dsh-activity-bell) — 在侧边栏搜索按钮旁增加一个活动铃铛：会话跑完后显示红色角标，点击后把侧边栏列表从按工作区分组切换成按天分组的最近活动列表，尚未打开过的完成项带绿点。
-- [dsh-activity-pane](https://github.com/ccll/dsh-activity-pane) — 提供活动面板，用于监控界面中的最近操作或事件。
-- [dsh-activity-tracker](https://github.com/Guyao146/dsh-activity-tracker) — 📊 DeepSeek Harness（DSH）活动统计插件：通过热力图、时间线和小时分布，按项目与日期查看编码活动及 Token 消耗。
-- [dsh-adaptive-reasoning](https://github.com/zhuifengqug/dsh-adaptive-reasoning) — 面向 DeepSeek Harness Web GUI 的、基于模型能力的推理档位滑块。
-- [dsh-add-assets](https://github.com/navid-kianfar/dsh-add-assets) — 扩展输入框加号按钮，支持添加文件、文件夹、上传或命令，并显示草稿附件预览。
-- [dsh-add-to-chat](https://github.com/choco9527/dsh-add-to-chat) — DSH插件 引用注释 添加到对话功能
-- [dsh-adhd-friendly](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-adhd-friendly) — 为注意力困难用户优化界面易用性，提升专注度。
-- [dsh-advanced-sidebar](https://github.com/navid-kianfar/dsh-advanced-sidebar) — 扩展侧边栏功能，包含 Git 变更、终端、文件浏览、预览、后台任务和归档删除操作。
-- [dsh-agent-astra](https://github.com/Rgndmln/dsh-agent-astra) — 在 DeepSeek Harness 界面中可视化 3D 智能体工作轨迹。
-- [dsh-agent-canvas](https://github.com/Lhy723/dsh-agent-canvas) — 在 DSH Web 中添加画布标签，可视化和管理代理及工作流。
-- [dsh-agent-lang](https://github.com/KannaKuron/dsh-agent-lang) — Agent 语言控制:DSH 插件,让工具调用描述、模型思考、回复输出三个通道各自跟随界面语言或固定指定语言(一键同步/一键关闭),以全局 runtime-context 注入,不改任何 preset
-- [dsh-agent-mail-ui](https://github.com/dff652/deepseek-harness-community-plugins/tree/HEAD/packages/dsh-agent-mail-ui) — 为 DeepSeek Harness 提供智能邮件相关的界面组件。
-- [dsh-agent-outputs-reader](https://github.com/HiSeax/dsh-agent-outputs-reader) — 渲染代理输出的Markdown和GFM文件，支持PDF、Word、Excel、PPT的预览与附件显示。
-- [dsh-agent-pill](https://github.com/mozhuanzuojing/dsh-agent-pill) — 显示智能体活动胶囊和汇总抽屉，包含状态、目标和后台任务。
-- [dsh-agent-selector](https://github.com/jiang12345-code/dsh-agent-selector) — 提供界面，用于在 DeepSeek Harness 环境中选择不同代理。
-- [dsh-agent-teams](https://github.com/Suxeca/dsh-plugin/tree/HEAD/third-party/dsh-agent-teams) — 添加会话切换面板，支持快捷键快速切换。
-- [dsh-agentmemory](https://github.com/Yiipu/dsh-agentmemory) — 在harness界面中显示账户余额信息。
-- [dsh-agnes-paseo](https://github.com/vvlife/dsh-agnes-paseo) — 为 DeepSeek Harness 界面提供未明确的视觉增强组件。
-- [dsh-agy-ui](https://github.com/Erick0412-dev/dsh-agy-ui) — 为DeepSeek Harness提供Antigravity风格的界面与体验增强。
-- [dsh-ai-ui-studio](https://github.com/wjinxuan/dsh-ai-ui-studio) — 用于设计和定制 DeepSeek Harness 中 AI 用户界面的工作室。
-- [dsh-aionui-panel](https://github.com/CAPTAIN1275/dsh-ui-web/tree/HEAD/packages/dsh-aionui-panel) — 为客户端界面提供 AionUI 面板组件，增强视觉面板。
-- [dsh-aionui-panel](https://github.com/chenw2759-wq/dsh-IDE/tree/HEAD/packages/dsh-aionui-panel) — 将 DSH 网页界面升级为 IDE，提供文件树、编辑器、预览、终端和远程工作区。
-- [dsh-aionui-panel](https://github.com/jiuge2467/DSH-WhaleDeck/tree/HEAD/plugins/dsh-aionui-panel) — 为 DeepSeek Harness 提供桌面面板，集成桌宠、MCP 调试沙箱、持久化终端和看板。
-- [dsh-aionui-panel](https://github.com/ningbainb/deepseek-harness-desktop/tree/HEAD/packages/dsh-aionui-panel) — 为桌面客户端提供AionUI面板，增强界面交互功能。
-- [dsh-aionui-panel](https://github.com/springbrand-lab/dsh-skin-universe/tree/HEAD/packages/dsh-aionui-panel) — 为 DSH 网页界面添加任务面板，以看板形式展示任务和进度。
-- [dsh-AIR](https://github.com/kaieye/dsh-AIR) — 使用 ↑ / ↓ 切换历史发送记录，并通过 /btw 打开停靠式侧边对话。
-- [dsh-all-enhance](https://github.com/rangdl/dsh-all-enhance) — DSH（DeepSeek Harness）功能增强插件
-- [dsh-all-usage](https://github.com/ParticleLight/dsh-all-usage) — 展示令牌用量、缓存、模型、提供商和工作区分析，包括余额热力图，并支持导出 CSV。
-- [dsh-always-status-bar](https://github.com/Bobnemimimmi/dsh-always-status-bar) — 始终显示消息下的 status bar，无需鼠标悬停
-- [dsh-amphoreus](https://github.com/xi-kari/dsh-amphoreus) — 翁法罗斯 × DSH：黄金裔席位工作区与画布工作台（基于 DeepSeek Harness 构建，非官方）
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 2413 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="theme"></a>
-
-<details>
-<summary><strong>主题与外观</strong> · 显示 253 / 共 498 个</summary>
-
-- [ambient-theme](https://github.com/intpfx/OpenFX/tree/HEAD/domains/dsh-openfx/packages/ambient-theme) — 应用环境主题，根据环境或时间改变视觉外观。
-- [anthropic-theme](https://github.com/KimFischer99/DeepSeek-Harness-Desktop/tree/HEAD/plugins/anthropic-theme) — 提供Anthropic风格视觉主题，美化桌面外壳外观。
-- [appearance](https://github.com/xiaoxiao44443/dfy-dsh-plugins/tree/HEAD/plugins/appearance) — 自定义 DeepSeek Harness 的外观，包括颜色、字体和布局样式。
-- [aurora](https://github.com/CAPTAIN1275/dsh-ui-web/tree/HEAD/packages/skins/aurora) — 应用极光主题配色，带鲜艳渐变和星空灵感视觉风格。
-- [azure-blade](https://github.com/0928OYX/dsh-free-skins/tree/HEAD/skins/azure-blade) — 为 DeepSeek Harness 客户端界面应用 Azure Blade 配色方案和视觉样式。
-- [bilbillm-deepseek-harness-angelina-themes](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/bilbillm-deepseek-harness-angelina-themes) — 为DeepSeek Harness界面提供一系列主题。
-- [black-whale](https://github.com/147228/dsh-xiaoyao-skins/tree/HEAD/packages/skins/black-whale) — 深色鲸鱼主题皮肤，属于夕小瑶皮肤合集，用于美化 Web 客户端。
-- [blue-fantasy](https://github.com/CAPTAIN1275/dsh-ui-web/tree/HEAD/packages/skins/blue-fantasy) — 应用蓝色奇幻主题，采用神秘蓝色调和富有想象力的视觉元素。
-- [blue-fantasy](https://github.com/jiuge2467/DSH-WhaleDeck/tree/HEAD/plugins/skins/blue-fantasy) — 为客户端界面应用蓝色奇幻视觉主题，营造魔幻沉浸的外观。
-- [blue-fantasy](https://github.com/ningbainb/deepseek-harness-desktop/tree/HEAD/packages/skins/blue-fantasy) — 为客户端界面应用蓝色幻想主题，营造魔幻美感。
-- [branding](https://github.com/picoaide/picoaide-harness/tree/HEAD/packages/client/branding) — 为客户端应用自定义品牌和视觉样式。
-- [btpanel-dsh](https://github.com/aaPanel/btpanel-dsh) — 为 aaPanel 的 DeepSeek Harness 集成提供定制主题，统一调整颜色与样式。
-- [butler-atelier](https://github.com/juliye2025/dsh-butler-atelier/tree/HEAD/butler-atelier) — 为 DSH 网页界面提供的深海男仆工坊主题皮肤。
-- [catnap-plugin](https://github.com/luoyan96/deepseek-harness-desktop/tree/HEAD/dsh-plugin-desktop/vendor/catnap-plugin) — 为 Catnap 桌面客户端提供界面皮肤，定制外观样式。
-- [Catppuccin-dsh-theme](https://github.com/zhijun-dai/Catppuccin-dsh-theme) — 为 DeepSeek Harness 应用柔和淡雅的 Catppuccin 配色方案。
-- [coloured-favicon](https://github.com/Elipese568/coloured-favicon) — 为 DeepSeek Harness (DSH) 网页提供彩色渐变流动小鲸鱼 favicon，并将页面内品牌元素一并彩虹化的 Cordis 客户端插件 A colour-gradient animated whale favicon and rainbow branding plugin for DeepSeek Harness (Cordis)
-- [core](https://github.com/orxz/deepseek-harness-themes/tree/HEAD/packages/core) — DeepSeek Harness 的核心主题定义，提供颜色和样式变化的基础。
-- [Cyberpunk-theme-for-dsh](https://github.com/GGbao-114/dsh-theme-cyberpunk-red) — 应用赛博朋克2077风格的红/霓虹主题，包含嵌入字体和启动动画。
-- [dafy-whale-theme](https://github.com/DViridescent/dafy-whale-theme) — DeepSeek Harness 蓝色大肥鱼主题插件：海洋配色、鱼群、气泡、吉祥物与品牌替换
-- [deepcel](https://github.com/Small-tailqwq/dsh-deepcel/tree/HEAD/deepcel) — 模仿 Excel 的界面皮肤，让 DeepSeek Harness 客户端呈现电子表格风格外观。
-- [deepseek-harness](https://github.com/starsstreaming/beautiCode/tree/HEAD/integrations/deepseek-harness) — 为AI编程客户端添加动态视频背景和主题场景。
-- [deepseek-harness-angelina-themes](https://github.com/bilbillm/deepseek-harness-angelina-themes) — 为DSH界面提供带视差效果的浅色和深色玻璃主题。
-- [deepseek-harness-avatar](https://github.com/zoyluoblue/deepseek-harness-avatar) — 允许将自定义图片设为网页背景，支持模糊与可读性调节。
-- [deepseek-harness-background](https://github.com/HaoyueQin/deepseek-harness-background) — 为 DeepSeek Harness Web GUI 添加自定义背景图片：上传本地图片或粘贴图片链接，可调不透明度、遮罩、面板透明与毛玻璃模糊，带实时预览，5% 阻尼滑块松手即存，遮罩自动适配明暗主题。
-- [deepseek-harness-hello-kitty-suite](https://github.com/Angel2518975237/deepseek-harness-hello-kitty-suite) — 💗 一套给 DeepSeek Harness 的粉色 Hello Kitty 主题皮肤 + 任务完成/提问提醒插件（Sweetheart Workspace Expressive skin & Hello Kitty Task-Done Notifier）
-- [deepseek-harness-liquid-glass-theme](https://github.com/Rainpomelo/deepseek-harness-liquid-glass-theme) — DeepSeek Harness - 液态玻璃与动态壁纸主题 (WebGL 物理透镜、动态壁纸与多层毛玻璃) #dsh-plugin
-- [deepseek-harness-pets](https://github.com/orxz/deepseek-harness-pets) — 这是一个专为 DeepSeek-Harness 定制的桌宠皮肤包， DeepSeek 的标志性“大鲸鱼”等宠物养成。
-- [deepseek-harness-skin](https://github.com/Zdram/deepseek-harness-skin) — 为 DeepSeek Harness Web 界面添加动漫背景皮肤。
-- [deepseek-harness-themes](https://github.com/yonglun/deepseek-harness-themes) — 提供 74 套从设计文档生成的非侵入式主题。
-- [DeepSeek-Harness-yizi-themes](https://github.com/laoduu/DeepSeek-Harness-yizi-themes) — 为 DeepSeek Harness（dsh）Web UI 提供的 19 个精品风格主题，完整移植自 YiziMarkdown 的设计语言。
-- [deepseek-harness-yunoseek](https://github.com/clclyzybzjsq/deepseek-harness-yunoseek) — 一个基于tv动画yumemita中的人物千石由乃，使用剧照素材，应用于deepseek-harness的自定义配色插件；A custom color scheme plugin for deepseek-harness, based on the character Yuno Sengoku from the TV anime "Yumemita"
-- [deepseek-style-theme](https://github.com/Lichtspur/deepseek-style-theme) — 应用 DeepSeek 官方风格，包含粒子背景、玻璃面板和进度显示。
-- [demon-slayer-night](https://github.com/springbrand-lab/dsh-skin-universe/tree/HEAD/packages/skins/demon-slayer-night) — 为界面应用以《鬼灭之刃》为灵感的暗黑奇幻主题。
-- [DevTools-Custom-Beautification-Plugin-for-DeepseekHarness-Class](https://github.com/1739321142/DevTools-Custom-Beautification-Plugin-for-DeepseekHarness-Class) — DeepseekHarness类DevTools自定义美化
-- [dhs-theme-plugin](https://github.com/kongxiangyiren/dhs-theme-plugin) — dsh 主题管理插件,可以自定义主题
-- [dph-endfield-theme](https://github.com/thjyy/dph-endfield-theme) — 为 Harness 网页端应用仿 Endfield 主题与动态吉祥物。
-- [dragon-heir](https://github.com/CAPTAIN1275/dsh-ui-web/tree/HEAD/packages/skins/dragon-heir) — 应用龙裔主题，采用史诗奇幻风格和龙纹视觉元素。
-- [dragon-heir](https://github.com/jiuge2467/DSH-WhaleDeck/tree/HEAD/plugins/skins/dragon-heir) — 为客户端界面应用龙裔主题皮肤，打造独特且史诗般的视觉风格。
-- [dragon-heir](https://github.com/ningbainb/deepseek-harness-desktop/tree/HEAD/packages/skins/dragon-heir) — 为客户端界面应用龙裔主题，采用龙元素设计。
-- [ds-hentai](https://github.com/lisongxuan/ds-hentai) — 提供受 ExHentai 启发的界面皮肤。
-- [dsh_Rhine_Lab_theme](https://github.com/ReLuckyLucy/dsh_Rhine_Lab_themo) — 为 Web 界面应用明日方舟莱茵生命主题皮肤。
-- [dsh-815-skin](https://github.com/lengduan/dsh-815-skin) — 1945-08-15 世界名画 dsh皮肤
-- [dsh-a6api](https://github.com/tttnny/my-dsh/tree/HEAD/plugins/dsh-a6api) — 提供仿 Harness 官网的深色主题，含极光、粒子鲸鱼、星座网格、玻璃拟态等视觉效果。
-- [dsh-adaptive-native](https://github.com/zhongjie10086/dsh-adaptive-native-standard) — 为 DeepSeek Harness 提供 Windows 原生自适应标准预设。
-- [dsh-aemeath](https://github.com/hachimi-ai/dsh-aemeath) — 爱弥斯主题皮肤 + 像素桌宠（鸣潮 Aemeath / Wuthering Waves），用于 DeepSeek Harness Web GUI。
-- [dsh-aemeath-skin](https://github.com/Rhongomyniadz/dsh-aemeath-skin) — 定制 DeepSeek Harness 客户端界面外观的视觉皮肤。
-- [dsh-amadeus-skin](https://github.com/justintangsysu/dsh-amadeus-skin) — 为DeepSeek Harness界面应用《命运石之门0》Amadeus风格皮肤。
-- [dsh-ambience](https://github.com/Hyna-hla/dsh-ambience) — 增强 DSH 界面的视觉氛围。
-- [dsh-angelina-theme](https://github.com/Demigod-cyber/dsh-angelina-theme) — DSH主题插件——直到大地变成一颗酸橙（Angelina 浅蓝主题）
-- [dsh-angelsanddemon-fatesumphony-skin](https://github.com/zhangyuzhangyu233/dsh-angelsanddemon-fatesumphony-skin) — 提供天使与恶魔主题的界面皮肤，搭配交响乐风格配色。
-- [dsh-anthropic-fonts](https://github.com/Isilsolme/dsh-anthropic-fonts) — 为 DeepSeek Harness 界面应用 Anthropic 风格字体。
-- [dsh-any-background](https://github.com/Tkingxiao/dsh-any-background) — 一个自定义主题插件，包括背景图（大小和位置），主界面和设置界面（透明度，色轮全色主题色）插件
-- [dsh-appearance](https://github.com/levi52/dsh-appearance) — DeepSeek Harness Web UI 的外观设置插件，一键个性化你的 Web UI
-- [dsh-appearance-gallery](https://github.com/wsxwj123/dsh-plugins/tree/HEAD/packages/dsh-appearance-gallery) — 为DeepSeek Harness提供外观主题画廊，让用户预览并应用不同的皮肤。
-- [dsh-arcaea-theme](https://github.com/a1swg1159-pixel/dsh-arcaea-theme) — 为DeepSeek Harness应用Arcaea风格的高调棱镜UI主题。
-- [dsh-archive](https://github.com/crack-time/dsh-client-ui-skin-cottage) — 田园小屋主题皮肤，含 4K 壁纸和毛玻璃面板，用于网页界面。
-- [dsh-asuka-school-theme](https://github.com/Yyyyyylor/dsh-asuka-school-theme) — 为 DeepSeek Harness Web UI 应用明日香主题，含动态壁纸和自适应配色。
-- [dsh-atom-commune-skin](https://github.com/dingdongji-hub/dsh-atom-commune-skin) — 原子朋克风格的共产主义公社
-- [dsh-aurora-bg](https://github.com/KUNTING0701/dsh-aurora-bg) — 为 DeepSeek Harness 网页界面添加极光背景效果，使用 CSS 变换和画布特效。
-- [dsh-aurora-skin](https://github.com/breaker505/dsh-aurora-skin) — 提供三套精心调校的配色皮肤，使用纯设计令牌无核心修改。
-- [dsh-ayaka-theme](https://github.com/l-vM2k/dsh-ayaka-theme) — 应用绫华主题，定制配色和视觉风格，呈现独特外观。
-- [dsh-background](https://github.com/SnoWinKK/dsh-background) — DSH 桌面版自定义背景图插件：文件选择器选图、调暗/调亮、/background 命令、localStorage 持久化
-- [dsh-balance](https://github.com/Yogioo/dsh-balance) — 设置背景图并自动适配界面文字、背景、品牌与边框颜色。
-- [dsh-baogongtou](https://github.com/soulYANG/dsh-baogongtou/tree/HEAD/packages/dsh-baogongtou) — 为 Harness 工作区套上包工头皮肤，更换对话与按钮样式，增添趣味人设。
-- [dsh-beautify](https://github.com/nlqh7/dsh-beautify) — 提供 Dream Skin 配色预设，并可通过设置页切换主题。
-- [dsh-beauty-persist](https://github.com/wuweiran-web/dsh-beauty-persist) — 让 DSH 桌面端壁纸持久不丢：支持 GIF 动图 & MP4 视频壁纸，内置全屏皮肤中心（上传、预览、一键应用、删除素材），重启、换端口、清缓存都不丢失。Server-side wallpaper & theme persistence for DSH Desktop — animated GIF / MP4 video wallpapers plus a full-screen skin center (upload, preview, apply, delete).
-- [dsh-beige-theme](https://github.com/SweetCandy-gift/dsh-beige-theme) — 一个面向长期 AI 编程的温暖米黄色 DeepSeek Harness 主题皮肤。
-- [dsh-bestui](https://github.com/BPZ0726/dsh-bestui) — 为 DeepSeek Harness 网页界面提供自适应壁纸与外观定制。
-- [dsh-bg-carousel](https://github.com/Jonah-Wu23/dsh-bg-carousel) — DeepSeek Harness 背景轮播插件：把工作区 backgrounds 目录的图片设为背景并自动轮播 (MIT)
-- [dsh-bgwall-plugin](https://github.com/hubo980205/dsh-bgwall-plugin) — 为 DeepSeek Harness 界面提供背景墙定制和视觉增强。
-- [dsh-black-whale](https://github.com/147228/dsh-black-whale) — DeepSeek Harness 黑鲸实验室主题：官网黑鲸 × 夕小瑶 IP，真实 profile 可安装的 Web UI 插件
-- [dsh-bloom-theme](https://github.com/webkubor/dsh-bloom-theme) — DeepSeek Harness (DSH) 主题插件：Bloom 莫兰迪配色 4 变体，OKLCH 调色，明暗双主题，顶栏一键切换，全部达 WCAG AA
-- [dsh-blue-sea-launcher](https://github.com/Elave-66/dsh-blue-sea-launcher/tree/HEAD/dsh-blue-sea-launcher) — 提供以二次元和 Galgame 美学为主题的启动图标。
-- [dsh-blue-whale](https://github.com/starslittle/dsh-blue-whale) — 复刻 DeepSeek Chat 蓝鲸配色的皮肤，亮色/深色跟随系统外观。
-- [dsh-blue-whale-ocean](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-blue-whale-ocean) — DeepSeek Harness的蓝鲸海洋主题皮肤。
-- [dsh-broken-theme](https://github.com/WTStarMark/QAQ/tree/HEAD/qaq-test-plugins/dsh-broken-theme) — 用于测试容灾守卫回滚机制的故障主题插件。
-- [dsh-catnap-studio](https://github.com/luoyan96/dsh-catnap-studio) — 猫咪主题插件，提供三套原创配色与一个宁静的互动伙伴。
-- [dsh-catppuccin-theme](https://github.com/NoNameLeGo/dsh-catppuccin-theme) — DeepSeek Harness Web GUI 的 Catppuccin 主题插件：Latte / Frappé / Macchiato / Mocha 四种主题一键切换，内置可开关的玻璃质感（Glassmorphism）
-- [dsh-cerrda-theme](https://github.com/Cerrda/dsh-cerrda-theme) — 应用 Cerrda 主题，改变界面的整体配色和外观。
-- [dsh-cho-kaguya-plugin-public](https://github.com/DaydreAmRing/dsh-cho-kaguya-plugin-public) — DSH皮肤插件、有超时空辉夜姬概念元素
-- [dsh-claude-theme](https://github.com/chajiuqqq/dsh-claude-theme) — dsh的claude风格界面
-- [dsh-claude-theme](https://github.com/kc0ed/dsh-claude-theme) — 为 dsh web 界面应用 Claude 风格的主题。
-- [dsh-client-ui-aqua-unofficial](https://github.com/afrel1024/dsh-client-ui-aqua-unofficial) — Aqua毛玻璃主题的非官方分支，增加对最新版本的兼容。
-- [dsh-client-ui-skin-claude](https://github.com/PAKIKNOWLEDGE/dsh-client-ui-skin-claude) — 提供 Claude 风格皮肤，包含暖黑背景、黏土色调和衬线界面。
-- [dsh-client-ui-skin-denia](https://github.com/Ewnscat-ya/dsh-client-ui-skin-denia) — DeepSeek Harness Web GUI 皮肤 · 鸣潮·达妮娅(Denia)主题「虚无之泡」。双形态亮/暗、侧边立绘、可修改的玻璃卡片、浮动泡泡粒子、锁链边框。
-- [dsh-client-ui-skin-fairy-kingdom](https://github.com/huntdier/dsh-open-plugins/tree/HEAD/packages/dsh-client-ui-skin-fairy-kingdom) — 为客户端界面应用童话王国主题皮肤，改变配色和样式。
-- [dsh-client-ui-skin-jarvis](https://github.com/YiCheng-Zzz/dsh-client-ui-skin-jarvis) — 可兼容web-ui的贾维斯皮肤
-- [dsh-client-ui-skin-qingxiao](https://github.com/taoser258/dsh-client-ui-skin-qingxiao) — 清宵 · 弦凝清霄 —— DeepSeek Harness (DSH) Web 界面美化皮肤：以《鸣潮》角色清宵为灵感的冰蓝·青碧·月白·玄夜调色板，含可换背景画卷、剑气流光粒子、磨砂玻璃面板与新会话迎宾页。A Qingxiao (Wuthering Waves) themed client UI skin for the DSH web GUI.
-- [dsh-client-ui-skin-real-madrid](https://github.com/alexfengrui/dsh-client-ui-skin-real-madrid) — 为 DeepSeek Harness 应用皇马主题双模式皮肤，包含暗色和亮色变体。
-- [dsh-client-ui-skin-verdandi](https://github.com/Sddft97/dsh-client-ui-skin-verdandi) — 为 DSH Web 界面应用 Aether Gazer 风格主题，带来全新外观。
-- [dsh-client-ui-skins](https://github.com/caoyiwei850/dsh-client-ui-skins) — 应用内置主题和自定义图片皮肤到Web界面。
-- [dsh-client-ui-theme-manager](https://github.com/thooy/dsh-client-ui-theme-manager) — 管理 DSH 客户端界面的主题，允许自定义外观。
-- [dsh-client-ui-theme-xp](https://github.com/SamizuHM/dsh-client-ui-theme-xp) — 为Web界面应用Windows XP Luna桌面主题，含多窗口、任务栏和Bliss壁纸。
-- [dsh-codex-theme](https://github.com/Lxd-Ashe/dsh-codex-theme) — 为 DSH 网页界面提供 Codex 风格的可配置浅色和深色主题。
-- [dsh-colorschemes](https://github.com/hatanokokosa/dsh-colorschemes) — 提供可定制的harness界面配色方案。
-- [dsh-columbina-theme](https://github.com/hyposelen1a/dsh-columbina-theme) — 应用原神主题的背景、蒙版和明暗配色方案。
-- [dsh-conversation-accents](https://github.com/YaoaY/dsh-conversation-accents) — 为DSH Web中的助手Markdown、工具调用和Think块自定义语义配色。
-- [dsh-cool-theme](https://github.com/CoolTea001/dsh-cool-theme) — 切换 DeepSeek Harness 视觉主题，内置多款热门默认主题。
-- [dsh-cornell-classic-theme](https://github.com/leamonac0823/dsh-cornell-classic-theme) — 为DeepSeek Harness界面应用康奈尔笔记本工作区主题，呈现经典纸质风格。
-- [dsh-cosmic-exploration](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-cosmic-exploration) — DeepSeek Harness的宇宙探索主题皮肤。
-- [dsh-cosmic-opera](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-cosmic-opera) — DeepSeek Harness的宇宙歌剧主题皮肤。
-- [dsh-crt-theme](https://github.com/WJNCT55555/dsh-crt-theme) — 为 DeepSeek Harness 网页提供双配色 CRT 终端主题。
-- [dsh-cursor-theme](https://github.com/auki-zy/dsh-cursor-theme) — 为 DeepSeek Harness 自定义鼠标各种状态的图案：覆盖 14 种 UI 状态，内置 18 套原创预设主题（配色、猫爪、霓虹、表情、像素、天气、折纸、太空人等），支持 ZIP 图片包导入导出，可一键应用到系统级光标（Windows 注册表 + SPI_SETCURSORS，macOS 实验性覆盖层）。
-- [dsh-custom-bg](https://github.com/Jisakuna/Whale-QwQ/tree/HEAD/dsh-custom-bg) — 应用自定义背景主题，改变视觉外观。
-- [dsh-custom-font](https://github.com/Vergil-long/dsh-custom-font) — 允许自定义 DeepSeek Harness 中的字体，提供字体选择功能。
-- [dsh-custom-fonts](https://github.com/lsh2002/dsh-custom-fonts) — deepseek-harness的修改字体插件
-- [dsh-custom-logo](https://github.com/dawsondx/dsh-custom-logo) — 通过应用内上传面板替换 favicon 和侧边栏徽标，支持轻松自定义品牌外观。
-- [dsh-custom-skin](https://github.com/SLin-code/dsh-custom-skin) — 提供自定义壁纸与半透明皮肤，个性化网页界面。
-- [dsh-custom-theme-import](https://github.com/Juryorca/dsh-custom-theme-import) — 导入自定义主题，为 DeepSeek Harness 界面提供个性化样式。
-- [dsh-custom-ui](https://github.com/lsaa4/dsh-custom-ui) — 毛玻璃风格DSH主题，含壁纸、字体定制与网易云音乐
-- [dsh-custom-wallpaper](https://github.com/baihejiangnan/dsh-custom-wallpaper) — 定制壁纸，支持图片压缩、毛玻璃、窗格透明度和自适应文字颜色。
-- [dsh-custom-workspace](https://github.com/JeremyGuo/dsh-custom-workspace) — 为 DeepSeek Harness Web 提供按工作区的外观设置。
-- [dsh-customization-settings](https://github.com/T-MKT/dsh-ui-settings) — 提供壁纸和主题色等通用界面外观自定义选项。
-- [dsh-cyber-tao](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-cyber-tao) — DeepSeek Harness的赛博道主题皮肤。
-- [dsh-cyberpunk-theme](https://github.com/ai7603/dsh-cyberpunk-theme) — 为 DeepSeek Harness 界面应用赛博朋克风格的配色和视觉效果。
-- [dsh-cyberpunk-theme](https://github.com/zjwzjw1018-git/dsh-cyberpunk-theme) — 为 DeepSeek Harness 界面应用赛博朋克配色和风格。
-- [dsh-dark-xianxia](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-dark-xianxia) — DeepSeek Harness的暗黑仙侠主题皮肤。
-- [dsh-darkplus-code](https://github.com/yis94744/dsh-darkplus-code) — 为 DeepSeek Harness 代码块提供 VS Code Dark+ 语法配色与字号控制。用 Dark+ token 配色重绘聊天代码块（明暗两套），并让代码块字号接入 DSH 自身用于其他内容字号的 --dsh-content-font-delta 机制，使其随字号设置同步增减，而不是固定 11px。在「设置 → 通用」新增一行，提供跟随字号/比例/固定三种模式、像素预设、类型青与函数黄变体切换（shiki 把类型名与函数名归到同一变量）以及配色开关。设置持久化在 ~/.dsh-darkplus-code/config.json。仅写入 --shiki-* 系列 token 变量与代码块字号 token，不触碰任何其他界面 token。
-- [dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale/tree/HEAD/maid-atelier) — DSH Web 鲸鱼娘皮肤系列（深海女仆工坊 maid-atelier）。
-- [dsh-deepseek-deep-sea](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-deepseek-deep-sea) — DeepSeek Harness的深海主题皮肤。
-- [dsh-deepseek-twin-whale](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-deepseek-twin-whale) — DeepSeek Harness的双鲸主题皮肤。
-- [dsh-design-styles](https://github.com/uckkk/dsh-design-styles) — 设计风格参考
-- [dsh-diorama](https://github.com/ZaVang/dsh-diorama) — 为 DeepSeek Harness 界面添加立体模型风格的视觉效果。
-- [dsh-doro](https://github.com/Baizhuojielan/dsh-doro) — 粉丝向Doro主题皮肤，为界面提供独特外观。
-- [dsh-dracula](https://github.com/lzylyd/dsh-dracula) — 为 DeepSeek Harness 网页界面提供 Dracula 暗色主题。
-- [dsh-dracula-theme](https://github.com/ossFrankFrank/dsh-dracula-theme) — 为 DeepSeek Harness 提供 Dracula 配色主题，呈现深紫色美学风格。
-- [dsh-ds-home-bg](https://github.com/Alphauni-x/dsh-ds-home-bg) — 为界面添加深蓝极光背景，含分层光晕、细网格和游动的半调鲸鱼，跟随系统外观设置。
-- [dsh-duobaxian](https://github.com/jindaxia2026/dsh-duobaxian) — 多巴仙 — DeepSeek Harness Web UI 主题：八仙×多巴胺亮色，8 套仙家变体+界面切换器+明暗双模式。仙气多巴胺，界面好心情。
-- [dsh-dynamic-background](https://github.com/njuptlzf/dsh-dynamic-background) — DeepSeek Harness (DSH) 动态背景切换插件：上传 GIF/静态图与内置 12 色纯色调色板，定时丝滑交叉淡入淡出切换页面背景，聊天区自动叠加主题色保护层。安装：dsh plugin add github:njuptlzf/dsh-dynamic-background
-- [dsh-dynamic-wallpaper](https://github.com/Willmylife/dsh-dynamic-wallpaper) — 提供多种动态壁纸，支持自定义导入及透明度、模糊、速度调节。
-- [dsh-echocat-prettier](https://github.com/VDERR/dsh-echocat-prettier) — 为 DSH AI 回复提供视觉主题、排版预设、独立配色、emoji、可选的主题表情包与长回复性能保护。
-- [dsh-elon-skin](https://github.com/kingOfSoySauce/dsh-elon-skin) — 为客户端应用马斯克主题皮肤，改变外观配色和风格。
-- [dsh-emerald-megacity](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-emerald-megacity) — DeepSeek Harness的翡翠都市主题皮肤。
-- [dsh-eva-theme-plugin](https://github.com/oceanxuikun/dsh-eva-theme-plugin) — 新世纪福音战士主题，包含 00、01、02 号机风格，带沉浸式背景和机甲界面效果。
-- [dsh-extensions-wallpaperskin](https://github.com/haibala-aii/dsh-extensions-wallpaperskin) — 提供动态壁纸皮肤，定制 web 界面的外观。
-- [dsh-extreme-xianxia-light](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-extreme-xianxia-light) — DeepSeek Harness的极致仙侠亮色主题皮肤。
-- [dsh-eye-care](https://github.com/Anionex/dsh-eye-care) — 为 DSH 网页提供暖光、暖暗及系统感知的护眼主题。
-- [dsh-eyecare](https://github.com/Yummyxl/dsh-eyecare) — dsh护眼插件
-- [dsh-f1-skin](https://github.com/frank-fan-818/dsh-f1-skin) — 为网页界面添加 F1 车队主题皮肤、转播风格背景及设置面板。
-- [dsh-fate-twin-contract](https://github.com/Jayliu2025-vip/dsh-fate-twin-contract) — 为 DeepSeek Harness 网页界面提供 Fate 主题皮肤，支持明暗模式。
-- [dsh-fgo-chaldea](https://github.com/CharlesAQ/dsh-fgo-chaldea) — 提供FGO迦勒底风格皮肤包，含五种主题和金色装饰。
-- [dsh-font-colors](https://github.com/Xinyi21yf/deepseek-harness-plugins/tree/HEAD/dsh-font-colors) — 为 DeepSeek Harness 界面提供自定义字体和配色方案。
-- [dsh-font-enhancer](https://github.com/loyalchiiina/dsh-font-enhancer) — DIY 你的 DSH 界面：按区域自定义字体/字号/颜色 | DIY your DSH UI fonts & colors
-- [dsh-font-plugin](https://github.com/wtksana/dsh-font-plugin) — 为界面应用自定义字体，改善阅读体验。
-- [dsh-font-settings](https://github.com/fuzz1og/dsh-font-settings) — 调整字体族、字号等排版设置，自定义界面外观。
-- [dsh-Fonts](https://github.com/zhijun-dai/dsh-Fonts) — 为 DeepSeek Harness 界面提供字体定制选项。
-- [dsh-forest-adventure](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-forest-adventure) — DeepSeek Harness的森林冒险主题皮肤。
-- [dsh-forest-companion](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-forest-companion) — DeepSeek Harness的森林伙伴主题皮肤。
-- [dsh-frosted-window](https://github.com/SenryLee/dsh-frosted-window) — 将上传的图片应用为全窗口磨砂玻璃主题。
-- [dsh-fusion-pixel-font](https://github.com/TableRogue/dsh-fusion-pixel-font) — 用 Fusion Pixel 12px 像素字体替换 DeepSeek Harness GUI 界面与代码字体
-- [dsh-gbc-ui](https://github.com/U1s1-king/dsh-gbc-ui) — 为 Web GUI 提供 GirlsBangCry 皮肤主题。
-- [dsh-gemini-m3e-theme](https://github.com/makajo/dsh-gemini-m3e-theme) — 为 DeepSeek Harness 网页界面提供 Gemini 风格 Material 3 主题，改变其视觉外观。
-- [dsh-gif-background](https://github.com/alcohol-101/dsh-gif-background) — 在Web界面设置自定义背景、GIF或动态壁纸，并带有本地素材库。
-- [dsh-glass-ui-theme](https://github.com/lkdxzhxi/dsh-glass-ui-theme) — 为 DeepSeek Harness 打造的液态玻璃 UI 主题：磨砂玻璃+边缘折射、可调透明度/模糊/色调、自定义字体、背景图与动态壁纸（多图轮播）、自定义 CSS、柔和动画。
-- [dsh-glassic-mist-theme](https://github.com/VlanTech/dsh-glassic-mist-theme) — 雾蓝主题，带飘云动画和磨砂玻璃界面。
-- [dsh-glassmorphism-theme](https://github.com/EdwardHamu/dsh-glassmorphism-theme) — 一个DeepSeek Harness 磨砂玻璃主题
-- [dsh-gui-customization](https://github.com/LAN-TINA-WS/dsh-gui-customization/tree/HEAD/packages/dsh-gui-customization) — 自定义 DSH 界面主题配色、背景图和视频，并调节氛围灯。
-- [dsh-hacker-terminal-theme](https://github.com/chengwill45-bot/dsh-hacker-terminal-theme) — 为网页界面应用黑客终端视觉主题。
-- [dsh-homepage-skin](https://github.com/yushi-xxh/dsh-homepage-skin) — 给 dsh web 换上 DeepSeek Harness 首页同款背景:深海流体、点线网格、数字鲸鱼,深浅双主题
-- [dsh-icon-theme](https://github.com/yzke/dsh-icon-theme) — 为设置和侧边栏提供自动检测且可自定义的图标。
-- [dsh-idea-style](https://github.com/Wilson-Lai-Ab/dsh-idea-style) — 为 DeepSeek Harness 提供界面外观定制，改变视觉风格。
-- [dsh-image-skin](https://github.com/Jack-sun-learner/dsh-image-skin) — DSH 图片皮肤插件：导入 PNG/JPG/WebP 自动生成主题配色，可选 Q 版宠物（程序化/AI 生图）
-- [dsh-image-theme](https://github.com/Carpon39038/dsh-image-theme) — 从上传的背景图提取色板，生成玻璃质感的 UI 主题。
-- [dsh-inkscreen-theme](https://github.com/Jimmyzwang-cloud/dsh-inkscreen-theme) — 为DSH网页客户端提供水墨纸感苹果玻璃主题，含手写侧边栏标识。
-- [dsh-internet-angel-desktop](https://github.com/Small-tailqwq/dsh-internet-angel-desktop) — 一款基于主播女孩重度依赖创建的 适用于 DSH 的 实验性主题皮肤 / Unofficial pixel desktop skin for DSH Web inspired by NEEDY GIRL OVERDOSE. Experimental, non-commercial fan project.
-- [dsh-ivory](https://github.com/ZJUZhiyuCai/dsh-ivory) — 受 Claude 启发的宁静主题，支持亮/暗/移动端，安全的 Markdown 预览，无遥测。
-- [dsh-joi-channel-theme](https://github.com/tpmoonchefryan/dsh-joi-channel-theme) — 非官方粉丝主题，呈现轴伊 Joi 的双衣装外观，纯视觉美化，非商业用途。
-- [dsh-JujutsuKaisen-rainlove](https://github.com/haxi8/dsh-JujutsuKaisen-rainlove) — 听雨的声音 一滴滴清晰， 你的呼吸像雨滴渗入我的爱里， 真希望 雨能下不停， 让想念继续 让爱变透明， 我爱上 给我 勇气的 Rainie Love， 窗外的雨滴 一滴滴 累积， 屋内的湿气 像储存爱你的记忆， 真希望 雨能下不停， 雨爱的秘密 能一直延续， 我相信我将会看到彩虹的美丽。
-- [dsh-kafka-ui](https://github.com/54088lp/dsh-kafka-ui) — 为 DSH 网页界面应用卡夫卡主题皮肤，灵感源自崩坏星穹铁道角色。
-- [dsh-kimino-theme](https://github.com/niiang/dsh-kimino-theme) — 为 DSH 网页界面应用《你的名字》电影主题，改变配色与视觉风格。
-- [dsh-krill-theme](https://github.com/i1j/dsh-krill-theme) — 浮游主题（Krill）——深海世界 + 浅海世界 双模式主题插件（DSH Web）：深色=深海（亮度编码信息层级），亮色=浅海（清澈度编码）；浮游生物动画背景、深潜工作态增强、水母参数入口。dsh-plugin
-- [dsh-l10n-hardpatch](https://github.com/lingyingaojue/dsh-l10n-hardpatch) — DeepSeek Harness (dsh) 硬编码中文化补丁插件：导入即汉化，dsh 更新后自动重打
-- [dsh-liang-skin](https://github.com/kingOfSoySauce/dsh-liang-skin) — DeepSeek Harness 滑动变阻器皮肤
-- [dsh-liquid-glass](https://github.com/Ultronen/dsh-liquid-glass) — DeepSeek Harness 液态玻璃：点一下，整个界面通透起来。透明度随心调，背景图自由换——让你的 Agent 住进风景里。Liquid glass for DeepSeek Harness: one toggle to turn the whole shell translucent, with a live opacity slider and a custom full-page background.
-- [dsh-liquid-glass](https://github.com/xingyingyuzhui/dsh-liquid-glass) — 为 DSH Web 界面添加壁纸和液态玻璃覆盖效果。
-- [dsh-liquid-glass-ui](https://github.com/xiaoxianasd/dsh-liquid-glass-ui) — 可以更改deepseek harness背景图以及更改ui为透明液态玻璃，当模型思考时可以自动跳转视频软件
-- [dsh-liuli-ui-enhance](https://github.com/LilycleHeart/dsh-liuli-ui-enhance) — DeepSeek Harness 界面主题插件：动态 Material 3 取色、壁纸磨砂材质、声纹可视化与日夜切换。
-- [dsh-live-backdrop](https://github.com/yang19997/dsh-live-backdrop/tree/HEAD/packages/dsh-live-backdrop) — 添加动态背景，支持静态图、GIF、MP4 壁纸，并允许覆盖 UI 主题。
-- [dsh-live2d-pastelpalettes](https://github.com/U1s1-king/dsh-live2d-pastelpalettes) — 采用Live2D风格的柔和配色主题，美化界面。
-- [dsh-locale-zh-tw](https://github.com/wangsan71/dsh-locale-zh-tw) — DSH Web 介面繁體中文（台灣）語言包：npm install 即可加入 zh-TW 語系，全介面自動簡轉繁，繁中瀏覽器自動切換
-- [dsh-logo-silhouette](https://github.com/kami-mura/dsh-logo-silhouette) — 在界面中显示标志剪影作为视觉元素。
-- [dsh-luvian-ui-wallpaper](https://github.com/EnernityLune/dsh-luvian-ui-wallpaper) — 壁纸主题插件，利用稳定选择器和官方API定制视觉资源。
-- [dsh-macos-skin](https://github.com/hero-goblins/dsh-macos-skin) — 为 DSH 提供 macOS 风格的视觉皮肤。
-- [dsh-march7th-skin](https://github.com/fishfromsky/dsh-march7th-skin) — 崩坏星穹铁道三月七主题的deepseek harness皮肤插件
-- [dsh-markdown-xyy](https://github.com/mengnanxyyyy/dsh-markdown-xyy) — dsh markdown 主题插件
-- [dsh-mars-flight-deck](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-mars-flight-deck) — DeepSeek Harness的火星飞行甲板主题皮肤。
-- [dsh-material-file-icons](https://github.com/sarfarazstark/dsh-material-file-icons) — 为网页界面添加 Material 风格的文件和文件夹图标，含 349 个 SVG。
-- [dsh-material-you](https://github.com/mtaech/dsh-material-you) — 应用 Material You 风格的配色方案，提供清新蓝白外观。
-- [dsh-matrix-skin](https://github.com/nicecx/dsh-matrix-skin) — 应用 Matrix 深绿暗色皮肤，适合夜间使用。
-- [dsh-matrix-theme](https://github.com/zengrz/dsh-matrix-theme) — 提供矩阵主题的视觉风格，可能改变颜色和字体以营造未来感。
-- [dsh-mcskin](https://github.com/DongDong1997/dsh-mcskin) — Minecraft主题皮肤，含六种主题、像素图标和生态梯度。
-- [dsh-md3-theme](https://github.com/N3kOk0/dsh-md3-theme) — 为 DeepSeek Harness 界面应用 Material 3 主题，定制颜色和视觉风格。
-- [dsh-minecraft-theme](https://github.com/EDMOK/dsh-minecraft-theme) — 为 DeepSeek Harness WebUI 套用 Minecraft 启动器风格皮肤。
-- [dsh-minecraft-theme](https://github.com/SuperLS-X/dsh-minecraft-theme) — 应用 Minecraft 风格视觉改造，包含方块纹理、像素字体和点击音效。
-- [dsh-minimalist-themes](https://github.com/mykeura/dsh-minimalist-themes) — 提供18套极简配色主题，单击即可切换外观。
-- [dsh-mobile-css](https://github.com/ook826092-cloud/dsh-mobile-css) — 为 DeepSeek Harness 界面应用移动端优化的 CSS 样式，改善小屏布局和可读性。
-- [dsh-moonrise](https://github.com/hanyi7867069-create/dsh-moonrise) — 为 DeepSeek Harness 界面应用暖琥珀与深夜蓝的配色主题。
-- [dsh-mpkg-wallpaper](https://github.com/XHR666/dsh-mpkg-wallpaper) — 为界面设置壁纸图片，提供视觉定制功能。
-- [dsh-naiwa-theme](https://github.com/DevourerM/dsh-naiwa-theme) — 为deepseek harness构建的奶蛙主题，可是我觉得很神圣呀。（素材来自互联网）
-- [dsh-nene-theme](https://github.com/mizuhara37/dsh-nene-theme) — 为DSH提供视觉主题，可能包含特定配色方案。
-- [dsh-neo-skin](https://github.com/0nt-one/dsh-neo-skin) — 应用新粗野主义皮肤，硬边框高对比，提供两套可切换方案，兼容明暗主题。
-- [dsh-neu-theme](https://github.com/Lhy723/dsh-neu-theme) — DeepSeek Harness Web 的轻拟物与磨砂玻璃主题插件，提供浅色/深色主题、环境光、材质纹理和细腻微交互。Neumorphism + glassmorphism theme plugin for DeepSeek Harness Web with warm light/dark palettes, ambient lighting, grain texture, and subtle micro-interactions.
-- [dsh-night-flight-companion](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-night-flight-companion) — DeepSeek Harness的夜航伙伴主题皮肤。
-- [dsh-night-forest-companion](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-night-forest-companion) — DeepSeek Harness的夜林伙伴主题皮肤。
-- [dsh-night-swing](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-night-swing) — DeepSeek Harness的夜色摇摆主题皮肤。
-- [dsh-nightshift](https://github.com/mikasaxin529/dsh-nightshift) — 提供夜间色温方案，降低暗光环境下使用时的视觉疲劳。
-- [dsh-niulai](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-niulai) — DeepSeek Harness的牛来主题皮肤。
-- [dsh-nothing-skin](https://github.com/Cinnamobot/dsh-nothing-skin) — 为 DSH 应用 Nothing 手机风格皮肤，包含点阵背景、单色配色和信号红点缀。
-- [dsh-nyamu-skin](https://github.com/Zoramoris/Amoris-agent/tree/HEAD/dsh-nyamu-skin) — 为 DeepSeek Harness 界面添加喵梦主题皮肤，提供定制视觉风格。
-- [dsh-official-homepage-theme](https://github.com/JohnnyTing/dsh-official-homepage-theme) — 复刻 DeepSeek Harness 官方首页主题插件
-- [dsh-one-dark-pro](https://github.com/TheHeartFickle/dsh-one-dark-pro) — DSH（DeepSeek Harness）主题插件：注册 One Dark Pro 配色，并把「外观」设置里的主题添加 One Dark Pro。
-- [dsh-opencode-palette](https://github.com/FeatherHunter/dsh-opencode-palette) — 让 DeepSeek Harness 穿上 34 款经典皮肤——东京的霓虹夜色、德古拉的暗红月光、复古工坊的暖黄灯火、黑客帝国的数字雨、玫瑰松林间的风……一键换肤，即点即换，重启不丢。34 legendary skins for DeepSeek Harness — tokyonight's neon dusk, dracula's crimson moon, gruvbox's retro glow, the matrix's digital rain, rose-pine's rosewood calm… one click, instant, persisted.
-- [dsh-outdoor-theme](https://github.com/Estellalee/dsh-outdoor-theme) — DSH 户外皮肤 · 山野向导（Trail Guide）
-- [dsh-output-styles](https://github.com/auggie246/dsh-output-styles) — 在设置中提供可配置的输出样式，让用户个性化模型回复的视觉格式。
-- [dsh-palenight-theme](https://github.com/youyli03/dsh-palenight-theme) — 为 dsh Web 界面提供 Palenight 暗色和暖中性亮色动态主题。
-- [dsh-particle-theme](https://github.com/ningbainb/deepseek-harness-desktop/tree/HEAD/packages/dsh-particle-theme) — 为DeepSeek Harness桌面客户端添加粒子主题皮肤，以动态粒子效果美化界面。
-- [dsh-pearl-oracle](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-pearl-oracle) — DeepSeek Harness的珍珠神谕主题皮肤。
-- [dsh-photo-skins](https://github.com/frankxxxxue/dsh-photo-skins) — 将个人照片转换为网页界面皮肤，自动提取主色调，所有文件本地保存。
-- [dsh-pixel-icons](https://github.com/TableRogue/dsh-pixel-icons) — 把 DeepSeek Harness GUI 矢量 SVG 图标转为像素风的插件
-- [dsh-pixel-ui](https://github.com/zhang66633/dsh-pixel-ui) — DeepSeek Harness 像素皮肤（Agent Xi 风格）：四个主题一键切换——像素·木屋 / 像素·羊皮纸 / 像素·暖阳 / 像素·终端绿，随时可切回现代默认 UI。
-- [dsh-plugin-backdrop](https://github.com/huguangyu666/dsh-plugin-backdrop) — dsh Web UI 动态背景：WebGL2 流体 + 字符鲸鱼游动(循环接缝赛博朋克故障转场) + 发光鱼群 + 点线网格
-- [dsh-plugin-background](https://github.com/haozhu11/dsh-plugin-background) — 为 DeepSeek Harness 网页界面设置自定义背景图，支持主题适配与本地保存。
-- [dsh-plugin-gemini-theme](https://github.com/dingyi580/dsh-plugin-gemini-theme) — 采用Gemini风格的界面皮肤，为DeepSeek Harness网页客户端换装。
-- [dsh-plugin-gouden-leeuw-theme](https://github.com/Andy294753951/dsh-plugin-gouden-leeuw-theme) — 为 DeepSeek Harness Web 界面提供非官方 Gouden Leeuw 月光庇护所主题。
-- [dsh-plugin-image-wallpaper](https://github.com/CaoNing3212/dsh-plugin-image-wallpaper) — 自定义Deepseek Harness webUI主题
-- [dsh-plugin-liquid-glass](https://github.com/StellerSurgeCode/dsh-everyday-plugins/tree/HEAD/plugins/dsh-plugin-liquid-glass) — 为界面应用液态玻璃视觉效果，提升美观度。
-- [dsh-plugin-odette](https://github.com/bblike/dsh-plugin-odette) — 为 DeepSeek Harness Web 提供冬季主题皮肤，含背景、芭蕾光标和芭蕾舞者加载动画。
-- [dsh-pnc-theme](https://github.com/Morinissleeping/dsh-pnc-theme) — 应用灵感源自女神异闻录系列的主题，定制颜色与视觉风格。
-- [dsh-ponyo-water-orbit](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-ponyo-water-orbit) — DeepSeek Harness的波妞水轨主题皮肤。
-- [dsh-premium-themes](https://github.com/xiaoyanzi191/dsh-premium-themes) — 提供八种内置及自定义导入的高级配色方案，美化界面外观。
-- [dsh-prism-plugin](https://github.com/mantonlove/dsh-prism-plugin) — 为 Web 界面提供深度可定制的玻璃拟态主题。
-- [dsh-qitian-cosmic-monkey](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-qitian-cosmic-monkey) — DeepSeek Harness的齐天宇宙猴主题皮肤。
-- [dsh-qq-skin](https://github.com/lispking/dsh-qq-skin) — 为界面应用 QQ NT 皮肤，支持明暗模式。
-- [dsh-qq2006](https://github.com/LaplaceYoung/dsh-qq2006) — DSH (DeepSeek Harness) 的 QQ2006 皮肤插件：注册 qq2006 主题、镜像 body[data-ds-skin]、全局皮肤表与完整素材
-- [dsh-qq2007-skin](https://github.com/LeemanCheung/dsh-qq2007-skin) — 为 DeepSeek Harness Web 界面应用 QQ 2007 复古皮肤。
-- [dsh-raiden-theme](https://github.com/lengzhanbao/dsh-raiden-theme) — Raiden Inazuma Atelier / 稻妻雷电工房 — DSH Web 紫金亚克力主题（独立于 Taffy）
-- [dsh-red-plane-adventure](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-red-plane-adventure) — 提供多款 DeepSeek Harness 皮肤，每款赋予界面独特视觉风格。
-- [dsh-refined](https://github.com/djh2203/dsh-refined) — DeepSeek-Refined 的 DeepSeek Harness 移植版 为 DeepSeek Harness（DSH）前端注入 Obsidian Border 风格的 Markdown 美化与多主题配色。
-- [dsh-retro-mac](https://github.com/Leyan0365/dsh-retro-mac) — Retro Macintosh — a classic Mac OS 8/9 Platinum skin for the DeepSeek Harness Web GUI. 复古麦金塔皮肤：铂金灰界面、Chicago 字体、条纹壁纸、浮雕控件。
-- [dsh-rhine-theme](https://github.com/mjn96/dsh-rhine-theme) — 明日方舟莱茵生命美术风格的deepseek harness皮肤主题
-- [dsh-rose-dream](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-rose-dream) — 以柔粉玫瑰色调重塑 DeepSeek Harness 界面的梦幻主题皮肤。
-- [dsh-s7r](https://github.com/hunter118/dsh-s7r) — 将界面装扮成 System 7 风格的复古桌面外观。
-- [dsh-sakura-theme](https://github.com/a1303845406/dsh-sakura-theme) — DeepSeek Harness 的晴樱与夜樱主题插件
-- [dsh-seaside-boutique](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-seaside-boutique) — 以清新海滨色彩为 DeepSeek Harness 界面注入度假气息的主题皮肤。
-- [dsh-shunshun-wallpaper](https://github.com/Ddamage/dsh-shunshun-wallpaper) — 为 DeepSeek Harness 界面设置自定义壁纸。
-- [dsh-simple-background](https://github.com/RunCross/dsh-simple-background) — 用于dsh web设置背景图，简单的设置背景图片的功能
-- [dsh-skin](https://github.com/Highjobop/dsh-gadgets/tree/HEAD/dsh-skin) — 为 DeepSeek Harness 界面提供外观与主题定制功能。
-- [dsh-skin](https://github.com/KinGao294/dsh-skin) — Codex 风格皮肤切换器 + 自定义壁纸层，可调透明度与模糊。
-- [dsh-skin-amis](https://github.com/wanzhiwei5/dsh-skin-amis) — 鸣潮爱弥斯主题皮肤: 粉白配色+赛博霓虹装饰的 DeepSeek Harness Web GUI 皮肤 / Amis-inspired pink-white skin for DSH Web UI
-- [dsh-skin-appearance](https://github.com/Vim0x3c/dsh-skin-appearance) — DeepSeek Harness 外观定制插件：八套内置主题 + 自定义壁纸（透明度/模糊），Host 设置持久化 | Appearance plugin for dsh web
-- [dsh-skin-argentina](https://github.com/henrychenhao/dsh-skin-argentina) — 梅西 阿根廷皮肤
-- [dsh-skin-background](https://github.com/megatronyy/dsh-skin-background) — 应用自定义图片背景，支持调暗和模糊控制，含内置和用户壁纸。
-- [dsh-skin-blue-whale](https://github.com/zenghuizhu69-hub/dsh-skin-blue-whale) — 为 Web UI 应用蓝鲸主题，包含官方渐变色与跃鲸图案。
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 245 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="session"></a>
-
-<details>
-<summary><strong>会话与消息</strong> · 显示 245 / 共 880 个</summary>
-
-- [agent-board](https://github.com/meisam2236/agent-board) — 使用持久化的工作区看板跟踪和管理 DeepSeek Harness 中的 AI 代理。
-- [agent-mode-switcher](https://github.com/my-dsh-plugin/agent-mode-switcher) — 在模型回答后切换当前会话的代理预设，以不同模式继续对话。
-- [AHGGG-dsh-side-chat](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/AHGGG-dsh-side-chat) — 添加侧边聊天面板，可在主界面旁进行并发会话而无需切换上下文。
-- [app-conversations](https://github.com/jo32/DeepDeck/tree/HEAD/plugins/app-conversations) — 将会话作为独立的应用级实体进行管理，提供专属视图和控制。
-- [archive](https://github.com/bLueriVerLHR/dsh-better-webui/tree/HEAD/packages/archive) — 管理消息历史并提供归档功能以更好地组织。
-- [archive-manager](https://github.com/xiaoxiao44443/dfy-dsh-plugins/tree/HEAD/plugins/archive-manager) — 管理对话存档，支持保存、加载和整理会话历史。
-- [archive-restore](https://github.com/swxs/archive-restore) — DSH 归档会话管理插件，支持查看归档列表、原位恢复与跨区迁移，Web 侧边栏一键管理
-- [Asaiuta-dsh-session-hub](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/Asaiuta-dsh-session-hub) — 管理会话，可能支持多会话并发或切换。
-- [aside](https://github.com/ywzhang1031/dsh-aside/tree/HEAD/packages/aside) — 将只读追问绑定到主对话具体文字并持久保存。
-- [aside-host](https://github.com/ywzhang1031/dsh-aside/tree/HEAD/packages/aside-host) — 为旁注对话提供后端支持，管理其持久化与主对话锚定。
-- [assistant-recovery](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/assistant-recovery) — 提供助手会话恢复功能，可还原或回滚对话状态，保障会话连续性。
-- [auto-compact](https://github.com/JohnathonYe/auto-compact) — 自动压缩对话历史，以管理上下文长度。
-- [better-session](https://github.com/morlay/better-session/tree/HEAD/packages/better-session) — 增强会话管理，提供更优的对话控制与组织功能。
-- [better-session-management](https://github.com/boyun-zhang/better-session-management) — DeepSeek Harness 会话管理插件：链式上下文视图、可在任意轮次边界分叉的子会话、一次性 /btw 只读问答，全部基于会话原语——把长对话拆成并行支线而不污染主上下文，但可手动向主会话注入临时对话内容
-- [billion-context-dsh](https://github.com/Tyan66666/billion-context-dsh) — 由模型决定何时压缩对话，通过主动修剪与搜索工具管理上下文。
-- [bites-the-dsh](https://github.com/CH4ACKO3/bites-the-dsh) — 为 DSH 网页界面提供只读、可脚本化的会话回放功能，用于重播和分析历史对话。
-- [blank-session-gc](https://github.com/StarPivotNet/dsh-plugins-public/tree/HEAD/packages/blank-session-gc) — 自动清理空白会话，保持工作区整洁。
-- [bowenliang123-dsh-context](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/bowenliang123-dsh-context) — 管理对话上下文，可能优化或压缩上下文窗口。
-- [bundle](https://github.com/791813037/dsh-story/tree/HEAD/packages/bundle) — 将运行记录转化为有章节、因果嵌套和证据的故事。
-- [bundle-rollback](https://github.com/23swccp/dsh-undo-plugin/tree/HEAD/packages/bundle-rollback) — 通过影子 Git 快照实现对话回滚，并提供归档管理（恢复、永久删除）。
-- [chat-mode](https://github.com/niushuanan/dsh-chat-migration/tree/HEAD/payload/chat-mode/product/plugins/chat-mode) — 提供无工作区的聊天模式，并支持在 DeepSeek Harness 中原生迁移对话。
-- [chat-mode](https://github.com/niushuanan/xiaozhuang-dsh/tree/HEAD/plugins/chat-mode) — 切换不同聊天模式，以适应多种场景与工作流程。
-- [chicheng-quickinput](https://github.com/534119219/chicheng-quickinput) — DSH 便捷输入保险箱插件：输入栏「用量」与「发送」之间一键展开，自动收录会话中的密钥/网址/服务器/手机号等；点击填入或 Ctrl+点击直接发送；私密内容密码保护 + WebDAV 备份。
-- [cli](https://github.com/maque2333/dsh-profile-manager/tree/HEAD/packages/cli) — 管理多个 DSH 配置文件，支持创建、切换与整理不同的配置集。
-- [clutch-dsh-discuss](https://github.com/Cerbur/clutch-dsh/tree/HEAD/packages/clutch-dsh-discuss) — 增强会话中的讨论与交互，促进协作流程。
-- [clutch-dsh-worktree](https://github.com/Cerbur/clutch-dsh/tree/HEAD/packages/clutch-dsh-worktree) — 为DSH网页界面提供感知Git worktree的会话视图，便于管理多个工作树。
-- [composer-history](https://github.com/mouliangyu/dsh-plugins/tree/HEAD/packages/composer-history) — 管理 DeepSeek Harness 中的对话历史，支持过往会话的检索与整理。
-- [context-assembler-DSH](https://github.com/i1j/context-assembler-DSH) — 上下文汇编 Context Assembler DSH V0.99 — DeepSeek Harness (dsh) 上下文汇编插件：话题块汇编、水位压力切割、工具轮压缩/改写、reality 召回注入、handoff 规划。MIT。
-- [context-budget](https://github.com/zhouwei713/dsh-daily-kit/tree/HEAD/packages/context-budget) — 管理并预算上下文窗口的使用，以优化 token 消耗。
-- [context-continuity](https://github.com/rrrrrredy/context-continuity) — 在压缩、恢复和交接场景中本地保存对话上下文，确保连续性。
-- [context-switchboard](https://github.com/HiWhaleW/dsh-toolbox/tree/HEAD/packages/context-switchboard) — 在不同会话或代理间路由上下文，有效管理对话流。
-- [conversation-folders-package](https://github.com/choocoo/conversation-folders-package) — 将对话线程整理到文件夹中，便于浏览和管理。
-- [conversation-import](https://github.com/niushuanan/dsh-chat-migration/tree/HEAD/payload/conversation-import/product/plugins/conversation-import) — 从外部来源导入对话到 DeepSeek Harness，实现无缝迁移。
-- [conversation-import](https://github.com/niushuanan/xiaozhuang-dsh/tree/HEAD/plugins/conversation-import) — 从外部导入对话记录，实现聊天历史的无缝迁移与整合。
-- [convoport](https://github.com/MrElysium/convoport) — 从任意网页聊天中捕获AI对话，本地保存并转换为可用的实时会话，而非死板导出。
-- [cot-summary](https://github.com/shenjackyuanjie/dsh-cot-summary/tree/HEAD/packages/cot-summary) — 总结思维链推理过程，提炼模型思考的关键见解。
-- [DeepSeek-Harness-Hanako-Memory](https://github.com/moononnn/DeepSeek-Harness-Hanako-Memory) — 把openhanako的记忆系统搬进DSH的插件！
-- [deepseek-harness-hashline](https://github.com/magian1127/deepseek-harness-hashline) — DeepSeek Harness hashline - 哈希锚点编辑
-- [deepseek-harness-replay](https://github.com/zoyluoblue/deepseek-harness-replay) — 将会话导出为自包含、可回放的 HTML 记录，便于分享与回看。
-- [deepseek-harness-retry](https://github.com/syncended/deepseek-harness-retry) — 为对话轮次增加重试机制，可重新执行失败或中断的响应。
-- [deepseek-harness-rewind](https://github.com/zoyluoblue/deepseek-harness-rewind) — 每次操作快照工作区，可回滚文件到任意历史点。
-- [deepseek-harness-session-log-header](https://github.com/chenshutian9610/deepseek-harness-plugin-list/tree/HEAD/packages/deepseek-harness-session-log-header) — 在头部展示会话日志元数据，便于管理会话。
-- [deepseek-harness-web-session-log-header](https://github.com/chenshutian9610/deepseek-harness-plugin-list/tree/HEAD/packages/deepseek-harness-web-session-log-header) — 显示 Web 会话日志头部，帮助跟踪和管理在线会话。
-- [deepseek-web-import](https://github.com/wpc0323/deepseek-web-import) — DeepSeek Web 对话导入
-- [deja-vu](https://github.com/vshulcz/deja-vu) — 索引并搜索多个 AI 编程工具的会话历史，无需向量嵌入即可回溯过往工作。
-- [desktop-temporary-workspace](https://github.com/ywandy/dsh-plugins/tree/HEAD/packages/desktop-temporary-workspace) — 为桌面会话提供临时工作区，便于快速任务隔离。
-- [DialogueContextBridge](https://github.com/ShadowQuill/DialogueContextBridge) — 对话上下文桥接 — 为大语言模型(LLM)/AI 智能体的对话做跨会话上下文桥接的 DSH 插件：把一次对话的共识打包成可移植快照，一键引入新对话（三层快照 / SQLite+FTS5 / AES-256-GCM）
-- [dsh_PromptRecall](https://github.com/liguanyu/dsh_PromptRecall) — 仿 Codex 的 DSH Web GUI 输入历史插件：会话输入框按 ↑/↓ 浏览历史 prompt，Esc清除当前对话框并进入历史，跨会话、跨重启持久保留，仅存纯文本，安全接管不误伤草稿。 A Codex-style input-history plugin for the DSH Web GUI: recall previous prompts with ↑/↓ in the composer, persisted across conversations and restarts, text-only storage with safe key routing.
-- [dsh_session_cost](https://github.com/Nalleyer/dsh_session_cost) — 在界面中显示当前会话的累计费用。
-- [dsh_session_folders](https://github.com/EugeneVl/dsh_session_folders) — 在DSH侧边栏添加一级命名文件夹，支持拖拽分组会话并服务端持久化。
-- [dsh-access-mode](https://github.com/ddll8023/dsh-access-mode) — 设置会话访问模式（默认/禁止编辑/自动），控制编辑权限。
-- [dsh-account-usage](https://github.com/Ycet/dsh-account-usage) — 新增归档页，按工作区管理已归档会话，支持筛选、恢复与彻底删除。
-- [dsh-accounts](https://github.com/kangshifu1/dsh-accounts) — 多租户认证，支持账户管理和工作区隔离。
-- [dsh-action-ledger](https://github.com/MkaliezZ/dsh-action-ledger) — 从会话日志重建可读的操作记录，便于审查和追踪。
-- [dsh-active-context-pruning](https://github.com/aerince/dsh-active-context-pruning) — 通过官方压缩API，由模型主动剪裁上下文。
-- [dsh-add-conversation](https://github.com/haohao16421/dsh-add-conversation) — 添加新建会话功能，可能通过界面按钮或命令触发。
-- [dsh-adrian-inject-context](https://github.com/polohot/dsh-adrian-inject-context) — 向会话中注入额外上下文，可能追加预定义或外部内容以丰富对话。
-- [dsh-agent-compact](https://github.com/MimicHunterZ/dsh-agent-compact) — 支持将选中对话片段压缩为自写检查点，替代全量上下文扫描。
-- [dsh-agent-mailbox](https://github.com/blairlaird/dsh-agent-mailbox) — 提供持久化的智能体间消息传递，支持线程、回执、搜索和在线状态，用于跨会话通信。
-- [dsh-agent-message](https://github.com/GengDaPeng/dsh-agent-message) — 实现跨会话的代理间通信，支持离线投递、回执和会话导航。
-- [dsh-agent-messaging](https://github.com/happyren/dsh-agent-messaging) — 记录跨会话验证声明并维护决策账本，避免多个 Agent 会话重复、矛盾或死锁。
-- [dsh-agent-preset-branch](https://github.com/lanhui1942/dsh-agent-preset-branch) — 从任意已完成轮次把会话分支到另一个 Agent 模式。会话标题栏的 Agent 模式标签变成菜单，每轮完成回复下方、自带分支按钮旁新增「分支模式」胶囊；两个入口都以所选模式新建会话，并把对话到所选轮次为止的事件日志前缀复制过去，源会话不被改动。尚未运行过任何轮次的会话改为就地为该模式。它走「新建 + 迁移」而不是分叉：DSH 在首轮之后锁定模式，自带分叉又必然继承父会话的模式。
-- [dsh-agent-preset-switcher](https://github.com/aefuimn/dsh-agent-preset-switcher) — 切换代理预设以改变会话行为或人设，增强多功能性。
-- [dsh-agent-quality-diagnosis](https://github.com/cat552/dsh-agent-quality-diagnosis) — 分析代理会话质量，提供工具调用证据与可操作建议。
-- [dsh-agent-replay](https://github.com/forrestsweet/dsh-agent-replay) — DeepSeek Harness 会话回放与脱敏分享插件：将真实 Agent 轨迹导出为独立交互 HTML，用于文档、演示和问题反馈。
-- [dsh-agent-sticky-note](https://github.com/alanpaul1969/dsh-agent-sticky-note) — 在 Web GUI 中以便签形式显示代理通知和待处理决策。
-- [dsh-agent-team-room](https://github.com/ishuowang/dsh-agent-team-room) — 在原生 DSH 房间中连接独立会话与 AI 成员，无需预设角色。
-- [dsh-aischat](https://github.com/Coprexist/AIsChat/tree/HEAD/dsh-aischat) — AI陪伴空间，代理拥有状态、记忆和节奏，支持群聊。
-- [dsh-anno](https://github.com/An0range/dsh-plugins/tree/HEAD/packages/dsh-anno) — 在选中文本上添加批示和追问功能。
-- [dsh-annotator](https://github.com/cw1999mm/dsh-annotator) — 为对话或消息添加注释，便于后续查阅和整理。
-- [dsh-approval-flow-poc](https://github.com/lasoloryan/dsh-approval-flow-poc) — 为代理操作提供默认拒绝的审批策略，确保关键动作需手动授权后方可执行。
-- [dsh-archive](https://github.com/imrascal/dsh-archive) — DeepSeek Harness归档会话管理插件
-- [dsh-archive-finder](https://github.com/AnakinWu/DSH-plugin/tree/HEAD/packages/dsh-archive-finder) — 提供 DSH 会话存档的查找界面，支持搜索和检索历史会话记录。
-- [dsh-archive-manage](https://github.com/peiyucn/dsh-sparrow/tree/HEAD/plugins/dsh-archive-manage) — 管理已归档的会话，支持查看、恢复和清理旧对话记录。
-- [dsh-archive-manager](https://github.com/ChuShiZ/dsh-archive-manager) — DSH profile-bundle: 归档会话浏览/恢复/物理删除（FTS 全文搜索）
-- [dsh-archive-manager](https://github.com/Earnest02522/dsh-archive-manager) — 管理已归档会话，支持查看、恢复及访问记录文件夹。
-- [dsh-archive-manager](https://github.com/jasonrale/dsh-archive-manager) — 管理会话归档，支持重新打开、取消归档或永久删除，并带有搜索功能。
-- [dsh-archive-manager](https://github.com/LianbinZhou/dsh-archive-manager) — 列出归档会话并一键恢复。
-- [dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager) — DSH Archive Manager 基于 DeepSeek Harness 的归档会话管理插件
-- [dsh-archive-manager](https://github.com/MoonlitDropOfBlood/dsh-archive-manager) — DSH的归档管理插件
-- [dsh-archive-manager](https://github.com/MS666666/dsh-archive-manager) — DeepSeek Harness归档管理器
-- [dsh-archive-manager](https://github.com/Saikel-Orado-Liu/dsh-archive-manager) — 管理已归档会话，支持显示、取消归档和永久删除。
-- [dsh-archive-manager](https://github.com/z953218350/dsh-archive-manager) — 在设置页管理归档会话，支持查看、搜索、恢复和删除。
-- [dsh-archive-manager](https://github.com/zengcj-dev/dsh-archive-manager) — 管理消息归档，方便用户存储、检索和组织对话历史。
-- [dsh-archive-manager](https://github.com/zimixvx/dsh-archive-manager) — 管理 DeepSeek Harness 会话归档，可能用于组织或恢复消息历史。
-- [dsh-archive-panel](https://github.com/realpkuasule/dsh-archive-panel/tree/HEAD/plugins/dsh-archive-panel) — 在专用面板中浏览并恢复已归档的会话。
-- [dsh-archive-panel](https://github.com/xiaozhiaixue/dsh-archive-panel/tree/HEAD/plugins/dsh-archive-panel) — 在专用面板中浏览并恢复已归档的会话。
-- [dsh-archive-purge](https://github.com/joyboy-yy/dsh-archive-purge) — 无论侧栏「归档显示」如何设置都强制隐藏已归档会话，并提供管理面板：取消归档，或彻底删除会话日志目录、归档与置顶登记及投影缓存。
-- [dsh-archive-retention](https://github.com/Momojie-S/dsh-archive-retention) — DSH 插件: 归档会话定期清理 —— 物理归档堆与页面归档会话超保留期(页面可配天/小时,cron 调度)自动物理删除
-- [dsh-archive-session](https://github.com/DreamStan/dsh-archive-session) — A DSH plugin for browsing archived sessions and safely deleting them.浏览归档会话，并安全地关闭、取消归档或删除会话。
-- [dsh-archive-vault](https://github.com/Britneycode/dsh-archive-vault) — dsh 插件：在设置面板中查看、恢复与永久删除归档会话
-- [dsh-archive-viewer](https://github.com/csiroqa/dsh-archive-viewer) — DeepSeek Harness（DSH）归档增强插件：自动定期归档、文件夹归档整理、LLM 摘要沉淀经验库、会话收藏与便签、会话删除与优雅关机。Archive enhancement plugin for DeepSeek Harness: auto-archive, folder organization, LLM knowledge library, bookmarks & notes, session delete.
-- [dsh-archive-viewer](https://github.com/DimitriLIAN/dsh-archive-viewer) — 在Web设置中列出并恢复已存档的会话。
-- [dsh-archive-viewer](https://github.com/keepermttl/dsh-archive-viewer) — DeepSeek Harness 归档会话管理插件：查看/恢复已归档会话（回到原工作区分组）+ 右上角一键关闭 dsh。MIT 许可，欢迎收录到任何插件合集，注明出处即可。
-- [dsh-archived-chats](https://github.com/Ultronen/dsh-archived-chats) — 管理已归档会话，支持搜索、预览、恢复、按工作区批量归档、ZIP 备份和回收站管理。
-- [dsh-archived-conversation](https://github.com/Li-canghai/dsh-archived-conversation) — 归档会话，可能用于后续检索或清理，管理 Harness 中的会话历史。
-- [dsh-archived-conversations](https://github.com/AKS1st/dsh-archived-conversations) — 在网页侧边栏底部显示归档会话，提供只读消息预览。
-- [dsh-archived-list](https://github.com/Yiklek/dsh-archived-list) — 在专用页面展示归档会话，方便用户查看和恢复。
-- [dsh-archived-panel](https://github.com/chensl139-ok/dsh-archived-panel) — DeepSeek Harness 插件:侧边栏「已归档」面板,可查看/打开/取消归档会话 A side panel that lists, opens, and unarchives archived sessions.
-- [dsh-archived-sessions](https://github.com/hashdiana/dsh-archived-sessions) — 管理 DeepSeek Harness 中的归档会话，提供旧对话的存储与检索。
-- [dsh-archived-sessions](https://github.com/Jiangdl0220/dsh-archived-sessions) — 查看和管理归档会话，支持浏览、阅读完整记录及删除。
-- [dsh-archived-sessions](https://github.com/kinomoto-hakage/dsh-archived-sessions) — dsh 已归档会话
-- [dsh-archived-sessions](https://github.com/lwklbb/dsh-archived-sessions) — 管理归档与活动会话，支持批量归档、恢复、删除及磁盘用量查看。
-- [dsh-archived-sessions](https://github.com/MuWinds/dsh-archived-sessions) — DeepSeek Harness 插件-归档会话管理，支持释放、清除归档会话
-- [dsh-archived-sessions](https://github.com/Zalpha263/dsh-archived-sessions) — dsh管理归档会话困难？用它就对了！
-- [dsh-archived-sessions](https://github.com/Zephyr-vibe/dsh-archived-sessions) — 管理会话，支持归档、恢复、安全删除及打开记录文件夹。
-- [dsh-argp](https://github.com/yoza10635/dsh-argp) — 0-LLM compaction for DeepSeek Harness (dsh): deterministic atomic reference-graph pruning of agent history — exact compression ratio, selective forgetting, recall instead of rewrite. 压缩阶段零 LLM 调用的确定性上下文压缩插件：原子引用图剪枝、选择性遗忘、压缩率精确兑现，即插即用 CompactionEngine。
-- [dsh-ask-guard](https://github.com/Q1hangL/dsh-ask-guard) — 防止挂起，将未答复的问题解析为超时而非阻塞。
-- [dsh-assembly.resume](https://github.com/kanchengw/dsh-assembly.resume) — 将本地Codex和Claude会话记录导入框架，实现统一访问。
-- [dsh-assistant-message-forge](https://github.com/anweat/dsh-assistant-message-forge) — 创建、修改和注入测试助手消息，并导入会话日志。
-- [dsh-at-mention](https://github.com/Lan-zk/dsh-at-mention) — 支持在编辑器中通过@提及引用工作区文件和跨会话上下文。
-- [dsh-attachments](https://github.com/CocoSgt/dsh-attachments) — 管理对话中的附件，可能支持文件的存储和检索。
-- [dsh-auth](https://github.com/hxy91819/dsh-auth) — 增加基于 Caddy 前置的管理员认证，使用 Argon2id 哈希及可撤销会话，增强安全性。
-- [dsh-auth-gate](https://github.com/TecFancy/dsh-auth-gate) — 为网页版添加登录门，支持口令/令牌认证、限速和用户管理。
-- [dsh-auth-gateway](https://github.com/xbzbing/dsh-password-gate) — 远程访问开发机使用，这只是一个 dsh 插件的 demo，安全功能只有最简单的频次兜底，切勿直接开放在外网。
-- [dsh-auto-chat-titles](https://github.com/leonardoxr/dsh-auto-chat-titles) — 自动为会话生成语义化、可配置的标题。
-- [dsh-auto-compact](https://github.com/songoao25/dsh-auto-compact) — 调整自动对话压缩参数，在长会话中保留上下文并提升回复质量。
-- [dsh-auto-continue](https://github.com/Aki2519/dsh-auto-continue) — 在对话达到停止点时自动继续，确保响应不中断。
-- [dsh-auto-continue](https://github.com/zhou1736948757-cpu/dsh-auto-continue) — 当输出达到令牌上限被截断时自动续写，专为小容量 Ollama 部署优化。
-- [dsh-auto-driving](https://github.com/huhaodong/dsh-auto-driving) — 让 DeepSeek Harness 智能体进入自动驾驶 🚗：模型故障自动回退、静默卡死自动保活重试、权限/提问/方案审批自动放行，AUTO-MODE.md 全程审计——无人值守、永不停摆的自愈式 AI 编码会话。
-- [dsh-auto-resume](https://github.com/LoserFox/marisa-distro/tree/HEAD/plugins/dsh-auto-resume) — 自动恢复中断的会话，保留对话上下文与状态。
-- [dsh-auto-review](https://github.com/aa2246740/dsh-auto-review) — 新增自动审查与批准模式，简化代理会话中的用户确认流程。
-- [dsh-autoload-history](https://github.com/magicOF2/dsh-autoload-history) — 在会话打开时自动加载完整对话历史，省去手动操作。
-- [dsh-autonomy](https://github.com/abab996/dsh-autonomy/tree/HEAD/packages/dsh-autonomy) — 按会话调节模型自主性，支持提示词注入与独立记忆。
-- [dsh-autonomy](https://github.com/JinkaiLiu/dsh-autonomy) — 可在当前会话中切换聊天与智能体模式。
-- [dsh-baize-rules](https://github.com/bvcvb/dsh-baize-rules) — 在对话开始时注入用户设定的会话或全局必做与禁止要求。
-- [dsh-balance](https://github.com/TwotwoPiggy/dsh-balance) — 实时追踪令牌用量并估算会话费用，支持动态峰谷定价。
-- [dsh-ballast](https://github.com/xswt442-cmd/dsh-ballast) — DSH 上下文窗口逐条归因面板——看谁占了窗口 | Per-message context window attribution for DSH — see what takes up the window
-- [dsh-beacon](https://github.com/JingzeChen/dsh-beacon) — 为并发会话提供注意力和交接工作空间，帮助管理多会话工作流。
-- [dsh-better](https://github.com/wackyju2-beep/dsh-better) — 更好的 DSH | Unofficial dsh plugin: archived sessions & task notifications / 已归档会话管理 · 任务系统通知
-- [dsh-better-archive](https://github.com/huahai0202/dsh-better-archive) — 在网页界面中添加面板，可查看并操作已归档会话。
-- [dsh-better-chat-history](https://github.com/echo-xianyu/dsh-better-chat-history) — 优化会话加载速度并减少磁盘读写消耗，提升聊天历史性能。
-- [dsh-bookmark](https://github.com/leilei3167/dsh-bookmark) — 为网页界面提供类 Codex 的会话导航器，便于切换聊天。
-- [dsh-bookmarks](https://github.com/penguin-oo/dsh-bookmarks) — 收藏助手回复并添加备注和标签，提供跨会话中心和 Markdown 导出功能。
-- [dsh-branch-visualizer](https://github.com/111222cjyq/dsh-branch-visualizer) — 可视化会话分支，支持导航、重命名、归档和兼容。
-- [dsh-break-glass-settlement-proof](https://github.com/dongsheng123132/dsh-break-glass-settlement-proof) — 为会话结算证据生成离线内容寻址证明。
-- [dsh-bridge](https://github.com/baixianger/dsh-session-messaging) — 实现同进程内不同会话之间的消息传递。
-- [dsh-bridge-0.1.0-rc.15](https://github.com/azure5100/huahua-dsh-chatroom/tree/HEAD/upstream-patched/dsh-bridge-0.1.0-rc.15) — 跨机群聊桥接组件，提供DSH聊天与weave集成的适配补丁。
-- [dsh-brief-session-title](https://github.com/Relethe/dsh-brief-session-title) — 将会话标题精简为单词，便于回忆。
-- [dsh-btw](https://github.com/gulagala001/dsh-btw) — 在主输入框上方使用原生弹窗，借助当前会话上下文进行旁聊与追问，主任务可继续运行。
-- [dsh-btw](https://github.com/iyllyt/dsh-btw) — 个人很喜欢 Claude Code 的 /btw，于是为 DSH 做了复刻：共享当前上下文快速旁路提问，不中断主任务，也不写入主会话历史。
-- [dsh-bundle](https://github.com/zsxian11/dsh-flywheel/tree/HEAD/packages/dsh-bundle) — 通过项目产物图在会话间传递精简工作卡，保持上下文而无需合并完整记录。
-- [dsh-capture-window](https://github.com/Yidien/dsh-capture-window) — DeepSeek Harness 旁路捕获插件：随手丢想法进独立的安静新会话，不打断主线上下文。
-- [dsh-carbonclub](https://github.com/szymonsheng2045/dsh-carbon-club) — 构建零模型成本的等待区，在人工接手前暂存用户消息。
-- [dsh-change-ledger](https://github.com/LoserFox/marisa-distro/tree/HEAD/plugins/dsh-change-ledger) — 记录会话状态变更，提供审计与恢复账本。
-- [dsh-change-review](https://github.com/cirelir/dsh-change-review) — DeepSeek Harness 会话修改审查插件：追踪会话内 write/edit，diff 对比展示，会话隔离/子代理聚合/SSE 实时推送/颜色自定义
-- [dsh-chat](https://github.com/baixianger/dsh-chat) — 增强 DeepSeek Harness 内的聊天功能，改进消息处理与显示。
-- [DSH-chat](https://github.com/MarkJun236/DSH-chat) — DSH Web GUI 普通对话插件：不绑工作区、不带工具，复用 ctx.llm 模型路由流式聊天，多会话历史本地持久化。
-- [dsh-chat-0.1.0-rc.33](https://github.com/azure5100/huahua-dsh-chatroom/tree/HEAD/upstream-patched/dsh-chat-0.1.0-rc.33) — 跨机群聊核心组件，提供DSH聊天功能的适配补丁。
-- [dsh-chat-archive](https://github.com/ohmejj/dsh-chat-archive) — 自动归档 DeepSeek Harness 对话记录
-- [dsh-chat-continue](https://github.com/Chu-m/dsh-chat-continue) — Auto-retry failed API requests to keep DSH conversations going. Supports configurable status codes and error codes. 自动重试失败的 API 请求，让 DSH 对话不中断。支持自定义状态码和错误码。
-- [dsh-chat-history](https://github.com/Stylelinzzz/dsh-chat-history) — 管理 DeepSeek Harness 会话的聊天历史存储和检索。
-- [dsh-chat-history](https://github.com/ttmouse/dsh-chat-history) — 管理聊天历史，可能涉及存储和检索过往消息。
-- [dsh-chat-history](https://github.com/VioletScar-Hui/dsh-chat-history) — 给 DSH 聊天输入框加上 CLI 风格历史记忆：上下键召回之前发送过的内容（纯客户端插件，重启不丢）
-- [dsh-chat-import](https://github.com/Nwflower/dsh-chat-import) — 把 Claude Code / Codex / ChatGPT / Cursor / Gemini / Reasonix / opencode 的聊天记录全保真导入为可续聊的 DSH 会话。
-- [dsh-chat-jumper](https://github.com/Cloud-J/dsh-chat-jumper) — dsh对话导航
-- [dsh-chat-log](https://github.com/YupegLV/dsh-chat-log) — Fold DSH session logs into clean chat logs: stream fragments merged, nothing else dropped. /chat + browser download. 把 DSH 会话日志折叠成聊天记录：流式碎片合并，其余内容一行不丢。/chat 命令 + 浏览器下载。
-- [dsh-chat-manager](https://github.com/tvrpdfe/dsh-chat-manager/tree/HEAD/packages/dsh-chat-manager) — 管理网页界面中的聊天会话，支持新建、删除和归档。
-- [dsh-chat-manager](https://github.com/WSL043/dsh-session-delete) — 给 DeepSeek Harness 原生会话菜单增加二次确认永久删除 | Confirmed session deletion for DSH
-- [dsh-chat-share](https://github.com/chrisx9z/dsh-chat-share) — 提供会话分享功能，支持导出和导入对话记录，便于协作与备份。
-- [dsh-chat-sync](https://github.com/nan1010082085/dsh-chat-sync) — 在网页界面中浏览并实时同步本地Claude Code和Codex CLI对话。
-- [dsh-chatgpt-bridge](https://github.com/jiezeng2004-design/dsh-chatgpt-bridge) — 作为 MCP 桥接，让 ChatGPT 能创建、查看、继续和控制 DeepSeek Harness 会话。
-- [dsh-checkpoint](https://github.com/dpskh/dsh-checkpoint) — 在会话中标记探索起点，便于后续折叠上下文。
-- [dsh-checkpoint-rewind](https://github.com/skkaczsh/dsh-checkpoint-rewind) — 支持通过关联 Git worktree 回滚检查点，并可重放会话、查看分支树形图。
-- [dsh-checkpoints](https://github.com/ANOKO1122/dsh-checkpoints) — 支持设置、回退和编辑对话检查点，附带文件快照和单文件撤销功能。
-- [dsh-chinese-mode](https://github.com/dawnliming/dsh-chinese-mode) — 在输入框添加中文模式开关，开启时向每个会话系统提示注入简体中文要求。
-- [dsh-cipher](https://github.com/NoxTyrannus/dsh-cipher) — 把 cipher 的持续思考/三中台/四类记忆以 UNNI/LOOP 会话模式接入 DSH（dsh-plugin bundle）
-- [dsh-cite](https://github.com/wanghehe123/dsh-sessions) — 为 DeepSeek Harness (DSH) 生态打造的跨会话引用 Web 插件
-- [dsh-claude-move](https://github.com/PerryLink/dsh-claude-move) — 四合一迁移向导：把 Claude Code、Codex、OpenCode、Hermes 的会话、记忆、技能、指令与斜杠命令迁入 DSH（/move 向导，审批门 + 幂等 move.json，会话可续聊）。
-- [dsh-clear-tool-results](https://github.com/stultuss/dsh-clear-tool-results) — DeepSeek Harness（DSH）host 平面插件：**每个 turn 结束时，把上一轮产生的 `tool/result` 从模型上下文中清除**，并提供聊天命令开关：
-- [dsh-cli-workspaces](https://github.com/qingkong143/dsh-cli-workspaces) — DeepSeek Harness 插件：带工作区切换的命令行任务模式（-w 切换，ws 子命令管理）
-- [dsh-client-ui-recent-sessions-switcher](https://github.com/blake-r/dsh-plugins/tree/HEAD/packages/dsh-client-ui-recent-sessions-switcher) — 提供客户端界面，在DeepSeek Harness中快速切换最近的会话。
-- [dsh-client-ui-session-switcher](https://github.com/Suxeca/dsh-plugin/tree/HEAD/packages/dsh-client-ui-session-switcher) — 提供快捷键的会话切换面板，快速导航不同对话。
-- [dsh-code-collector](https://github.com/bycall/dsh-code-collector) — 收集当前会话中的代码块，支持复制、批量下载和跳转。
-- [dsh-codebuddy-credits](https://github.com/peiyucn/dsh-sparrow/tree/HEAD/plugins/dsh-codebuddy-credits) — 管理已归档会话，提供输入建议，并为纯文本模型启用图像视觉。
-- [dsh-codex](https://github.com/life1996cou/dsh-codex) — 同步codex中的会话到dsh,一键导入上下文.
-- [dsh-codex-compaction](https://github.com/shaomingbo/dsh-codex-compaction) — 集成Codex原生压缩，优化Harness会话中的上下文管理。
-- [dsh-codex-continue](https://github.com/zhoujianbin/dsh-codex-continue) — DSH 插件：读取本机 Codex 项目与会话，一键在 DSH 里继续。Read local OpenAI Codex sessions and continue them in DeepSeek Harness.
-- [dsh-codex-import](https://github.com/G1en-114/dsh-codex-import) — 将 Codex CLI 对话历史导入为 Harness 会话。
-- [dsh-codex-migrate](https://github.com/polarskicpl/dsh-codex-migrate) — 将 Codex CLI 的对话、MCP 服务器和记忆迁移到 DeepSeek Harness。
-- [dsh-codex-pins](https://github.com/robbyisrobby/dsh-codex-pins) — 把 DeepSeek Harness 侧边栏分成置顶和最近两栏，各自独立滚动，置顶过的会话不再出现在最近列表里。
-- [dsh-codex-sync](https://github.com/Walvez/dsh-codex-sync) — 实现 Codex 与 DSH 的双向同步，涵盖技能、会话、工作区及 MCP 镜像。
-- [dsh-codex-timeline](https://github.com/Wine-Red/dsh-codex-timeline) — Codex-style turn timeline and local conversation search for DeepSeek Harness Web | Codex风格的对话节点时间线导航栏，提供会话内容搜索等增强
-- [dsh-command-delete](https://github.com/wang122818/dsh-command-delete) — 添加斜杠命令以删除会话和工作区项目。
-- [dsh-compact](https://github.com/zixin947/dsh-compact) — DeepSeek Harness 上下文自动压缩、手动压缩与溢出恢复插件
-- [dsh-compact-and-branch](https://github.com/zeropointnine/dsh-compact-and-branch) — 压缩当前会话并开启新会话继续工作，简化上下文管理。
-- [dsh-compaction](https://github.com/ljsysfurryACE/dsh-compaction) — 实现语义与物理 KV 压缩的后端，将会话内存占用最高压缩 35.6 倍。
-- [dsh-compaction-cacheaware](https://github.com/Zhuchen00123/dsh-compaction-cacheaware) — Reasonix 风格缓存感知压缩后端，实现 ctx.compaction seam：唯一 compact_ratio 触发；稳定前缀 + 一条结构化 summary + recent tail 组成检查点；常规压缩永不改写 canonical transcript。
-- [dsh-compaction-instant](https://github.com/KitDoesIt/dsh-compaction-instant) — 提供免 LLM 的无损对话压缩，减少 token 使用而不丢失内容。
-- [dsh-compaction-meta](https://github.com/DViridescent/dsh-compaction-meta) — 允许 agent 在 DSH 里自己编辑自己的上下文（元压缩，待实现）。Let the agent compact its own context (meta-compaction, TODO).
-- [dsh-compaction-micro](https://github.com/blake-r/dsh-plugins/tree/HEAD/packages/dsh-compaction-micro) — 提供微型的会话历史压缩机制，降低对话中的 token 消耗。
-- [dsh-compaction-micro](https://github.com/Perfirstvito/dsh-compaction-micro) — 实现上下文压缩策略，高效管理并压缩对话历史。
-- [dsh-compaction-pro](https://github.com/helibeiqi/dsh-compaction-pro) — 实现高保真、双语、递归的压缩后端，用于总结和精简对话历史。
-- [dsh-compaction-tune](https://github.com/kuanfu0430/dsh-compaction-tune) — 调节自动压缩阈值，控制上下文何时被压缩。
-- [dsh-compactor](https://github.com/lionwill/dsh-compactor) — DSH上下文压缩插件
-- [dsh-composer-history](https://github.com/baisama-cloud/dsh-composer-history) — 为输入框添加命令历史导航，可用方向键循环浏览过往指令。
-- [dsh-config-export](https://github.com/sunchendd/dsh-config-export) — DSH 配置备份插件：侧边栏一键导出/导入 ~/.dsh 配置（设置/profile/SSH/预设/皮肤/看板），支持敏感字段脱敏与恢复前安全快照
-- [dsh-context-budget](https://github.com/d3vmeh/dsh-context-guard) — 监控并管理本地模型上下文大小，保持在 GPU 友好范围内，含预填充速度测量和早期压缩。
-- [dsh-context-compactor](https://github.com/kusesad-1122/dsh-context-compactor) — DSH 上下文压缩/总结插件：80% 自动全局详细总结压缩（保留核心任务/决策/待解决问题/重要文件位置，删除调试细节与已解决错误），压缩后验保证 totalTokens 必须真实下降，context-overflow 自动恢复，/compact + /context-status，输入框上方一键按钮
-- [dsh-context-compass](https://github.com/NinjaSln-labs/dsh-context-compass) — DeepSeek Harness 会话健康插件：真实数据的「继续 vs 新开」上下文罗盘——头部徽章 / /compass / context_compass 工具 / 多会话一览面板
-- [dsh-context-compass](https://github.com/NinjaSln-labs/dsh-plugins/tree/HEAD/dsh-context-compass) — 提供跨会话的上下文感知，提升对话连贯性。
-- [dsh-context-compressor](https://github.com/qwert702/dsh-context-compressor) — 压缩和管理对话上下文，使会话保持在模型限制内。
-- [dsh-context-console](https://github.com/anweat/dsh-context-console) — 提供完整上下文工作台：轨迹、清单、缓存历史、消息伪造与会话日志恢复。
-- [dsh-context-dashboard](https://github.com/uckkk/dsh-context-dashboard) — DSH 会话上下文统计面板：每会话消息/轮次/工具调用/预估 token + 全局与按项目报告。Context usage dashboard for DeepSeek Harness.
-- [dsh-context-doctor](https://github.com/Max-Null/seek-soul-in-darkness/tree/HEAD/shell/profile-template/vendor/dsh-context-doctor) — 诊断并优化对话上下文使用，在有限窗口内保持信息相关性。
-- [dsh-context-engineering](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-context-engineering) — 优化对话中的上下文使用，提升模型表现。
-- [dsh-context-guard](https://github.com/kpl0111/dsh-context-guard) — 修剪工具结果以节省长会话中的令牌。
-- [dsh-context-lens](https://github.com/gordonlu/dsh-context-lens) — 分析请求上下文变化及缓存重用情况，帮助理解模型请求间的差异。
-- [dsh-context-maid](https://github.com/Icstick/dsh-context-maid) — DeepSeek Harness 自动上下文策展插件：tool 输出内容感知瘦身 + 无效日志清理 + 工作流/记忆钉扎保护 + 先归档后压缩 + 摘要模型可配
-- [dsh-context-rollover](https://github.com/athif23/dsh-context-rollover) — 管理上下文窗口滚动，保留全新工作上下文、持久笔记和逐字最近片段，不进行摘要。
-- [dsh-context-structurer](https://github.com/kkkkkklze/dsh-context-structurer) — 将对话结构化为带目录的类型化子上下文。
-- [dsh-context-taxonomy](https://github.com/ArtificialNotImbecile/dsh-context-taxonomy/tree/HEAD/packages/dsh-context-taxonomy) — 为对话轮次提供逻辑调用分类，用于上下文管理。
-- [dsh-context-tree](https://github.com/wr-web/dsh-context-tree) — 为 Harness 提供可复用的轨迹树上下文、精确轮次分支和有界跨会话召回。
-- [dsh-context-truth](https://github.com/deepseekv41flash/dsh-context-truth) — 宿主侧插件：每轮把宿主实测的上下文占用写入运行时上下文，并向压缩提示词追加两条规则，使生成的检查点不再复述关于剩余 token 预算的说法。
-- [dsh-continue](https://github.com/inmny/dsh-continue) — 为 DeepSeek Harness 增加一个直接续跑按钮。当会话异常结束时，可以从现有上下文继续执行，不会引入其他提示词。
-- [dsh-continue-on-limit](https://github.com/qwert702/dsh-continue-on-limit) — 当模型达到输出上限时自动发送继续提示，确保回复不中断。
-- [dsh-conv-export](https://github.com/beijingwahw/dsh-conv-export) — 将当前 Harness 会话导出为 Markdown、PDF 或长图 PNG。
-- [dsh-conv-search](https://github.com/beijingwahw/dsh-conv-search) — 在对话内提供文本搜索，支持 Ctrl+F、大小写和全词匹配，并感知流式内容。
-- [dsh-conversation-archive](https://github.com/yxv1203-collab/dsh-conversation-archive) — 管理会话归档、保留、安全删除及验证备份，确保数据可控。
-- [dsh-conversation-branches](https://github.com/Caramel-Geass/dsh-conversation-branches) — 管理对话分支，支持分叉与切换不同对话路径。
-- [dsh-conversation-exporter](https://github.com/liuyuelintop/dsh-conversation-exporter) — 将对话导出为整洁易读的Markdown文件，便于分享和存档。
-- [dsh-conversation-landmarks](https://github.com/mantonlove/dsh-conversation-landmarks) — 在长对话中增加固定导航和悬停预览地标。
-- [dsh-conversation-language](https://github.com/Dingpenghui-good/dsh-conversation-language) — 在对话中按需切换中文和英文语言。
-- [dsh-conversation-link](https://github.com/duanyunlun/dsh-conversation-link) — 同一 DeepSeek Harness 进程内对话之间的对等通信：列出一个工作区里可见的对话、用昵称连接对方、给对方发消息且不必等它当前一轮结束、不唤醒对方地查看进度，并给自己声明常驻的工具调用规则。
-- [dsh-conversation-manager](https://github.com/lanlandeli/dsh-conversation-manager) — DeepSeek Harness 会话管理插件｜归档与恢复、批量操作、工作区分组、子代理关系、活动详情、记录目录与安全文件清理
-- [dsh-conversation-map](https://github.com/xyAxzy/dsh-conversation-map) — 以交互式地图可视化会话结构，便于在DeepSeek Harness中导航浏览。
-- [dsh-conversation-navigator](https://github.com/wang122818/dsh-conversation-navigator) — 为 DeepSeek Harness 网页会话提供按轮次浏览和跳转消息的导航栏。
-- [dsh-conversation-rewind](https://github.com/DTSFO/dsh-conversation-rewind) — 回退会话历史，可从较早的对话节点重新查看和继续。
-- [dsh-conversation-rollback](https://github.com/sharedcare/dsh-conversation-rollback) — 支持在网页界面中回滚对话，并编辑和重新发送消息。
-- [dsh-conversation-share](https://github.com/bill9109/dsh-conversation-share) — 分享任意段落的对话。
-- [dsh-conversation-threads](https://github.com/bertonsaa/dsh-conversation-threads) — 将会话组织成线程，便于导航和管理。
-- [dsh-conversation-tree](https://github.com/Unintendedz/dsh-conversation-tree) — 为对话添加不可变的回复分支、内联分支切换和整树浏览功能。
-- [dsh-convo-cost](https://github.com/ljr282341583/dsh-convo-cost) — 追踪并展示对话成本，用于预算监控。
-- [dsh-copy-session-id](https://github.com/Hanihahaha/dsh-copy-session-id) — 复制当前会话ID到剪贴板，便于快速分享和引用。
-- [dsh-cost-tracker](https://github.com/lyfZhixing/dsh-cost-tracker) — 为 DeepSeek Harness Web（`dsh --profile web`）记录**每日 LLM 调用花费**，支持按会话 / 模型 / 天多维度查看。
-- [dsh-cot-summerization](https://github.com/MeowLynxSea/dsh-cot-summerization) — 可能用于会话中思维链的总结，具体功能待确认。
-- [dsh-credential-handoff](https://github.com/xiaohj233/dsh-credential-handoff) — 通过凭据服务安全传递会话级凭据，避免秘密泄露。
-- [dsh-cross-session](https://github.com/Wha1eChai/dsh-cross-session) — 在统一运行时内发现并连接多个会话，实现跨会话通讯。
-- [dsh-cross-session-bridge](https://github.com/red000000/dsh-cross-session-bridge) — 适用于deepseek harness的根会话桥插件，可令根会话间双向通信
-- [dsh-cross-session-messaging](https://github.com/Weiyang742/dsh-cross-session-messaging) — 通过节点发现，在多个DeepSeek Harness进程间转发文本消息。
-- [dsh-crosstalk](https://github.com/Jesse-njx/dsh-crosstalk) — 跨会话消息：本机任意会话都可像 Claude Code 一样列出并互发消息，基于本地心跳注册表与收件箱。
-- [dsh-cue-plugin](https://github.com/unnnnoooo/dsh-cue-plugin) — DeepSeek Harness 的跨会话引用(cue)插件
-- [dsh-custom-instructions](https://github.com/huanghai-lab/dsh-custom-instructions) — DSH Web GUI 自定义指令编辑器插件：在设置页直接编辑 ~/.dsh/AGENTS.md 全局指令（类似 ChatGPT Custom Instructions），对所有聊天生效。热插拔安装，无需改动 DSH 源码。
-- [dsh-custom-instructions](https://github.com/lyke-61/dsh-custom-instructions) — Codex-style custom instructions for DeepSeek Harness: edit ~/.dsh/AGENTS.md from a settings panel - applies to every chat and model. 类 Codex 自定义指令：在设置里编辑全局指令，所有会话所有模型生效。
-- [dsh-cwl](https://github.com/kalifun/dsh-cwl) — 以确定性方式清理会话上下文，无需大模型参与，避免摘要信息丢失。
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 635 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="memory"></a>
-
-<details>
-<summary><strong>记忆</strong> · 显示 248 / 共 438 个</summary>
-
-- [adapter](https://github.com/DecarbonizedGlucose/dsh-memory-note/tree/HEAD/adapter) — 在本地存储轻量笔记，帮助代理跨会话保留信息。
-- [agent-guard](https://github.com/hr98w/dsh-memory/tree/HEAD/benchmark/locomo/agent-guard) — 作为守护机制，确保跨会话长期记忆一致且高效，借鉴 Claude Code 的自动记忆设计。
-- [agent-teams](https://github.com/zhujunpeng12/dsh-memory-system/tree/HEAD/plugins/agent-teams) — 实现本地优先持久化记忆，含热启动、中文 BM25 冷召回、租约锁写入与治理。
-- [aifp-mcp](https://github.com/wjabanjj/aifp-mcp) — AiFP 记忆感知系统｜MCP 服务，一套记忆全 AI 共享。面向中文的 Agent 感知记忆，支持叙事链、语义纠错、感知链图扩散。兼容 DeepSeek‑Harness、Claude Code、Cursor、Codex等全部 MCP 客户端，数据完全本地存储。
-- [Aik358-dsh-auto-memory](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/Aik358-dsh-auto-memory) — 自动管理长期记忆，跨会话保存用户上下文，可能结合检索或摘要。
-- [base](https://github.com/fufankeji/deepseek-harness-studio/tree/HEAD/packages/bundle/base) — 桌面端基础包，提供笔记存储与代理上下文记忆功能。
-- [base](https://github.com/op7418/pilot-harness/tree/HEAD/packages/bundle/base) — 桌面客户端基础包，提供笔记与代理上下文的持久化存储。
-- [BigSeedSkill](https://github.com/kobenfang/BigSeedSkill) — 🌱 BigSeed 闪念记录与人生拼图 - 捕捉生活点滴生成人生故事/自传 | Life story, journal, biography, memory keeper
-- [bundle](https://github.com/mianyoubiaoqing/dsh-Mmem/tree/HEAD/packages/bundle) — 在单个 dsh 进程中支持多个独立记忆空间，实现分段长期记忆与检索。
-- [bundle](https://github.com/whyself/dsh-knowledge-qa-plugin/tree/HEAD/packages/bundle) — 打包知识问答系统，支持基于知识库的问答。
-- [claude-auto-memory](https://github.com/cnzgray/dsh-plugins/tree/HEAD/packages/claude-auto-memory) — 自动存储并管理对话记忆，实现跨会话的持久回忆。
-- [coding-agents](https://github.com/vectorize-io/hindsight/tree/HEAD/hindsight-integrations/coding-agents) — Hindsight 可学习的 Agent 记忆：自动召回与沉淀的长期项目记忆、知识页、深度反思与按仓库隔离的记忆库。
-- [context-archive](https://github.com/bLueriVerLHR/dsh-better-webui/tree/HEAD/packages/context-archive) — 归档对话中的上下文以保留重要信息。
-- [cordis-plugin-sofagent-ontology](https://github.com/KongFangXun/sofagent/tree/HEAD/engine/dsh-plugins/cordis-plugin-sofagent-ontology) — 维护基于本体的知识结构，支持跨代理会话的语义推理。
-- [core](https://github.com/AstroLiao/dsh-memory-core/tree/HEAD/core) — 在本地 Markdown 文件中持久化跨会话的用户画像、项目和偏好，无需配置。
-- [deepseek-harness](https://github.com/fgm-builds/corti/tree/HEAD/src/integrations/deepseek-harness) — 为 AI 代理提供持久记忆层，基于 Postgres 检索，以 Markdown 为事实来源，实现长期上下文。
-- [deepseek-harness](https://github.com/rrrrrredy/agent-memory-system/tree/HEAD/integrations/deepseek-harness) — 本地存储带证据的长期记忆，供编码智能体跨会话使用。
-- [Deepseek-Harness-Lifelong-Agent](https://github.com/haoyuan-sjtu/Deepseek-Harness-Lifelong-Agent) — 为 AI Agent 提供受管长期记忆核心，支持跨会话知识持久化。
-- [deepseek-harness-local](https://github.com/reshuibuduo/tmcra-memory/tree/HEAD/integrations/deepseek-harness-local) — 为 DSH 代理提供本地优先、范围隔离的长期记忆，跨会话持久化知识。
-- [deepseek-harness-memory](https://github.com/2303572348/deepseek-harness-memory) — 提供跨会话的长期记忆存储，以保持持续上下文。
-- [deepseek-harness-mimo-memory](https://github.com/Rainpomelo/deepseek-harness-mimo-memory) — DeepSeek Harness - MiMoCode 工作区自动记忆插件 (0 工具调用预注入、后台自动蒸馏与跨会话持久化) #dsh-plugin
-- [deepseek-knowz-plugin](https://github.com/knowz-io/deepseek-knowz-plugin) — 通过MCP服务与精简技能库，为DeepSeek Harness提供持久化、组织化的知识库。
-- [distill](https://github.com/LoserFox/distill) — 自动对话蒸馏：后台 subagent 反省 + 技能 create/update。
-- [docindex](https://github.com/JohnXu22786/docindex) — 为工作区文档构建本地语义索引，使用混合 FTS5 和嵌入检索。
-- [dsh](https://github.com/directwire/culmen/tree/HEAD/runtime/dsh) — 实现一种人格格式，跨运行时持久化 AI 的记忆、成长和关系。
-- [dsh](https://github.com/djasdh/interest-memory/tree/HEAD/bridge/dsh) — 将低占用内存后端桥接到 DSH，实现持久化代理记忆。
-- [dsh](https://github.com/MickLife/mex/tree/HEAD/src/mex/integration/dsh) — 存储并提供个人记忆上下文，尤其用户画像，以实现个性化 AI 服务。
-- [dsh_cardian](https://github.com/myYangyunfan/dsh_cardian) — 在本地 Obsidian 笔记库中保存笔记、闪卡和长期知识，供跨会话复用。
-- [dsh-adaptive-context](https://github.com/Icstick/dsh-adaptive-context) — DeepSeek Harness 的 AdaptiveContextPlane (ACP) 插件——带治理的长期记忆系统
-- [dsh-agenda](https://github.com/shynloc/acks-dsh-plugins/tree/HEAD/knowledge/dsh-agenda) — 管理日程安排，记录任务与事件供后续回溯。
-- [dsh-agent-context](https://github.com/jonah791/dsh-agent-context) — 管理代理上下文，可能在会话间存储和调用对话上下文。
-- [dsh-agent-memory](https://github.com/findshan/dsh-agent-memory) — 实现自进化记忆，含捕获、梦境整合、检索注入和用户画像。
-- [dsh-agent-memory](https://github.com/jonah791/dsh-agent-memory) — 为 DeepSeek Harness 提供智能体驱动的长期记忆存储与检索。
-- [dsh-agent-memory](https://github.com/xingyingyuzhui/dsh-agent-memory) — Claw persistent memory for DeepSeek Harness. 金库、日记、回顾、压缩前冲洗。
-- [dsh-agentmemory](https://github.com/elementor-i/dsh-agentmemory) — 通过本地 REST 服务器，新增完整记忆工具、捕获钩子和上下文注入。
-- [dsh-agentsoul](https://github.com/yuhui-sama/dsh-agentsoul) — 加载人设文件与跨会话记忆，实现个性保持和知识蒸馏。
-- [dsh-ai-soul](https://github.com/zuohaisu/dsh-ai-soul) — 为智能体提供持久身份层，跨会话维持人设与长期记忆。
-- [dsh-animation-principles](https://github.com/uckkk/dsh-animation-principles) — 迪士尼动画12法则知识库
-- [dsh-appserver](https://github.com/text2future/flowix/tree/HEAD/dsh-appserver) — 为智能体提供持久化笔记与记忆存储，增强办公、写作和编码场景下的跨会话上下文。
-- [dsh-areas](https://github.com/shynloc/acks-dsh-plugins/tree/HEAD/knowledge/dsh-areas) — 整理并持久化主题领域，便于知识留存与检索。
-- [dsh-auto-memory](https://github.com/1304836815/dsh-auto-memory) — DSH 会话级记忆插件：收尾提醒 + MEMORY.md 记忆索引维护 + 实时对话日志 + LLM 摘要压缩，配置面板在 设置→插件。Session memory for DeepSeek Harness.
-- [dsh-auto-memory](https://github.com/Aik358/dsh-auto-memory) — 实现三层自动记忆系统，含主动日历提醒、温馨问候与跨工具记忆继承。
-- [dsh-behuman](https://github.com/goodddGrades/dsh-behuman) — DeepSeek Harness 的跨会话记忆与自进化：记忆以 Markdown 文件存储在磁盘上，目录（每条记忆一行）随提示词携带而非检索；另有一轮后台复审，检查主 agent 漏写的部分。
-- [dsh-biomemory](https://github.com/KLRSL/dsh-biomemory) — 仿生记忆系统，透明 Markdown 存储，写入需批准，支持冻结快照。
-- [dsh-bookmarks](https://github.com/shynloc/acks-dsh-plugins/tree/HEAD/knowledge/dsh-bookmarks) — 保存并检索书签链接，支持跨会话引用。
-- [dsh-brain-compaction](https://github.com/Lsc-91-69/dsh-brain-compaction/tree/HEAD/dsh-brain-compaction) — 模拟人脑压缩会话上下文，大幅减少长任务的 token 消耗和内存占用。
-- [dsh-brainagent](https://github.com/stas130286-blip/dsh-brainagent) — 受大脑启发的认知插件:情景、语义、程序与情绪记忆,带强化学习信号;目标栈支持时间触发器,好奇心驱动的自主网络研究,以及主动提议。
-- [dsh-butler-memory](https://github.com/AndyYang12345/dsh-butler-memory) — 集成记忆服务器，为会话提供有序的长期和短期记忆。
-- [dsh-campaign-memory](https://github.com/SeaOf0/dsh-redteam-model/tree/HEAD/plugins/dsh-campaign-memory) — 在dsh web环境中管理红队行动相关的记忆存储。
-- [dsh-canon](https://github.com/shaneconner/canon/tree/HEAD/dsh-canon) — 为编码代理提供规范化项目记忆，包括资产条目、追加式日志和胶囊呈现。
-- [dsh-cc-haha-dream](https://github.com/yihefeikong-rgb/dsh-cc-haha-dream) — DSH 自动做梦插件：后台定期回顾会话与记忆整合去重（复刻 CC-HAHA autoDream）· Auto memory consolidation (dream) plugin for DeepSeek Harness, inspired by CC-HAHA
-- [dsh-cc-haha-memory](https://github.com/yihefeikong-rgb/dsh-cc-haha-memory) — 跨会话持久化用户信息，实现长期记忆。
-- [dsh-cinematography](https://github.com/uckkk/dsh-cinematography) — 电影运镜与镜头语言参考
-- [dsh-claude-mem](https://github.com/Bleed00/dsh-claude-mem) — 集成 claude-mem，为 DSH 对话提供持久记忆。
-- [dsh-client-ui-obsidian-memory](https://github.com/detongz/dsh-client-ui-obsidian-memory) — 为DeepSeek Harness管理基于Obsidian的长期记忆库，实现知识持久化存储与检索。
-- [dsh-codebase-memory](https://github.com/andyfan1094/dsh-codebase-memory) — 将代码知识图谱从 MCP 接入 Harness，实现持久化检索。
-- [dsh-codebase-memory-mcp](https://github.com/princeofdream/dsh-codebase-memory-mcp) — 通过MCP提供代码库记忆，可能支持持久代码上下文。
-- [dsh-cognitio](https://github.com/ljlj7149-cloud/dsh-cognitio) — 纠错驱动的认知架构插件（DeepSeek Harness）：分层记忆 + 哨兵自动提醒 + 纠错进化 + 审批仲裁。让 AI 记得你的规矩，换模型换预设都有效；所有自动沉淀，你批准才生效。
-- [dsh-cognition](https://github.com/scd13150/dsh-cognition) — 提供项目记忆系统，约束、观察、记住和验证操作。
-- [dsh-context-enhancement](https://github.com/chuxindd/dsh-context-enhancement) — 面向 DeepSeek Harness 编程会话的持久化任务状态与上下文感知压缩。
-- [dsh-context-milvus](https://github.com/bobjia/dsh-context-milvus) — 基于 Milvus 向量数据库，为跨会话提供长期记忆与知识检索。
-- [dsh-context-mode](https://github.com/pharaohnie/dsh-context-mode) — DSH 原生 Cordis 插件：知识库(FTS5)、路由强制、会话记忆、沙箱执行(Think-in-Code)——context-window 减负
-- [dsh-context-pack](https://github.com/MkaliezZ/dsh-context-pack) — 生成确定性、注重隐私的仓库上下文包，供模型注入使用。
-- [dsh-context-pro](https://github.com/kiwifruit13/dsh-context-pro) — DSH Agent 上下文浸泡器：注入五维认知图鉴 + 链协议模式（prestep 零干预）+ JSON 快照链演化提取
-- [dsh-context7](https://github.com/Nrxous/dsh-context7) — 跨会话检索上下文信息，增强与 DSH 的交互体验。
-- [dsh-continuum](https://github.com/QuantumKuba/dsh-coninuum) — 将项目状态和检查点持久化到磁盘，防止长时间运行的工作流上下文耗尽。
-- [dsh-cost-ledger](https://github.com/suimi8/dsh-cost-ledger) — 跨会话持久化 token 用量到 SQLite，提供查询与预算工具，内置可覆盖的 DeepSeek 定价。
-- [dsh-cue-bank](https://github.com/itr-del/dsh-cue-bank) — 从对话构建跨会话持久提示库，并在主题切换时重新注入上下文。
-- [dsh-daoing-memory](https://github.com/daoing/dsh-daoing-memory) — 为 DeepSeek Harness 提供跨会话的长期记忆存储功能。
-- [dsh-df-memory](https://github.com/lhdrc/dsh-df-memory) — 管理跨会话的长期记忆，实现用户上下文持久化。
-- [dsh-dream](https://github.com/STARDUSTLC666/dsh-dream) — DSH 做梦插件：会话回放（梦原料）→ 反思 → 梦境日记（记忆巩固）。多帧 zstd 会话读取，零运行时依赖。Dream plugin for DeepSeek Harness: session replay, reflection, dream journal.
-- [dsh-dreaming](https://github.com/fatatalia/dsh-dreaming) — dsh 梦境记忆整合插件：凌晨随机窗口把记忆梦境化（裸上下文 narrative 纯梦写作）+ 信号驱动洞察晋升 + MEMORY.md 预算管理，随 dsh web 启停
-- [dsh-echo-memory](https://github.com/JxaMe/dsh-echo-memory) — 管理跨会话的回声记忆，在不同对话之间持久化上下文信息。
-- [dsh-engram](https://github.com/kenz1117/dsh-engram) — 跨会话存储和检索记忆，保持用户上下文持久化。
-- [dsh-engram](https://github.com/skepsun/dsh-loom) — 极简·省 token 的 DSH 长期记忆插件：零 LLM 自动捕获、符号索引渐进披露、ESR 证据闭环。Minimalist token-saving memory for DeepSeek Harness: zero-LLM auto-capture, symbolic index, ESR-lite evidence closure.
-- [dsh-engram-relay](https://github.com/yjh051108/dsh-engram-relay) — dsh-engram-relay 公开镜像（上游：dsh-external/dsh-engram-relay）：跨会话分层记忆 + 哈希×语义×因果超稀疏唤醒，13 个 engram_* 工具，BSD-3-Clause
-- [dsh-engram-session](https://github.com/xiuyuan18/dsh-engram-session) — 为每个会话启动 engram 记忆子进程，注册记忆工具并将协议注入系统提示词，实现长期上下文。
-- [dsh-engramory](https://github.com/tinqiao-oss/engramory/tree/HEAD/adapters/dsh/plugin) — 给 DeepSeek Harness 的长期记忆，以纯 markdown 保存：一条事实一个文件，任何编辑器都能打开。索引 `MEMORY.md` 有 200 行 / 25KB 的硬上限，由 `ctx.tools.guard()` 强制执行——让已超限的索引继续变大的写入会被拒绝，而缩小它的重写一律放行，于是过大的索引可以一步步压缩下来。插件不会自行写入记忆，记什么由你和模型决定。同一个记忆库也被 Claude Code、Codex、Kiro、OpenClaw 使用。
-- [dsh-env-profile](https://github.com/Yvesgao/dsh-env-profile) — DSH 全局经验插件：自动探测环境 + 跨会话档案 + 低开销注入，减少重复探测、加快会话、降低 token。
-- [dsh-evolve](https://github.com/chenzheshushi-commits/dsh-evolve) — 提供跨会话持久记忆，支持零令牌召回、分级审批和基于重复的强化学习。
-- [dsh-experience-flywheel](https://github.com/XZDYM/dsh-experience-flywheel) — 跨会话存储经验记忆，带双重接受门，并通过中间件自动注入。
-- [dsh-experience-library](https://github.com/libiwolve/dsh-experience-library) — dsh-experience-library: 更有经验的 DeepSeek - 经验验证固化层(实时采集/加工/三层检验/技能书/benchmark验证)
-- [dsh-expmem](https://github.com/creativedswork/dsh-expmem) — 跨会话持久化代理的经验记忆。
-- [dsh-file-memory](https://github.com/ICCuse/dsh-file-memory) — 文件型工作记忆：memorize/recall 把关键前提逐字保存在会话笔记文件，无损挺过上下文压缩。
-- [dsh-flowix-memory](https://github.com/text2future/flowix/tree/HEAD/dsh-flowix-memory) — 为智能体提供长期记忆和笔记，适用于办公、写作和编码场景。
-- [dsh-focal](https://github.com/Haoran2099/dsh-focal) — 注重隐私的任务记忆与自适应本地桌面观察，提供个性化辅助。
-- [dsh-gentle-engram](https://github.com/eehcx/dsh-gentle-engram) — 通过 Cordis 桥接 Engram 持久记忆，支持长期知识保留。
-- [dsh-geometry-plugin](https://github.com/sdoygb/conjugate-spectral-geometry/tree/HEAD/dsh-geometry-plugin) — 索引 12 卷 117 篇量子纠错文献，支持基于 DeepSeek RAG 的知识检索与问答。
-- [dsh-git-memory](https://github.com/starfishwrx/dsh-git-memory) — 以 git 备份的可审查格式存储长期上下文，实现持久记忆。
-- [dsh-global-memory](https://github.com/IriskaDev/dsh-global-memory) — 为 DeepSeek Harness 提供跨会话的全局记忆存储。
-- [dsh-global-memory](https://github.com/xujiping/dsh-plugins/tree/HEAD/packages/dsh-global-memory) — 为 DeepSeek Harness 提供跨会话的全局记忆管理。
-- [dsh-goodmemory](https://github.com/hjqcan/dsh-goodmemory) — 自动跨会话回忆和写入记忆，为对话提供持续的上下文支持。
-- [dsh-graphify-plugin](https://github.com/QuantumKuba/dsh-graphify-plugin) — 构建知识图谱以增强代码理解，识别核心节点并提供拓扑智能工具。
-- [dsh-hermes-memory](https://github.com/isheng-eqi/dsh-hermes-memory) — 实现Hermes风格持久记忆，支持有界、文件备份、模型精选快照注入。
-- [dsh-hermes-memory](https://github.com/lcthe/dsh-hermes-memory) — 为 DeepSeek Harness 环境提供持久化记忆和安全会话感知检索。
-- [dsh-hindsight](https://github.com/Ryu6Zero/dsh-hindsight) — 基于 Hindsight 实现跨会话记忆，提供命令与工具进行回忆、记住和遗忘。
-- [dsh-hindsight-advanced](https://github.com/paulalesius/dsh-hindsight-advanced) — 提供长期记忆，支持自动回忆、保留/回忆/反思工具，并可按范围控制可见性。
-- [dsh-hindsight-memory](https://github.com/jackyytche/dsh-hindsight-memory) — 为 DeepSeek Harness 提供长期记忆功能，支持跨会话的持久化回忆，增强上下文保留。
-- [dsh-hive](https://github.com/llluchy/dsh-hive) — 构建并导航仓库的持久知识图谱，节省 token 并提升探索效率。
-- [dsh-honcho](https://github.com/plastic-labs/dsh-honcho) — 集成 Honcho 记忆层，为会话提供跨期用户画像与上下文召回。
-- [dsh-honcho-memory](https://github.com/kingcharleslzy-ai/dsh-honcho-memory) — 管理跨会话的用户长期记忆，实现对话间持久上下文。
-- [dsh-hybrid-memory](https://github.com/Frog755/dsh-hybrid-memory) — 提供混合记忆：冻结快照、可检索知识库和多工具导入，数据本地存储。
-- [dsh-ihow-memory](https://github.com/iHow1/dsh-ihow-memory) — 为 DeepSeek Harness 提供记忆功能，可能用于持久化用户上下文。
-- [dsh-infinite-context](https://github.com/chocobo77/dsh-infinite-context) — 实现多层级记忆管理、语义检索和结构化记忆，支持无限上下文。
-- [dsh-insights](https://github.com/DDDPG/dsh-plugins/tree/HEAD/plugins/dsh-insights) — 提供工作区记忆、跨会话调用与命令行工具。
-- [dsh-kb-manager](https://github.com/xiaoshi7915/dsh-kb-manager) — 管理本地知识库生命周期，支持多格式导入、混合搜索、快照和便携包。
-- [dsh-kb-rag](https://github.com/YuMu247/dsh-kb-rag) — 提供本地优先的 RAG 工具，支持向量检索和知识库操作，基于 Ollama 和 ChromaDB。
-- [dsh-knowledge](https://github.com/dhb861832993-star/dsh-knowledge) — 构建本地知识库，支持全文索引与来源引用的检索。
-- [dsh-knowledge](https://github.com/ICCuse/dsh-knowledge) — 全局知识库桥：kb_add/kb_search/kb_show/kb_timeline 读写与 Codex 共享的 D:\knowledge（格式逐字节兼容）。
-- [dsh-knowledge](https://github.com/lemoncat7/dsh-knowledge) — 安装知识库插件，支持跨会话持久化信息的存储与检索。
-- [dsh-knowledge](https://github.com/Soren-ABT/dsh-knowledge) — 实现知识库与 RAG，提供分块、本地嵌入、混合搜索与管理面板。
-- [dsh-knowledge-archives](https://github.com/shynloc/acks-dsh-plugins/tree/HEAD/knowledge/dsh-knowledge-archives) — 归档整理积累的知识，支持长期检索与利用。
-- [dsh-knowledge-base](https://github.com/zy-ultimately/dsh-knowledge-base) — 管理知识库，实现跨对话的信息持久化存储与检索。
-- [dsh-knowledge-brain](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-knowledge-brain)
-- [dsh-knowledge-forge](https://github.com/bill084153-cell/dsh-knowledge-forge) — 构建本地优先的自动Wiki记忆，并生成原生技能以持久化知识。
-- [dsh-knowledge-graph](https://github.com/cwbcheng/dsh-knowledge-graph) — 将任意文本转化为知识图谱（事实、推理、概念等），并与原文双向关联。
-- [dsh-knowledge-graph](https://github.com/fango19961106-dotcom/dsh-knowledge-graph) — 利用 SQLite FTS5 实现跨会话的知识记忆、搜索和回忆，单文件持久化。
-- [dsh-knowledge-graph](https://github.com/RickDeng005/dsh-knowledge-graph) — 从对话中构建知识图谱，支持长期记忆与检索。
-- [dsh-knowledge-sqlite](https://github.com/NinjaSln-labs/dsh-knowledge-sqlite) — 利用SQLite全文检索实现跨会话知识存储与查询，支持中文检索。
-- [dsh-knowledge-sqlite](https://github.com/NinjaSln-labs/dsh-plugins/tree/HEAD/dsh-knowledge-sqlite) — 使用 SQLite 存储和检索跨会话知识，实现长期记忆。
-- [dsh-knowledge-sync](https://github.com/liugu2023/dsh-knowledge-sync) — 跨会话同步知识库，实现持久记忆。
-- [dsh-lan-memory](https://github.com/kiefeng/dsh-lan-memory) — 澜·记忆与人格系统 — DeepSeek Harness memory & persona plugin (三层记忆 + SOUL/MOOD + 一键整理)
-- [dsh-layered-memory](https://github.com/DDDFXYqiming/dsh-layered-memory) — 为 DeepSeek Harness 提供跨会话的长期记忆，支持跨对话的知识持久化。
-- [dsh-layered-memory](https://github.com/JunNanLYS/dsh-layered-memory) — 移植自 TencentDB-Agent-Memory MemoryCore 管线的分层长期记忆：对话自动蒸馏为 L1 事实 / L2 场景 / L3 画像三层记忆，并在每一步前召回注入。混合检索（SQLite FTS5 BM25 + sqlite-vec 向量，可选本地嵌入模型）、按会话捕获档位（auto/chat/work/off）、召回去重与时效衰减、设置页记忆浏览器、支持从 L0 原始事件全量重建。
-- [dsh-layered-memory](https://github.com/Olalaye/dsh-layered-memory) — DeepSeek Harness 分层长期记忆插件：瞬时/情景/语义三层记忆，自动捕获、AI 提炼、跨会话召回与可视化管理。
-- [dsh-learn](https://github.com/kouyichi/dsh-plugins/tree/HEAD/dsh-learn) — 促进学习与知识获取，可能存储长期教育数据。
-- [dsh-library](https://github.com/PerryLink/dsh-library) — 将本地 Markdown 与文本文档转为可检索的知识库，支持语义与关键词混合搜索、引用校验与来源注入。
-- [dsh-light-memory](https://github.com/chidaic/dsh-light-memory) — 轻量记忆系统插件：四个 Markdown 文件（USER/PROJECT/WORKLOG/CONVENTION）+ append/distill 两个动作，零外部部件，prefix-cache 友好的双层注入。
-- [dsh-lite-memory](https://github.com/SiriusWJ/dsh-lite-memory) — DSH 简化版记忆插件:SQLite 条目化记忆(标题/重要程度/来源/内容,增删改查)+ 日历与到点提醒(月视图+时间轴+待执行/已完成双tab),对话面板记忆 tab 与设置二级菜单,中英双语自动跟随。
-- [dsh-living-memory](https://github.com/dearbld/dsh-living-memory) — 自维护知识库，含夜间巡查、时间衰减、混合召回与知识图谱，实现长期记忆。
-- [dsh-liya-archives](https://github.com/feverZHONG/dsh-liya-archives) — 处理会话或数据的归档，用于长期存储和检索。
-- [dsh-llm-wiki](https://github.com/detpecca/dsh-llm-wiki) — 将 DeepSeek Harness 接入 wiki，实现跨会话知识的存储与检索。
-- [dsh-llm-wiki](https://github.com/wangning19940904/dsh-llm-wiki) — 创建工作区范围内的本地优先维基，用于存储和检索 LLM 生成的知识。
-- [dsh-llmwiki](https://github.com/chancelu/dsh-llmwiki) — 将本地Markdown维基用作长期记忆，支持融合检索与自动捕获。
-- [dsh-local-memory](https://github.com/caopu16/dsh-local-memory) — DSH（DeepSeek Harness）本地跨会话记忆插件：捕获每轮对话摘要、注入最近几天记忆，并提供 memory_search 工具按需检索全部历史记忆。
-- [dsh-local-memory](https://github.com/huangjua/dsh-local-memory) — 利用Markdown与自修复SQLite镜像，持久化跨会话的智能体记忆。
-- [dsh-local-vector-memory](https://github.com/liangxiaobing520/dsh-local-vector-memory) — 提供全本地向量记忆，含嵌入、SQLite存储和自动召回。
-- [dsh-log-memory](https://github.com/says693/dsh-log-memory) — 为会话日志提供弹窗守护和增量备份，支持多种存储格式。
-- [dsh-long-memory](https://github.com/wwskills/dsh-long-memory) — 跨会话持久化长期知识，使 DeepSeek Harness 能够跨会话回忆。
-- [dsh-long-term-memory](https://github.com/windrover/dsh-long-term-memory) — 实现分层长期记忆，支持中文BM25检索、JSONL存储和上下文注入，持久化知识。
-- [dsh-maestro-memory](https://github.com/ddtcorex/dsh-maestro-memory) — 提供持久化跨会话记忆与待办，支持五轨道、确认写入和 Git 同步。
-- [dsh-markdown-memory](https://github.com/SYMlp/dsh-markdown-memory) — 以每个事实一个 Markdown 文件存储长期记忆，可人工编辑和版本管理。
-- [dsh-md-memory](https://github.com/CuteSamurai24/dsh-md-memory) — 基于小文件提供长期记忆，模型写 markdown，宿主注入。
-- [dsh-mem](https://github.com/Jelee0145/dsh-mem) — 为dsh构建持久化跨工作区记忆的插件
-- [dsh-mem0](https://github.com/orangeshinee/dsh-mem0) — 集成 mem0，实现跨会话的长期记忆和知识持久化。
-- [dsh-mem0](https://github.com/wingsky-1/dsh-plugin-hub/tree/HEAD/packages/dsh-mem0) — 跨会话保存用户偏好与对话上下文，实现长期记忆检索，支持个性化交互。
-- [dsh-mem0-plugins](https://github.com/runfali/dsh-mem0-plugins) — dsh 持久化记忆插件 - 依托自建的 mem0‑graph 服务器实现自动回忆与回写。
-- [dsh-memarc](https://github.com/loongWoong/dsh-plugins/tree/HEAD/packages/dsh-memarc) — 实现长期记忆归档，可能包含向量索引以支持检索。
-- [dsh-memento](https://github.com/PerryLink/dsh-memento) — 有界、分层、带审批门、可审计的跨会话记忆：`ctx.memory` 服务 + 零依赖 SQLite 存储 + `memory` 工具与冻结快照注入；写入必过审批门，模型可见内容可自会话日志重建。
-- [dsh-memflow](https://github.com/crwsr124/dsh-memflow) — DeepSeek Harness 记忆框架插件。MEMFLOW 记忆流模式：会话会结束，记忆不会——感知先行、边做边记、无缝续接。分布式记忆架构：每个项目都有自己的记忆，子任务自定义记忆上下文，项目 skill 自迭代——一个插件让你的所有工作流实现类Hermes效果。
-- [dsh-memgas](https://github.com/quqxui/dsh-memgas) — DeepSeek Harness 长期记忆插件：四通道检索融合 + 记忆演化闭环，检索方法来自 ICLR 2026 论文 MemGAS。Long-term memory plugin for DeepSeek Harness (dsh).
-- [dsh-memoir](https://github.com/Qinling-Melon-Farmers/dsh-memoir) — DSH 项目持久化记忆插件（TypeScript）：会话归纳 + 经验教训沉淀，写入 PROJECT_MEMORY.md 与全局索引；每轮工作结束自动提醒蒸馏、自动注入未来 AGENTS；附 Web GUI 记忆面板（项目/全局 tab、检索、手动记录/删除）。dsh-plugin
-- [dsh-memories](https://github.com/DamonKoy/dsh-plugins/tree/HEAD/packages/dsh-memories) — 跨会话管理长期记忆，供代理回顾过往交互。
-- [dsh-memories](https://github.com/jisi71/dsh-memories) — 维护跨会话的长期事实与项目进度账本，在新会话中自动召回，延续记忆。
-- [dsh-memory](https://github.com/Amengclass/dsh-memory) — 提供持久化、可被模型编辑的记忆与笔记存储，支持增删改查，跨会话保留事实。
-- [dsh-memory](https://github.com/aqsk-BLG/dsh-memory) — 管理跨会话的长期记忆存储与检索。
-- [dsh-memory](https://github.com/ben7am1n/dsh-memory) — 用 SQLite 存储跨会话数据，实现持久化记忆。
-- [dsh-memory](https://github.com/biubiu23333333/dsh-memory) — 管理跨会话的长期记忆存储。
-- [dsh-memory](https://github.com/boomzikazita/dsh-memory) — 提供多通道召回、确认写入和加密存储的长期记忆插件。
-- [dsh-memory](https://github.com/chenhw7/dsh-memory) — 跨会话持久化用户事实与偏好，通过BM25检索和分层作用域管理长期记忆。
-- [dsh-memory](https://github.com/dennisrongo/dsh-plugins/tree/HEAD/plugins/dsh-memory) — 为 DeepSeek Harness 添加持久记忆功能，支持跨会话回忆和上下文感知。
-- [dsh-memory](https://github.com/doublehappy123/dsh-memory) — 为 DeepSeek Harness 提供跨会话的长期记忆持久化，实现对话间的信息召回。
-- [dsh-memory](https://github.com/FuRongJun-1999/CommonTrustProtocol/tree/HEAD/plugins/dsh-memory) — 为智能体提供持久化记忆存储与检索。
-- [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) — AGI 的长期记忆基础设施。让 AI Agent 拥有不可遗忘的自我。跨会话记忆 · 持续学习 · 可审计信任（智能论 v3.2）
-- [dsh-memory](https://github.com/guntur-d/dsh-memory) — 提供跨会话持久记忆，按工作区存储事实，支持记忆的写入、列出、搜索和遗忘。
-- [dsh-memory](https://github.com/guyuefangyuanl/dsh-memory) — 为Harness提供跨会话持久记忆，包含记忆工具和维护技能。
-- [dsh-memory](https://github.com/haitang1/dsh-memory) — 持久记忆插件，自动注入摘要，提供记忆工具、会话滚动摘要与网页设置卡片。
-- [dsh-memory](https://github.com/hmlyx/dsh-memory) — 提供长期记忆功能，跨会话存储用户画像与AI偏好。
-- [dsh-memory](https://github.com/hr98w/dsh-memory) — 提供基于Markdown的长期记忆，支持全局与工作区分层管理和渐进式披露。
-- [dsh-memory](https://github.com/Jesse-njx/dsh-memory) — 基于 DSH 无损会话日志的引用式记忆：蒸馏出的事实带 `(sessionId, eventRange)` 引用，可随时展开回原始日志片段。
-- [dsh-memory](https://github.com/jipika/dsh-memory) — 给 DeepSeek Harness 的两层长期记忆：一个全局 markdown 文件加按项目分级的文件，每次提示词组装时作为提示词段注入，并在设置面板里为每层提供开关与正文查看。
-- [dsh-memory](https://github.com/joyiok/dsh-memory) — 提供跨所有会话的共享持久化记忆存储，包含记忆工具和Web侧边栏面板。
-- [dsh-memory](https://github.com/JustGenius-s/DSH-Plugs/tree/HEAD/plugins/dsh-memory) — 为DSH代理提供跨会话的持久记忆存储与检索。
-- [dsh-memory](https://github.com/LiuJunheng/DeepSeekHarnessGreen/tree/HEAD/plugins/dsh-memory) — 跨会话保存对话上下文，实现长期记忆与持续回忆。
-- [dsh-memory](https://github.com/Max-Null/dsh-memory) — 跨会话存储和检索长期记忆。
-- [dsh-memory](https://github.com/mnbvcxzaqwertyuioplm/dsh-memory) — DSH 跨会话语义记忆插件：智谱 embedding-3 + SQLite，提供 memory_add / memory_search 语义召回；配置可选、绝不因缺 key/缺库/缺服务而崩。
-- [dsh-memory](https://github.com/navid-kianfar/dsh-memory) — 提供基于 DuckDB 的持久化、可搜索项目记忆，并注入规则到模型请求。
-- [dsh-memory](https://github.com/nightBrise/Oh-My-DSH/tree/HEAD/dsh-memory) — DeepSeek Harness综合插件包，可能包含记忆功能。
-- [dsh-memory](https://github.com/ningbainb/deepseek-harness-desktop/tree/HEAD/packages/dsh-memory) — 提供跨会话的持久化存储，记住用户事实与偏好以个性化回复。
-- [dsh-memory](https://github.com/qwert702/dsh-memory) — 提供项目级和全局长期记忆存储，支持自动提取和链接图可视化。
-- [dsh-memory](https://github.com/seriousz158/dsh-memory) — 基于Git存储对话历史，实现长期持久化和版本控制。
-- [dsh-memory](https://github.com/Towzai/dsh-memory) — 跨会话记忆，支持向量检索和自动系统提示注入。
-- [dsh-memory](https://github.com/yan5236/dsh-memory) — 实现两阶段长期记忆：会话提取与全局整合，并注入摘要及记忆工具。
-- [dsh-memory](https://github.com/yangyongzhen/dsh-memory) — 为 DeepSeek Harness 提供长期记忆，跨会话存储和回忆对话上下文。
-- [dsh-memory](https://github.com/zhouzhencheng07/dsh-memory) — 提供跨会话记忆，包括自动捕获、搜索和整合。
-- [dsh-memory-amem](https://github.com/Zhang-Zhengyuan/dsh-memory-amem) — 提供长期代理记忆，具备A-MEM、提示注入防御及原生与MCP集成。
-- [dsh-memory-bridge](https://github.com/gangwolf2312-creator/dsh-memory-bridge) — 桥接记忆树，自动提取和注入上下文，含事件图、维基图和时间线审计。
-- [dsh-memory-bundle](https://github.com/Paloma966/dsh-mem/tree/HEAD/dsh-memory-bundle) — 基于 SQLite 的本地 AI 记忆，提供 memory_search、memory_remember 和 memory_context 工具。
-- [dsh-memory-bundle](https://github.com/QIANLING-0831/dsh-memory/tree/HEAD/packages/dsh-memory-bundle) — 通过中文感知搜索、去重、混合向量记忆和跨会话核心记忆减少 token 消耗。
-- [dsh-memory-canvas](https://github.com/guobinmengxiang-rgb/dsh-memory-canvas) — 将日志卸载到 refs 文件，维护 Mermaid 画布并按节点 ID 回忆。
-- [dsh-memory-connect](https://github.com/Asher-2000/dsh-memory-connect) — 实现跨会话记忆，支持自动提取、语义召回和定期维护。
-- [dsh-memory-dashboard](https://github.com/perinchiang/dsh-memory-dashboard) — 提供只读仪表盘，展示DeepSeek Harness四层本地记忆，方便查看。
-- [dsh-memory-director](https://github.com/ljsysfurryACE/dsh-memory-director) — 提供 LLM 驱动的记住/忘记管理，实现跨会话持久记忆，填补 Harness 记忆空缺。
-- [dsh-memory-eternal](https://github.com/EternalNight996/dsh-memory-eternal) — 记忆核心（Memory Eternal）：把 boujoy-harness 记忆模块搬进任意 DeepSeek Harness 的独立插件——对话自动沉淀知识卡到本地 Markdown Vault（去重/检索/知识图谱），零人工干预
-- [dsh-memory-evolve](https://github.com/csyangwen/dsh-memory-evolve) — 为 DeepSeek Harness 带来「跨会话长期记忆 + 后台自我进化」能力的纯插件实现：五轨记忆 · git 分支感知 · 回合内自我审查 · 技能自我进化与技能管理器 · 四轨待办 · COI 调度 · 会话广播 · 会话搜索 · 提示词管理器 · 临时信息便签——零核心修改、零运行时依赖，随装随用、卸载即净。
-- [dsh-memory-forget](https://github.com/XIAOke8698/dsh-memory-forget) — 为 AI 智能体实现遗忘引擎，支持记忆 TTL、衰减、驱逐和审计。
-- [dsh-memory-ga](https://github.com/DiligenceLai/dsh-memory-ga) — 实现分层的门控记忆系统，通过索引、规则和会话检查点实现持久知识。
-- [dsh-memory-gate](https://github.com/GIT121995/dsh-memory-gate) — 管理 DeepSeek Harness 中检索记忆的使用方式，决定采用、验证或忽略，并支持反馈学习和审计。
-- [dsh-memory-graph](https://github.com/zmh2000829/dsh-memory-graph) — 提供本地优先的长期记忆与时间知识图谱，支持持久化。
-- [dsh-memory-hermes](https://github.com/SipengXie2024/dsh-memory-hermes) — 实现有界记忆和自策展技能库，含后台审查循环。
-- [dsh-memory-hook](https://github.com/VinsonWild/Wangdefa.Memory/tree/HEAD/dsh-memory-hook) — 实现五层本地记忆组件，数据完全保留本地，具备白盒可控和可解释性。
-- [dsh-memory-hub](https://github.com/ARFCON/dsh-hotplug-hub/tree/HEAD/dsh-hotplug-hub/dsh-memory-hub) — 集中管理控制台的记忆，提供会话数据的存储与检索中枢。
-- [dsh-memory-lite](https://github.com/pacoyi/dsh-memory-lite) — 跨会话存储和检索关键信息，实现轻量级长期记忆。
-- [dsh-memory-local](https://github.com/LISHUANGXI1412/dsh-memory-local) — DSH 的本地跨会话记忆：remember/recall/forget 工具、系统提示词注入，以及管理项目级与全局记忆的设置页。
-- [dsh-memory-manager](https://github.com/MoonlitDropOfBlood/dsh-memory-manager) — DSH基本的记忆功能
-- [dsh-memory-manager](https://github.com/tuanmaoOVO/dsh-memory-manager) — dsh的记忆管理
-- [dsh-memory-manager](https://github.com/xiaoshi7915/dsh-memory-manager) — 提供统一的记忆管理层，实现跨会话的持久上下文。
-- [dsh-memory-meow](https://github.com/Phant0Meow/dsh-memory-meow) — 项目级跨会话记忆：PROJECT.md 快照注入首条用户消息（缓存友好）+ memory_remember 工具 + ReAct 任务结束自动反思；各项目独立记忆文件，互不互通。
-- [dsh-memory-migration](https://github.com/tieveto666-code/dsh-memory-migration) — 为原版 DeepSeek Harness 提供长期记忆：用键值对保存身份、偏好、方法论和约束，并在后续对话中按提问召回。可手动增删改查；也可选「记忆迁移」，从 ChatGPT / Claude / Gemini / DeepSeek 官方导出包提取少量核心记忆。独立插件，不修改 DSH 源码。
-- [dsh-memory-nexus](https://github.com/Frank-NF/dsh-memory-nexus) — 提供四层记忆、上下文压缩、提示词编排及企业级安全的集成记忆管理方案。
-- [dsh-memory-palace](https://github.com/lovezi0/dsh-memory-palace) — 把 WorkBuddy 的文件式记忆系统移植进 [DeepSeek Harness](https://www.deepseek.com/harness/) —— 为 Harness 提供**跨会话持久化、人类可直接编辑的 Markdown 记忆**。
-- [dsh-memory-panel](https://github.com/sdf-jkl-gh/dsh-memory-panel) — 提供用于管理 DeepSeek Harness 持久记忆的面板。
-- [dsh-memory-panel](https://github.com/x2it/dsh-memory-panel) — 提供长期记忆工具和侧边栏，可视化代理对用户的记忆。
-- [dsh-memory-plugin](https://github.com/disc0nct/dsh-memory-plugin) — 为DeepSeek Harness提供跨会话持久记忆，让agent能存取信息。
-- [dsh-memory-plugin](https://github.com/ly028716/dsh-memory-plugin) — 记录用户偏好、工具使用和项目上下文以提供个性化建议。
-- [dsh-memory-plugin](https://github.com/volcengine/OpenViking/tree/HEAD/examples/dsh-memory-plugin) — 整合长期记忆、知识检索与技能，为智能体提供自演进的上下文数据库。
-- [dsh-memory-plugin](https://github.com/yushenghai1106/dsh-memory-plugin) — 为 harness 提供可插拔的持久记忆，实现跨会话的用户数据与偏好召回。
-- [dsh-memory-porter](https://github.com/Shiye-10Pages/dsh-memory-porter) — 📦 记忆搬家：把 Claude / ChatGPT 的历史记忆搬进 DeepSeek Harness —— 逐字证据由代码回原文核对，你逐条批准，全程本地 | Move your Claude & ChatGPT memory into DSH, with machine-verified verbatim evidence
-- [dsh-memory-protocol](https://github.com/baaai123/dsh-memory-protocol) — 桥接 MCP 服务器并强制执行记忆协议，确保持久知识。
-- [dsh-memory-pyramid](https://github.com/33moren33/dsh-memory-pyramid) — 为 Harness 增加带时间轴的无限记忆，包含追加式事实日志和代理维护的摘要金字塔，阅读预算恒定。
-- [dsh-memory-s3](https://github.com/Re-s/dsh-memory-s3) — 提供基于S3的跨会话记忆，支持语义召回、向量搜索和带附件的结构化条目。
-- [dsh-memory-search-plus](https://github.com/the-thinker0/dsh-memory-search-plus) — 提供跨会话的本地全文搜索，支持消息级导航和编码历史检索。
-- [dsh-memory-self-evolution](https://github.com/CJL-1995/dsh-memory-self-evolution) — dsh自动进化记忆系统
-- [dsh-memory-setup](https://github.com/863683348/dsh-memory-setup) — 为 DSH 提供可审计的个人记忆层，存储偏好、约定、工作流和经验教训。
-- [dsh-memory-spaces](https://github.com/icearia0219/dsh-memory-spaces) — 管理跨会话记忆空间，支持溯源、版本控制和注入预览，由用户掌控。
-- [dsh-memory-system](https://github.com/zhujunpeng12/dsh-memory-system) — 提供本地优先的持久记忆，支持热启动、BM25 冷召回、事务写入和只读治理。
-- [dsh-memory-tdai](https://github.com/Jason-Liao/dsh-memory-tdai) — 用于跨会话长期记忆的插件。
-- [dsh-memory-triage](https://github.com/AtinyFurina/dsh-memory-triage) — 对长期记忆进行分诊，整理、优先级排序或清理知识。
-- [dsh-memory-vault](https://github.com/flymysql/dsh-memory) — 跨会话记忆库：remember / recall / forget 工具、每轮提示注入与设置页条目浏览。
-- [dsh-memory-vault](https://github.com/hjj588/dsh-memory-vault) — 为 DSH 提供长期记忆存储库，用于跨会话的持久知识。
-- [dsh-memory-vi](https://github.com/zxck5xz/dsh-memory-vi) — 用 SQLite 保存跨会话的项目长期记忆。
-- [dsh-memoryhub](https://github.com/solknight48/dsh-memoryhub) — 会话启动时自动加载检查点记忆，提供记忆工具与技能，并新增记忆标签页。
-- [dsh-memoryleak](https://github.com/warmwine/dsh-memoryleak) — 基于dsh的知识库和待办管理工具
-- [dsh-memoryos](https://github.com/tianhao8687/dsh-memoryos) — 为DeepSeek Harness提供基于证据的长期项目记忆，集成MemoryOS实现知识存储与检索。
-- [dsh-mihaji](https://github.com/Miyamiz39/mihaji-memory/tree/HEAD/dsh-mihaji) — 跨会话持久化存储与检索记忆。
-- [dsh-miopiik-recall](https://github.com/Chillizu/mop-plugins/tree/HEAD/packages/dsh-miopiik-recall) — 跨会话保存并检索长期记忆，维持用户上下文。
-- [dsh-missher-memory](https://github.com/Missher12/dsh-missher-memory) — 为 DeepSeek Harness 维护项目范围的长周期记忆。
-- [dsh-mneme](https://github.com/modusensus/dsh-mneme) — 实现结构化记忆引擎，支持语义搜索、实体时间线和自动整合。
-- [dsh-mneme](https://github.com/modusensus/dsh-mneme/tree/HEAD/dsh-mneme) — 跨会话记忆：SQLite + 可人工编辑的 Markdown 镜像，后台自动巩固（去重/合并/冲突裁决），提供 6 个记忆工具。
-- [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) — Mnemon 深度集成：本地三层记忆（Runtime Memory、可检索 Documents、受监督 Memory Spaces）。
-- [dsh-mnemon-strategy-auto-capture](https://github.com/omdsh-dev/dsh-mnemon/tree/HEAD/plugins/dsh-mnemon-strategy-auto-capture) — 自动捕获运行时上下文和项目文档，实现跨会话的持久化、可搜索记忆。
-- [dsh-mnemon-strategy-light-context](https://github.com/omdsh-dev/dsh-mnemon/tree/HEAD/plugins/dsh-mnemon-strategy-light-context) — 提供轻量级上下文管理，保持关键记忆活跃且不增加过多负担。
-- [dsh-mnemon-strategy-scoped](https://github.com/omdsh-dev/dsh-mnemon/tree/HEAD/plugins/dsh-mnemon-strategy-scoped) — 将记忆捕获限定在特定项目或会话内，实现精准且有组织的长期回顾。
-- [dsh-mnemos](https://github.com/Rottenwooood/dsh-mnemos) — 实现跨会话的持久记忆，存储并检索上下文以增强回忆能力。
-- [dsh-mnemosyne](https://github.com/rebron1900/dsh-mnemosyne) — Mnemosyne 记忆层在 DeepSeek Harness 中的插件 — 本地优先、SQLite 支持的跨会话记忆。
-- [dsh-mnemosyne-memory](https://github.com/fjzzwxp/dsh-mnemosyne-memory) — Mnemosyne 永久记忆插件 - 为 DSH 提供长期记忆、向量搜索和 LLM 反思功能，对标 Hindsight Coding Agents
-- [dsh-mnemosyne-memory](https://github.com/Witchwarren2344/dsh-mnemosyne-memory) — 为长期记忆提供向量搜索与LLM反思，确保持续的上下文。
-- [dsh-mobile-glass](https://github.com/YiRan0/dsh-mobile-glass) — 将会话活动桥接到本地自托管记忆守护进程，实现持久上下文。
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 190 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="tools"></a>
-
-<details>
-<summary><strong>工具与能力</strong> · 显示 251 / 共 4009 个</summary>
-
-- [@xiaohe-store/dsh-canvas](https://github.com/wild-river2016/dsh-xiaohe-canvas) — 小禾画布 AI 创作助手 - 操作画布创作电商内容（图片、视频、工作流）。
-- [@zhaoolee/dsh-notes](https://github.com/zhaoolee/notes) — 将 DSH 对话导出为锤子便签风格 PNG，或在配置的账号工作区中新建和更新 Markdown 便签。
-- [88API Image Studio](https://github.com/blackdm666/dsh-plugin-88api-image) — 统一接入 Image2 与 Nano Banana 四款模型，覆盖文生图、多参考图编辑、2K/4K 输出、顺序批量任务、默认模型持久化和脱敏 Key 配置。
-- [academica-mcp](https://github.com/academica-sh/academica-mcp) — 托管生物医学文献、临床试验、支付数据和医疗保健提供者证据的 MCP 服务器。
-- [accurlex-dsh-legal](https://github.com/MrPunchLeonardo/accurlex-dsh-legal) — 集成accurLex开放平台的法律工具，支持法律文档处理与分析。
-- [acp-app](https://github.com/niushuanan/xiaozhuang-dsh/tree/HEAD/packages/bundle/acp-app) — 增强版 DeepSeek Harness，支持计算机使用、团队协作及多工作树开发。
-- [adapter-dsh](https://github.com/Porphyrioon/ironlaw/tree/HEAD/packages/adapter-dsh) — 为编码代理提供基于证据的完成和修复，提高输出可靠性。
-- [adb_dsh_plugin](https://github.com/mang0cola/adb_dsh_plugin) — 通过 ADB 直接在 agent 环境中控制安卓设备。
-- [adobe-after-effects](https://github.com/pirate-608/dsh-plugins/tree/HEAD/plugins/adobe-after-effects) — 集成 Adobe After Effects，支持合成与动态图形工作流的自动化控制。
-- [adobe-photoshop](https://github.com/pirate-608/dsh-plugins/tree/HEAD/plugins/adobe-photoshop) — 提供自动化处理 Adobe Photoshop 任务的工具，涵盖图像编辑与批量操作。
-- [adobe-premiere](https://github.com/pirate-608/dsh-plugins/tree/HEAD/plugins/adobe-premiere) — 支持 Adobe Premiere Pro 的自动化控制，用于视频编辑与后期制作流程。
-- [agent-bridge](https://github.com/GalaxyBatMan111/dsh-plugins/tree/HEAD/agent-bridge) — 连接 Claude Code、Codex 等外部代理，扩展 DeepSeek Harness 的自动化能力。
-- [agent-guard](https://github.com/mokuyoaxis/agent-guard) — 通过隔离、审计和人工升级使破坏性操作可逆。
-- [agent-in-browser](https://github.com/chris-003/dsh-agent-in-browser/tree/HEAD/agent-in-browser) — 让代理实时查看和控制浏览器，支持导航、截图、点击和标签页管理。
-- [agent-plaza](https://github.com/agent-plaza/agent-plaza) — 免注册的AI代理公共平台，提供HTTP API与技能集成。
-- [agnes-media](https://github.com/LittleBeaverStudio/agnes-media) — 为Agnes AI媒体模型注册生成图像和视频的工具，支持在环境中进行媒体创作。
-- [ai-search-dsh](https://github.com/Anspire-AI/ai-search-dsh) — 集成AI搜索能力，增强信息检索效率。
-- [all](https://github.com/hyzyn/dsh-plugin-kit/tree/HEAD/packages/all) — 通用工具集，提供环境、MCP、提示词和个人资料管理。
-- [all](https://github.com/zhu1090093659/dsh-trading/tree/HEAD/packages/all) — 提供交易终端统一入口，以三栏界面整合多市场行情和可切换连接器。
-- [android](https://github.com/Very12345/sai-dsh-plugins/tree/HEAD/packages/android) — 为 sai 编码代理集成 Android 相关工具。
-- [anglesvideo-dsh-plugin](https://github.com/anglesvideo/anglesvideo-dsh-plugin) — 使用 Angles 服务从软件仓库创建产品发布视频，集成于 DeepSeek Harness。
-- [anime-find](https://github.com/cocofhu/anime-find) — DeepSeek Harness 搜番插件：对话内多源搜索番剧，卡片展示 Bangumi 评分与详情，支持复制磁力。
-- [Anionex-dsh-vision-toolkit](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/Anionex-dsh-vision-toolkit) — 提供视觉相关工具，可能支持图像分析或生成功能。
-- [anno-dsh-native](https://github.com/philmingdao/anno-dsh-native) — 提供本地优先的 HTML 审阅、编辑和批注功能。
-- [anysearch-dsh](https://github.com/anysearch-team/anysearch-dsh) — 为DeepSeek Harness提供网络搜索和高级搜索工具，增强信息检索能力。
-- [anysearch-team-anysearch-dsh](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/anysearch-team-anysearch-dsh) — 提供搜索工具，用于查询网络或本地数据源。
-- [apply-patch](https://github.com/ivwumupy/dsh-plugins/tree/HEAD/apply-patch) — 在 DSH 中应用补丁到文件或代码。
-- [apply-patch](https://github.com/JohnXu22786/apply-patch) — 将结构化统一差异应用到文件系统，支持多文件解析、模糊块匹配和试运行。
-- [apply-patch-engine](https://github.com/songyang0603/dsh-codex/tree/HEAD/packages/apply-patch-engine) — 应用 AI 模型生成的代码补丁，通过验证和错误处理将其集成到代码库中。
-- [approval-guard](https://github.com/zhouwei713/dsh-daily-kit/tree/HEAD/packages/approval-guard) — 提供审批守护机制，用于控制和验证用户操作。
-- [arch-doc](https://github.com/duyanta123/arch-doc) — 分析代码库并生成架构文档，涵盖模块、依赖和入口点。
-- [argo](https://github.com/taxueseek/argo) — 专为 agent 打造的搜索工具：多语言，覆盖中文/英文/学术/代码/购物/金融/新闻/百科。
-- [ark-managed-agents](https://github.com/volcengine/ark-cli/tree/HEAD/dsh-plugins/ark-managed-agents) — 集成火山引擎Ark服务，直接根据提示生成媒体、多模态答案或部署端点。
-- [ark-plan-api](https://github.com/volcengine/ark-cli/tree/HEAD/dsh-plugins/ark-plan-api) — 提供火山引擎Ark的API访问，简化媒体和多模态任务的提示到输出流程。
-- [asset-management](https://github.com/ret-c1/harness-plugin-tutorial/tree/HEAD/harness-plugin-lib/plugins/asset-management) — 管理 Harness 环境中的文件与资源等资产。
-- [assistant-delivery](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/assistant-delivery) — 将助手产出的结果或文件发送给指定接收方的投递工具。
-- [astock](https://github.com/huyang218/dsh-plugins/tree/HEAD/packages/astock) — 提供股票市场数据和分析工具。
-- [attach-files](https://github.com/eeyzs1/dsh-plugins/tree/HEAD/packages/attach-files) — 支持通过拖拽或选择方式将文件附加到对话中。
-- [aura-vision](https://github.com/Ck-epsilon/aura-vision) — 提供免费视觉 OCR 能力，支持基于瓦片的长文档识别。
-- [auto-mouse](https://github.com/Fish121380/auto-mouse) — 为 AI 代理提供带 OCR 和 MCP 输出的桌面 UI 上下文选择器。
-- [auto-vision](https://github.com/h-k-c/auto-vision) — DeepSeek Harness 图片插件：贴图不会让对话报错，模型自动判断是否需要看图（支持智谱/魔搭免费视觉模型，图片在聊天窗口正常显示）
-- [autocad-mcp](https://github.com/pirate-608/dsh-plugins/tree/HEAD/plugins/autocad-mcp) — 通过 MCP 集成 AutoCAD，实现 CAD 设计任务的编程控制与自动化。
-- [autoload](https://github.com/AtropinolTT/dsh-guide-dog/tree/HEAD/autoload) — 自动加载 Guide Dog 多模态插件，方便快速使用其功能。
-- [avoid-ai-writing-cn](https://github.com/hellogit2021/avoid-ai-writing-cn) — 知乎"去AI味写作技巧"社区免费提供：中文写作去 AI 味插件（AI-isms / AI writing / humanize）。说"去掉AI味"即重写，说"写的不错"自动学习新 AI 词。安装：dsh plugin --profile web add github:hellogit2021/avoid-ai-writing-cn
-- [awesome-dsh](https://github.com/stakeswky/awesome-dsh) — DSH 插件生态导航：GitHub topic dsh-plugin 全量目录，自动抓取 + Workers AI 中文翻译 + 按需检索 skill｜Auto-updating catalog of 2600+ DeepSeek Harness plugins
-- [awesome-ios-sim](https://github.com/qubyyang/awesome-ios-sim) — 通过 Swift CLI 和 MCP 服务器，捕获、对比并应用可复现的模拟器状态。
-- [backpack](https://github.com/gxx950224/backpack) — 为 harness 提供背包功能，可能包含库存或存储工具。
-- [base](https://github.com/dabaicai001/star-deepseek-harness-desktop/tree/HEAD/vendor/deepseek-harness/packages/bundle/base) — 提供 DSH 核心基础功能，支持数据库、SSH、SFTP 和 Docker 自动化操作。
-- [base](https://github.com/jiuge2467/dsh-studio/tree/HEAD/packages/bundle/base) — 提供 DSH 核心工具，包含 MCP 调试中枢和视觉思考引擎。
-- [base](https://github.com/PHoenixs57/deepseek-aix/tree/HEAD/packages/bundle/base) — 提供多源学术搜索、论文去重及文件夹收藏功能。
-- [base](https://github.com/ROOKIE02314/dsh-browser/tree/HEAD/packages/bundle/base) — 集成 Playwright，支持在环境中执行浏览器自动化操作。
-- [base](https://github.com/SuperJJ007/papermachine/tree/HEAD/packages/bundle/base) — 在本地运行 Python 和 R 代码生成数据图表，并将每张图追溯到其来源脚本。
-- [base](https://github.com/yth1120/deepseek-harness/tree/HEAD/packages/bundle/base) — 基础包提供工作台套件，包含右侧栏、终端、时间线、审阅、文件和浏览器预览。
-- [base](https://github.com/zhu1090093659/dsh-trading/tree/HEAD/packages/base) — 作为交易终端核心库，为多市场接入提供共享数据模型和工具函数。
-- [bash-on-windows](https://github.com/bainianlaoyao/windows-bash) — 将 Git Bash 配置为 Windows 上唯一的终端工具，并提供预设。
-- [bashguard](https://github.com/bLueriVerLHR/dsh-better-webui/tree/HEAD/packages/bashguard) — 为 shell 命令添加安全防护，防止误执行。
-- [beav-deepseek-harness](https://github.com/Jamailar/beav-deepseek-harness) — 为小红书等社媒提供 AI 运营支持，包括调研、文案、图片与视频制作。
-- [better-deepseek-harness](https://github.com/awa-123-cw/better-deepseek-harness) — DSH 图片/音视频托管插件：自动拉起 8899 静态服务 + 3080 /files/ 路由（HTTP Range 流式）+ WebUI 内点击即播（视频静音/音频 20% 音量/互斥懒加载）
-- [better-shell-tools](https://github.com/gao-gao-zai/BetterShell/tree/HEAD/packages/better-shell-tools) — 提供增强的 shell 工具集，供终端用户在环境中使用。
-- [bifrost-dsh](https://github.com/BrokkAi/bifrost/tree/HEAD/plugins/bifrost-dsh) — 提供多语言静态分析，辅助代理和编辑器处理大型代码库。
-- [BigFish](https://github.com/kobenfang/BigFish) — 🎣 BigFish AI钓鱼助手 - 钓点分析·鱼情分析·钓点分享 | Fishing spot analysis, fish activity, bait & lure
-- [BigFocus](https://github.com/kobenfang/BigFocus) — 🎯 BigFocus 追踪管家 - 商品价格/明星动态/行业追踪 | Price tracking, monitoring, alerts
-- [BigFood](https://github.com/kobenfang/BigFood) — 🍳 BigFood AI冰箱管家 - 食材识别→菜谱推荐 | Food recognition, recipe recommendation
-- [BigLead](https://github.com/kobenfang/BigLead) — 🎯 BigLead 精准客户线索挖掘 - B2B销售获客 | B2B lead generation, sales prospecting
-- [BigPlan](https://github.com/kobenfang/BigPlan) — 📋 BigPlan AI产品调研 - 市场/技术/供应链分析，三套产品规格方案 | Product research, market analysis
-- [bilibili-downloader-dsh](https://github.com/menghuanshiguang/bilibili-downloader-dsh) — DeepSeek Harness 插件(Agent Preset):B站(bilibili) 音视频下载助手。整合 bilidown CLI 与下载技能:官方API直链 / HTTP 412 反爬规避 / 扫码登录高清 / AV1 自动规避 / 合集秒下 / 片段截取。
-- [billion-context-dsh](https://github.com/myYangyunfan/dsh_desktop/tree/HEAD/dsh-desktop/assets/plugins/billion-context-dsh) — 打包 DeepSeek Harness 命令行工具，提供 Windows 桌面客户端，一键启动使用。
-- [bing-web-search](https://github.com/h-k-c/bing-web-search) — DeepSeek Harness 网页搜索插件：有 Tavily key 走 Tavily，没有自动退回免费无 key 的 Bing，搜索永远可用（零配置起步）
-- [blackboard-plugin](https://github.com/fyfhcgch/dsh-ctf-collaborate/tree/HEAD/dsh-ctf-team/plugins/blackboard-plugin) — 在黑板上管理多人CTF题目，支持共享笔记、代理任务和证据整理。
-- [blender](https://github.com/CheshireJCat/blender) — Blender 3D 生产插件：提供 30 个建模/重建 Skill、13 个运行时工具和 26 个确定性 Helper，覆盖参考图拟合、渲染、验证、动画与可移植格式导出；npm 包名 `dsh-blender`。
-- [BlockRunAI-dsh-clawrouter](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/BlockRunAI-dsh-clawrouter) — 路由工具调用，可能作为外部工具的代理或调度器。
-- [bloome-finance-plugin](https://github.com/ArcoCodes/bloome-finance-plugin/tree/HEAD/plugins/bloome-finance-plugin) — 提供财务数据接入与分析能力，让用户能在助手中查询和处理财务信息。
-- [bookkeeping](https://github.com/JohnXu22786/bookkeeping) — 通过对话记账：记录收支、查询、报表、导出 CSV/HTML 并设置月度预算。
-- [bootstrap](https://github.com/ADWMC/helm-d/tree/HEAD/packages/bootstrap) — 聚合安卓、Web、原生、协议、恶意软件与 AI 安全分析模块的综合工具。
-- [bridge](https://github.com/lukaiwuyi/dsh-frontend-tools/tree/HEAD/bridge) — 将 Web、Electron 或 Tauri 应用与 DeepSeek Harness 代理桥接，支持实时工具注册。
-- [bridge-browser](https://github.com/LianPing-cyber/dsh-browser-full-access/tree/HEAD/packages/browser/bridge-browser) — 为DeepSeek Harness提供全权限后台标签页浏览器自动化桥接。
-- [bridge-browser](https://github.com/Lum1104/dsh-browser/tree/HEAD/packages/browser/bridge-browser) — 通过 Chrome 侧边栏扩展使 harness 直接控制浏览器。
-- [browser](https://github.com/jo32/DeepDeck/tree/HEAD/plugins/browser) — 提供浏览器控制能力，让代理直接操作网页。
-- [browser](https://github.com/ophielel/deepseek-forge/tree/HEAD/packages/browser) — 添加浏览器控制能力以进行自动化网页交互，使 DeepSeek Harness 能导航和操作网站。
-- [browser](https://github.com/picoaide/picoaide-harness/tree/HEAD/packages/host/browser) — 将浏览器控制能力集成到宿主环境中。
-- [browser](https://github.com/stelmakhdigital/dsh-web-automation/tree/HEAD/browser) — 提供浏览器自动化能力，用于网页交互和数据抓取。
-- [browser-automation](https://github.com/JohnXu22786/browser-automation) — 真实浏览器自动化 MCP 服务器：通过可访问性树快照让 agent 打开网页、点击、填表、截图并执行脚本。
-- [browser-connector](https://github.com/Azhe0306/dsh-connectors/tree/HEAD/packages/browser-connector) — 浏览器自动化连接器：通过 DevTools 协议驱动本机 Edge/Chrome，可打开页面、读取正文、点击、填表与截图，提供 11 个工具，无运行时依赖。
-- [browser-half](https://github.com/toRolex/periscope/tree/HEAD/spike/browser-half) — 为浏览器场景的编程代理提供视觉能力。
-- [browser-mcp](https://github.com/ywleeo/browser-mcp) — 通过真实 Chrome 浏览器提供本地 MCP 服务器，用于读取和操作网页。
-- [browser-playwright](https://github.com/Short-Arm-Ape/dsh-browser-unified/tree/HEAD/upstream/dsh-browser-xylt369/packages/browser-playwright) — 在 DeepSeek Harness 中集成 Playwright 实现浏览器自动化。
-- [browser-playwright](https://github.com/xylt369/dsh-browser/tree/HEAD/packages/browser-playwright) — 提供基于Playwright的浏览器自动化工具，支持导航、点击和评估，并带有安全特性。
-- [browser-standard](https://github.com/acosmi/dsh-plugin/tree/HEAD/plugins/dsh-browser-automation/packages/browser-standard) — 标准化浏览器自动化能力，使代理能够控制和交互网页浏览器。
-- [browser-unified-mit](https://github.com/Short-Arm-Ape/dsh-browser-unified/tree/HEAD/packages/browser-unified-mit) — DeepSeek Harness 的统一浏览器控制插件，支持网页自动化与交互。
-- [browser-unified-plugin](https://github.com/Short-Arm-Ape/dsh-browser-unified/tree/HEAD/packages/browser-unified-plugin) — DeepSeek Harness 的统一浏览器插件，提供网页交互能力。
-- [browser-use](https://github.com/eeyzs1/dsh-plugins/tree/HEAD/packages/browser-use) — 允许用户通过代理控制浏览器，自动化网页导航与交互。
-- [browser-use](https://github.com/fatmind/dsh-plugin-browser-use/tree/HEAD/packages/browser-use) — 复用已登录Chrome会话，抓取网站、填表与点击，无需重新登录。
-- [BrowserPilot for DeepSeek Harness](https://github.com/Puxora/dsh-browserpilot) — 将 BrowserPilot 的本机 Chrome MCP 工具接入 DeepSeek Harness，提供可配置的权限策略和管理面板入口。
-- [BrowserRig](https://github.com/Castor6/BrowserRig) — 控制已登录的 Chromium 浏览器，无需远程调试授权。
-- [bundle](https://github.com/alex04130/dsh-forge/tree/HEAD/bundle) — 提供运行时注入、子代理派发、模型路由、插件管理与浏览器桥接。
-- [bundle](https://github.com/anht3889/dsh-mcp-management/tree/HEAD/packages/bundle) — 管理Harness中的MCP服务器和工具集合。
-- [bundle](https://github.com/anht3889/dsh-web-search/tree/HEAD/packages/bundle) — 为 DeepSeek Harness 打包网络搜索工具，支持在会话内直接搜索并获取结果。
-- [bundle](https://github.com/CC19990113/dsh-plugin-codegraph/tree/HEAD/packages/bundle) — 提供代码图工具，从索引中定位符号声明、调用方和影响范围。
-- [bundle](https://github.com/chaojixinren/dsh-reviewer-bot/tree/HEAD/bundle) — 原生DSH插件形态的代码评审机器人，支持多平台、可插拔规则和本地重放。
-- [bundle](https://github.com/hejielijob-commits/dsh-data-agent/tree/HEAD/packages/bundle) — 接入可插拔的数据代理，让 AI 在环境中直接查询和分析数据。
-- [bundle](https://github.com/LongSir0419/dsh-mcp-manager/tree/HEAD/bundle) — 通过可视化网页界面管理 MCP 服务器，支持增删改查及连接测试。
-- [bundle](https://github.com/lyuwen/dsh-codeact-tools/tree/HEAD/bundle) — CodeAct 代理工具包，用于执行代码和自动化任务。
-- [bundle](https://github.com/ph4310822/dsh-x402-wallet/tree/HEAD/packages/bundle) — 集成 x402 支付钱包，支持在 Harness 内进行交易。
-- [bundle](https://github.com/sakthiveltofficial/dsh-git-plugins/tree/HEAD/packages/git/bundle) — 捆绑Git操作，支持本地与远程仓库管理。
-- [bundle](https://github.com/shenyan-008/dsh-visual-aid/tree/HEAD/bundle) — 通过视觉模型作为辅助，让纯文本模型也能处理图像。
-- [bundle](https://github.com/weijiafu14/dsh-remote-sandbox/tree/HEAD/packages/bundle) — 提供崩溃恢复的远程执行环境，具备心跳保活、透明恢复和工作区同步。
-- [bundle](https://github.com/wulun811/LiuHe/tree/HEAD/malong/dsh/bundle) — 提供基于 Rust 的代码工具集，含 44 个 MCP 工具用于编辑、分析与质量检查。
-- [bundle](https://github.com/xun404/dsh-pihuo-plugins/tree/HEAD/packages/bundle) — 以聊天工作进程方式运行本地 ACP 进程。
-- [bundle](https://github.com/zxmqq1234/DeepSeek-Harness-Remote/tree/HEAD/packages/bundle) — 为手机伴侣提供安全远程访问层，支持局域网、公网与 P2P 模式。
-- [bundle-data-analysis](https://github.com/1797833970/dsh-data-analysis-plugin/tree/HEAD/packages/data-analysis/bundle-data-analysis) — 打包 Python 代码运行时、分析工具与技能，支撑数据分析智能体的工作流。
-- [busabase-dsh-plugin](https://github.com/busabase/busabase-dsh-plugin) — 将 DeepSeek Harness 连接到 Busabase，用于结构化数据和已批准知识；以卡片呈现工作区实体，并将写入作为待人工审核的提案。
-- [c-vision](https://github.com/cczzyy-cn/c-vision) — DeepSeek Harness (DSH) 视觉插件 —— 给智能体屏幕/窗口视觉 + 电脑使用能力（see/ocr/list_windows + 鼠标键盘操作），跨语言调用捆绑的 Python cvision，Windows / macOS 可用。
-- [calendar](https://github.com/JohnXu22786/calendar) — 集成CalDAV、iCalendar和RRULE日历，支持农历、节假日和亚洲时区。
-- [calendar](https://github.com/zhouwei713/dsh-daily-kit/tree/HEAD/packages/calendar) — 集成日历功能，用于管理日程和事件。
-- [canon-deepseek-harness-plugin](https://github.com/HeyBobChan/canon-deepseek-harness-plugin) — 将 Canon 服务集成到 DeepSeek Harness，扩展其外部功能。
-- [cau-portal-open](https://github.com/ZBber-lab/cau-portal-open) — 农大门户（cau-portal）：中国农业大学通知公告 DSH 插件 + 爬虫/AI 加工管道（开源工具，数据由使用者自建）
-- [cc-mcp](https://github.com/Bcy2020/dsh-cc-ecosystem/tree/HEAD/packages/cc-mcp) — 引入Claude Code的MCP配置，连接外部工具。
-- [cc-permissions](https://github.com/Bcy2020/dsh-cc-ecosystem/tree/HEAD/packages/cc-permissions) — 应用Claude Code的权限规则，实现一致访问控制。
-- [ceph](https://github.com/Elinpf/dsh-ops-plugins/tree/HEAD/packages/ops-access/ceph) — 提供访问 Ceph 存储的工具，支持与 Ceph 集群交互。
-- [chaos-03x-dsh-agy](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/chaos-03x-dsh-agy) — 可能提供基于代理的工作流或任务管理工具。
-- [chatnode-wechat](https://github.com/snzhi000-sys/harness-macos-desktop-plugin-suite/tree/HEAD/plugins/cowork/packages/chatnode-wechat) — 提供微信聊天节点，支持在桌面插件套件中与微信服务进行交互。
-- [chicheng-gate](https://github.com/534119219/chicheng-gate) — DSH Web 插件：局域网/远程访问控制、frpc 内网穿透、面板密码门禁与手机端 UI 适配。
-- [chimerax](https://github.com/Hongcheng-LI/dsh-scientific/tree/HEAD/plugins/chimerax) — 集成 ChimeraX 用于科学工作流中的分子可视化和分析。
-- [chrome-faithful](https://github.com/bpc-oss/chrome-faithful) — 通过 MCP 忠实控制你真实、已登录的 Chrome 配置文件：基于 MV3 chrome.debugger 扩展与经认证的本地桥接实现精确多 Profile 路由。不复制配置文件、不用调试 Profile、不开远程调试端口、不用 Edge。内置多信号挑战检测与人机化验证处理、页面 File 注入、签名 URL 安全的媒体导出，以及持久化虚拟列表采集。
-- [citeguard](https://github.com/Chhlafiu4312/citeguard) — 在 DeepSeek Harness 回复中提取引用并验证证据，帮助用户确认信息可靠性。
-- [claude-marketplace-bridge](https://github.com/cnzgray/dsh-plugins/tree/HEAD/packages/claude-marketplace-bridge) — 将 Claude 市场桥接到 DeepSeek Harness，以便访问外部工具和资源。
-- [client](https://github.com/hyperion2144/dsh-hashline-edittool/tree/HEAD/client) — 基于哈希锚点，提供精确的文件读取、编辑与撤销操作。
-- [cloudq-for-dsh](https://github.com/TencentCloud/cloudq-for-dsh) — 对接腾讯云服务，可能用于消息队列或集成场景。
-- [clutch-dsh-fireworks](https://github.com/Cerbur/clutch-dsh/tree/HEAD/packages/clutch-dsh-fireworks) — 提供烟花相关工具，为终端用户增添实用功能。
-- [cn](https://github.com/zhu1090093659/dsh-trading/tree/HEAD/packages/cn) — 为交易终端提供中国市场（CN）的连接能力，支持A股等品种交易。
-- [cn-intel-mcp-dsh](https://github.com/lory69060/cn-intel-mcp-dsh) — 通过 MCP 提供供应链情报，含信号、记录与问答。
-- [cn-linebreak](https://github.com/chiang21fcb/cn-linebreak) — 中文网页文案断行审查与修复工具：按《中文网页文案断行修复指南》检查孤字行/词组被拆/缺 keep-all 等问题，并自动插入。
-- [cocos-codely](https://github.com/hhhh124hhhh/cocos-extensions/tree/HEAD/cocos-codely) — 通过 MCP 让 AI 直接操作 Cocos Creator，覆盖场景操作、构建验证与多智能体协作。
-- [codegraph](https://github.com/hyzyn/dsh-plugin-kit/tree/HEAD/packages/codegraph) — 生成并可视化代码图谱，帮助理解项目结构。
-- [CodeReader](https://github.com/PathChan/CodeReader) — 提供代码文件读取和分析的工具。
-- [codex-bridge](https://github.com/xiaoxiao44443/dfy-dsh-plugins/tree/HEAD/plugins/codex-bridge) — 桥接 DeepSeek Harness 与 Codex，实现跨平台的代码执行与集成。
-- [codex-terminal](https://github.com/Ephemeral-AI-Lab/dsh-plugins/tree/HEAD/plugins/codex-terminal) — 在 Harness 内提供终端界面，用于直接运行代码和命令。
-- [comfy-local-tools](https://github.com/pirate-608/dsh-multi-tools/tree/HEAD/plugins/comfy-local-tools) — 提供视觉、ComfyUI、Unity、创意应用、CAD 和 Ren'Py 集成的多模态工具集。
-- [comm-protocol-hub](https://github.com/Thanksgiver233/comm-protocol-hub) — 将分散在 3GPP Release 15~18 的 70+ 条通信协议规范，按 TN/NTN/全息/近远场/混合/安全等 8 个维度结构化整理，为通信工程师和 AI 助手提供一键式协议查询能力。通过三个 DSH 工具（关键词搜索、分类浏览、单条详情），取代人工翻阅数百页 PDF 的繁琐过程，让大模型在通信领域回答更准确、有据可查。本项目填补了通信工程专业知识在 AI 助手中的空白，是首个面向通信领域的 DSH 协议知识库插件。
-- [command-scout](https://github.com/JohnXu22786/command-scout) — 命令侦察插件：扫描工作区，把项目声明的构建命令（Makefile、npm scripts、just、deno 等）暴露为可调用工具。
-- [community-market](https://github.com/jo32/DeepDeck/tree/HEAD/plugins/community-market) — 为 DeepSeek Harness 提供社区市场，用于浏览和安装额外插件。
-- [compatibility-radar](https://github.com/HiWhaleW/dsh-toolbox/tree/HEAD/packages/compatibility-radar) — 监控 DeepSeek Harness 环境中插件兼容性，并提供预检功能。
-- [Computer User](https://github.com/asun-labs/dsh-plugin-computer-user) — 在右侧面板显示实时桌面快照并提供电脑操作工具。虚拟指针操作不占用真实光标；切换到实机模式后才会操作桌面。
-- [computer-control](https://github.com/JohnXu22786/computer-control) — 桌面控制插件：截图、鼠标/键盘注入与可访问性树语义操作，内置急停、放行规则、确认流程、待机与试运行模式。
-- [computer-use](https://github.com/jo32/DeepDeck/tree/HEAD/plugins/computer-use) — 在 DeepSeek Harness 桌面端启用鼠标键盘等计算机控制能力。
-- [computer-use-vision](https://github.com/xuanyuanluoxue/computer-use-vision) — 为 DSH 增加 Windows 电脑操作能力，支持截图、视觉、模拟输入和自进化知识库。
-- [connectors](https://github.com/picoaide/picoaide-harness/tree/HEAD/packages/host/connectors) — 提供到外部服务和系统的连接器。
-- [cordis-transfer-plugin](https://github.com/zby1211/cordis-transfer-plugin) — 导入和导出 Cordis 动态插件，支持跨环境迁移配置。
-- [core](https://github.com/StvLi/dsh-ros2/tree/HEAD/packages/core) — 为 ROS 2 系统提供诊断与联合调试工具，帮助用户高效定位和解决问题。
-- [crazy-lab](https://github.com/TheCrazyLab/crazy-lab) — DeepSeek Harness 插件：让 agent 读/抓/解析知乎（回答·专栏·搜索）
-- [crypto](https://github.com/zhu1090093659/dsh-trading/tree/HEAD/packages/crypto) — 为交易终端提供加密货币市场的连接能力，支持币种行情与交易。
-- [ctf-console](https://github.com/fyfhcgch/dsh-ctf-collaborate/tree/HEAD/dsh-ctf-team/plugins/ctf-console) — 协作CTF控制台，管理题目、共享笔记、Agent任务和证据整理。
-- [cue-data-mcp](https://github.com/sensedeal/cue-skills/tree/HEAD/dsh/cue-data-mcp) — 作为MCP工具适配器，连接外部数据源，使智能体能在对话中检索和查询数据。
-- [cue-omni-reader](https://github.com/sensedeal/cue-skills/tree/HEAD/dsh/cue-omni-reader) — 为代理提供多格式阅读工具，用于解析和理解各种文档类型。
-- [cybersyn-for-dsh](https://github.com/dimensionlesslu-dotcom/cybersyn-for-dsh) — 集成 cybersyn 工具，供智能体使用数据或系统功能。
-- [dataops-integration](https://github.com/SparkElf/dsh-plugins-plus/tree/HEAD/packages/dataops-integration) — 集成数据操作流程，方便用户在界面中管理和处理数据集。
-- [db-connector](https://github.com/JohnXu22786/db-connector) — 连接 SQLite/PostgreSQL/MySQL，支持模式内省、只读安全和写入审批。
-- [deepc-link](https://github.com/evil7/deepSea/tree/HEAD/packages/deepc-link) — 在社区中心搜索、下载、评分和讨论插件。
-- [deepsec-shield](https://github.com/Unclecheng-li/DeepSec/tree/HEAD/dsh-plugins/deepsec-shield) — 实时审计 AI 生成的代码，检测幻觉包、缺失安全措施和模式错误。
-- [deepsec-spear](https://github.com/Unclecheng-li/DeepSec/tree/HEAD/dsh-plugins/deepsec-spear) — 利用 40 多个技能包自动化授权渗透测试，从侦察到概念验证。
-- [deepseek_harness_plugin_box](https://github.com/boyuan623-coder/deepseek_harness_plugin_box) — DeepSeek Harness 插件盒子：浏览 GitHub 社区插件、中文简介、按 star 排序并复制安装命令
-- [deepseek-AutoReview](https://github.com/Violet-Evergarden-Xiya/deepseek-AutoReview) — DeepSeek Harness 的“替我审核”插件
-- [Deepseek-Continuity](https://github.com/linxuhao/Deepseek-Continuity) — 一个自带模型的multimodal deepseek harness 插件，提供生成的图/音一致性
-- [deepseek-harness](https://github.com/agentrq/agentrq/tree/HEAD/plugins/deepseek-harness) — 提供自托管的真人介入任务管理器，支持从移动端、网页或桌面实时控制智能体。
-- [deepseek-harness](https://github.com/fatmo666/Caushell/tree/HEAD/integrations/deepseek-harness) — 对 shell 命令执行编译风格的预执行安全分析。
-- [deepseek-harness](https://github.com/inthepond/ff-toolkit/tree/HEAD/integrations/deepseek-harness) — 集成FFmpeg命令行、MCP服务器和AI工具接口，用于媒体处理。
-- [deepseek-harness](https://github.com/scotthuang/agent-knock-knock/tree/HEAD/connectors/deepseek-harness) — 在 OpenClaw 中控制本地 Codex 和 Claude Code 终端，通过共享 tmux 会话实现人机交接。
-- [deepseek-harness](https://github.com/Tannnnhauser/pivot-web-search/tree/HEAD/integrations/deepseek-harness) — 提供多源网络搜索与内容提取，智能切换服务商。
-- [deepseek-harness](https://github.com/yxy050208/multisim-mcp/tree/HEAD/integrations/deepseek-harness) — 集成电路仿真，支持AI生成、模拟与数据导出。
-- [deepseek-harness-blaxel-sandbox](https://github.com/blaxel-ai/deepseek-harness-blaxel-sandbox) — 在 Blaxel 沙箱环境中执行代码，提供隔离且安全的运行环境。
-- [deepseek-harness-browser-use](https://github.com/syncended/deepseek-harness-browser-use) — 通过 browser-use 工具，让 DSH 具备浏览器自动化控制能力。
-- [deepseek-harness-forge-plugins](https://github.com/jinguanghai/deepseek-harness-forge-plugins) — 为 DSH 添加数学、逻辑、正则等门控及记忆召回插件。
-- [deepseek-harness-good](https://github.com/hashgraph-online/hol-guard/tree/HEAD/tests/fixtures/deepseek-harness-good) — 为AI代理提供运行时安全防护，阻止危险工具、密钥访问和恶意包。
-- [deepseek-harness-openai-codex](https://github.com/syncended/deepseek-harness-openai-codex) — 集成OpenAI Codex能力，提供代码执行与生成工具。
-- [deepseek-harness-plugin](https://github.com/cloveric/tarocub/tree/HEAD/deepseek-harness-plugin) — 为 DeepSeek Harness 等 CLI 代理提供本地网关，主打飞书集成，可选支持 Telegram。
-- [deepseek-harness-plugs-manage](https://github.com/Casually/deepseek-harness-plugs-manage) — Deepseek Harness 插件管理工具，方便搜索安装官方插件库
-- [deepseek-harness-remote-ssh](https://github.com/NaNQiQ/deepseek-harness-remote-ssh) — DeepSeek Harness（DSH）的远程 SSH 执行环境扩展插件，可在本地与远程 Linux/Unix 环境之间切换，让 DSH 原生文件、搜索、Shell 与终端工具直接在远端运行，无需修改 DSH 源码或在服务器安装额外 Agent。
-- [deepseek-harness-shortcut](https://github.com/Ho11ow8/deepseek-harness-shortcut) — 创建桌面快捷方式，一键启动 DeepSeek Harness 网页客户端。
-- [deepseek-harness-ssh](https://github.com/gdgfd22/deepseek-harness-ssh) — 为GPU和离线实验室服务器提供安全门控的SSH环境，支持安全的远程操作。
-- [deepseek-harness-tool-palette](https://github.com/lizhecome/deepseek-harness-tool-palette) — 提供渐进式工具发现和按代理解锁，增强工具使用体验。
-- [DeepSeek-Harness-Video-Director](https://github.com/chiphoton/DeepSeek-Harness-Video-Director) — 利用 MiniMax-H3 生成视频，由 AI 导演并通过画布式界面操控。
-- [deepseek-harness-web-search-plugin](https://github.com/cloveric/tarocub-deepseek-harness-plugin) — 通过 Brave 和 Tavily API 提供可溯源来源的网页搜索，集成于 DeepSeek Harness。
-- [deepseek-harness-zhipu_plan_tools](https://github.com/magian1127/deepseek-harness-zhipu_plan_tools) — 将智谱 GLM 编程计划的 MCP 服务器接入 harness，增强工具能力。
-- [deepseek-idesign](https://github.com/Devin-AXIS/deepseek-design/tree/HEAD/packages/deepseek-idesign) — 提供可编辑的设计系统，用于创建和定制视觉内容。
-- [deepseek-ippt](https://github.com/Devin-AXIS/deepseek-design/tree/HEAD/packages/deepseek-ippt) — 使用模板和 AI 辅助创建和编辑 PPT 演示文稿。
-- [deepseek-ivideo](https://github.com/Devin-AXIS/deepseek-design/tree/HEAD/packages/deepseek-ivideo) — 利用 AI 和模板生成和编辑视频内容。
-- [deepseek-mcp-plugin](https://github.com/YNM10086/deepseek-mcp-plugin) — DSH 宿主级图片理解插件：vision_describe 工具，MiniMax → 智谱 → Ollama 三层后端自动降级，随 DSH 启动自动挂载
-- [deepseek-peak-blocker](https://github.com/zisekongling/deepseek-peak-blocker) — 高峰时段，对发往 DeepSeek 官方 API 的新请求进行友好拦截与询问
-- [deepseek-plugin](https://github.com/Wlain/kling-ai-deepseek-plugin) — 将 Kling AI 集成为 DeepSeek Harness 的远程 MCP 服务器。
-- [deepseek-vl-support](https://github.com/limccn/deepseek-vl-support) — 将图像文件路由到兼容 OpenAI 的视觉端点，为纯文本模型赋予视觉能力。
-- [deepseekeyes](https://github.com/dttxorg/deepseekeyes) — 提供可审计的视觉和跨平台计算机使用运行时，含严格证据、健康检查和令牌记账。
-- [DeepSeekHarness-MCP-Manager](https://github.com/xxxyz/DeepSeekHarness-MCP-Manager) — 持久化的 MCP 服务器管理器，提供设置界面、HTTP API 及跨平台安装程序。
-- [deepspider](https://github.com/ma-pony/deepspider) — AI 原生智能爬虫与 JavaScript 逆向工程平台，基于 DSH、Patchright/CDP 与独立语义运行时，从浏览器证据恢复参数生成逻辑并交付可验证 Solver。
-- [design-studio](https://github.com/Devin-AXIS/iPolloWork/tree/HEAD/external-plugins/deepseek-harness/design-studio) — 在 AI 工作区中集成设计工作室，支持可编辑设计与协作流程。
-- [desktop-connector](https://github.com/Azhe0306/dsh-connectors/tree/HEAD/packages/desktop-connector) — Windows 桌面控制连接器：截屏（含被遮挡与半出屏窗口）、枚举与置顶窗口、鼠标移动、点击、拖拽与滚轮、发送按键与输入任意文字，通过 koffi FFI 提供 10 个工具。
-- [docker-sandbox-plugin](https://github.com/fyfhcgch/dsh-ctf-collaborate/tree/HEAD/dsh-ctf-team/plugins/docker-sandbox-plugin) — 在隔离的Docker沙箱中运行CTF任务，确保不可信代码的安全执行。
-- [doco-dsh](https://github.com/songofhawk/doco-dsh) — 集成 Doco 知识库，提供搜索、阅读、大纲和保存草稿功能。
-- [docs-retriever](https://github.com/JohnXu22786/docs-retriever) — 版本化文档检索插件：通过文档目录索引按需拉取准确、带版本、可溯源的 API 文档，避免凭空猜测 API。
-- [documents](https://github.com/zhouwei713/dsh-daily-kit/tree/HEAD/packages/documents) — 处理和管理各类文档文件。
-- [dongsheng123132-dsh-xiapan-media](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/dongsheng123132-dsh-xiapan-media) — 集成下盘媒体，可能用于媒体播放或分享。
-- [donsetch-dsh](https://github.com/dondai44423/donsetch-dsh) — 将 DonSeTch 集成为原生 dsh 工具，支持抓取、搜索和爬取网页内容。
-- [draw2code](https://github.com/guchang/draw2code) — 促进人机协同原型设计，将绘图转换为代码以加速开发。
-- [ds-harness-remote](https://github.com/liguobao/deepseek-harness-remote) — 支持从桌面或安卓设备安全远程连接并操作 Harness。
-- [ds-vision-plugin](https://github.com/Sorwcyra/ds-vision-plugin) — 支持粘贴图片进行多模型视觉对比、OCR和自动文本桥接。
-- [dsh](https://github.com/Altairpaca/dshelm/tree/HEAD/packages/dsh) — 为 DSH 提供代理层，包含可组合组件和生态集成能力。
-- [dsh](https://github.com/Bandersnatch0x/amber-protocol/tree/HEAD/dsh) — 通过DSH补丁覆盖实现Amber协议，用于编码代理的仓库本地治理。
-- [dsh](https://github.com/BingL-Li/vision-translation/tree/HEAD/adapters/dsh) — 为 DeepSeek Harness 提供视觉和翻译能力，整合图像识别和语言翻译服务。
-- [dsh](https://github.com/Chenmo0414/openanalyst/tree/HEAD/packages/dsh) — 将编码 agent 变为数据分析师，含 DuckDB、自动剖析、SQL 和实时图表。
-- [dsh](https://github.com/elonmaskhair-prog/dsh-plugin-diepi/tree/HEAD/dsh) — 提供用于确定性量化回测的插件和 MCP 适配器。
-- [dsh](https://github.com/Jesse-njx/dsh-cowork/tree/HEAD/packages/dsh) — 提供办公文档与笔记本的读写工具，支持 xlsx、pdf、docx 等格式，并集成 MCP 服务。
-- [dsh](https://github.com/juntaoding/Flowboard/tree/HEAD/packages/dsh) — 在 DeepSeek Harness 中提供办公协作与团队管理，让目标、会议、Agent 执行、进度和资料持续流动。
-- [dsh](https://github.com/linxuhao/AItelier/tree/HEAD/integrations/dsh) — 将 AI-Atelier 个人工作台集成到 DeepSeek Harness。
-- [dsh](https://github.com/littleblakew/msds-chain-mcp/tree/HEAD/plugins/dsh) — 集成 MSDS 链功能，可能用于材料安全数据表操作。
-- [dsh](https://github.com/philmingdao/anno/tree/HEAD/adapters/dsh) — 实现本地优先的 HTML 审查和注释，供 AI 编码代理使用。
-- [dsh](https://github.com/possible055/agentshim/tree/HEAD/adapters/dsh) — 为 Codex 提供小型、能力范围的工具集，可能包含特定实用功能。
-- [dsh](https://github.com/Vladimir-Human/ru-marketplace-mcp/tree/HEAD/dsh) — 将俄罗斯及中国电商平台封装为 MCP 服务器，支持比价与搜索。
-- [dsh](https://github.com/Weaxs/stock-analysis-plugin/tree/HEAD/dsh) — 提供轻量级行情数据工具和策略技能，辅助股票分析。
-- [dsh](https://github.com/wuliLiuyue/wxpilot/tree/HEAD/packages/dsh) — 让 AI 代理像操作浏览器一样驱动微信开发者工具，自动化小程序导航与交互。
-- [dsh_design](https://github.com/xbyzzZ/dsh_design) — DeepSeek Harness 的可点击 HTML 原型画布。聊天描述界面后，design_* 工具把 HTML 写到 .dsh-design/；原型预览按平台尺寸缩放，支持缩放、平移、批注和多份原型切换。
-- [dsh_omnivision](https://github.com/xiaozhengdeng/dsh_omnivision) — 通过 OmniParser 提供屏幕识别和桌面自动化的 GUI 工具。
-- [dsh_upload_file](https://github.com/JarszmLovesAI/dsh_upload_file) — 将文件粘贴到编辑器，支持收件箱存储和缩略图。
-- [DSH_xieshujing](https://github.com/shuaweng/DSH_xieshujing) — 写书鲸：面向 DeepSeek Harness 的原生 AI 小说创作工作台插件
-- [dsh-0-tools](https://github.com/ai-yukin/dsh-0-tools) — 为终端用户提供一系列工具。
-- [dsh-3d-model-viewer](https://github.com/lishLRF/dsh-3d-model-viewer) — DSH 插件：在 DeepSeek Harness 的 Web 界面查看 OBJ/STL/STEP 三维模型，并转译为标准化、LLM 可读的 JSON（含语义分析），一键发送给 AI。
-- [dsh-a-share-screener](https://github.com/Gaines-cz/dsh-a-share-screener) — 提供 A 股股票筛选，支持可插拔策略和多数据源。
-- [dsh-a11y-audit](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-a11y-audit) — 执行可访问性审计，提供报告和修复建议。
-- [dsh-a11y-audit](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-a11y-audit) — 审计Web界面可访问性问题并提出改进建议。
-- [dsh-a2a](https://github.com/ryubyte/dsh-a2a) — 支持出站调用远程 Agent 技能，并提供入站 A2A 服务及连接面板。
-- [dsh-a2a](https://github.com/TGYD-helige/dsh-plugins/tree/HEAD/packages/dsh-a2a) — 实现 A2A 协议服务器，支持智能体间通信。
-- [dsh-a2a-agent](https://github.com/fangweixuan26-hash/dsh-a2a-agent) — 通过Agent2Agent协议暴露DeepSeek Harness智能体，支持JSON-RPC的智能体间通信。
-- [dsh-ab-sample](https://github.com/uckkk/dsh-ab-sample) — A/B测试样本量
-- [dsh-abs](https://github.com/uckkk/dsh-abs) — 绝对值
-- [dsh-ac-save](https://github.com/uckkk/dsh-ac-save) — 空调节能
-- [dsh-ac-size](https://github.com/uckkk/dsh-ac-size) — 空调匹数选择
-- [dsh-ac-trouble](https://github.com/uckkk/dsh-ac-trouble) — 空调故障排查
-- [dsh-academic-paper-search](https://github.com/wp-a/dsh-academic-paper-search) — DeepSeek Harness 的中文学术论文检索 Bundle：复用 Academic Paper Search MCP，支持多源检索去重、引用核验、引文图谱、MeSH、试验检索与审计导出。
-- [dsh-academic-research](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-academic-research) — 协助学术研究任务，包括文献检索和引文管理。
-- [dsh-access-gate](https://github.com/bamboostrip/dsh-access-gate) — 控制 DeepSeek Harness 访问权限的门控插件，可能用于认证或授权。
-- [dsh-accounting-cert](https://github.com/uckkk/dsh-accounting-cert) — 会计证书要求
-- [dsh-acne-care](https://github.com/uckkk/dsh-acne-care) — 痘痘护理
-- [dsh-acne-mark](https://github.com/uckkk/dsh-acne-mark) — 痘印淡化
-- [dsh-acp](https://github.com/cnctem/dsh-acp) — 通过 ACP 服务器桥接 Zed 等 IDE 与 DeepSeek Harness agents，实现 IDE 集成。
-- [dsh-acp](https://github.com/dushaobindoudou/dsh-acp) — 运行 ACP 服务器，允许从 Zed 等兼容客户端驱动 DSH 智能体。
-- [dsh-acp-adapter](https://github.com/zaimokuza-yoshiteru/dsh-acp-adapter) — 在会话界面中直接启动外部 AI 代理，将其集成到工作流中。
-- [dsh-acp-paseo](https://github.com/Pheobe-Southwood/dsh-acp-paseo/tree/HEAD/packages/dsh-acp-paseo) — 将dsh与Paseo ACP集成，提供模型目录、计划/执行模式和斜杠命令。
-- [dsh-acre2ha](https://github.com/uckkk/dsh-acre2ha) — 英亩转公顷
-- [dsh-ad-bid](https://github.com/uckkk/dsh-ad-bid) — 广告出价上限
-- [dsh-ad-roi](https://github.com/uckkk/dsh-ad-roi) — 广告ROI计算
-- [dsh-adapter-qq](https://github.com/jixishi/dsh-adapter-qq) — 集成QQ作为适配器，支持通过QQ平台进行对话交互。
-- [dsh-adb](https://github.com/SamXiaBing/dsh-adb) — ADB 设备·台架运维工具集：设备发现、结构化 logcat（后台采集）、apk 安装、文件 pull/push、性能快照。
-- [dsh-adhd-copilot](https://github.com/zimai233/dsh-adhd-copilot) — ADHD 行为辅导技能：任务拆解、事项过载管理、启动仪式与失败重启。
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 3758 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="skill"></a>
-
-<details>
-<summary><strong>技能包</strong> · 显示 297 / 共 1049 个</summary>
-
-- [.dsh-plugin](https://github.com/kongyecn-wq/dsh-okx-skill-hub/tree/HEAD/.dsh-plugin) — 将 OKX 官方行情技能（价格、K线、技术指标）适配到 DeepSeek Harness 生态中。
-- [academic-research-graph](https://github.com/watericetangcw/academic-research-graph) — 将单篇学术论文转化为可探索的研究地图。
-- [Aegis](https://github.com/GanyuanRan/Aegis) — 通过基线优先、证据验证和漂移检查的规范，让编码智能体在长任务中保持架构意识。
-- [agency-agents-zh-dsh-plugin](https://github.com/RHY006/agency-agents-zh-dsh-plugin) — 将 20 个部门 268 个角色的中文 AI 专家库打包为原生技能。
-- [agent-assets](https://github.com/guyuefangyuanl/deepseek-better-harness/tree/HEAD/packages/agent-assets) — 技能包的一部分，用于增强证据通道，可独立安装。
-- [agent-instructions-plus](https://github.com/sidleo/agent-instructions-plus) — 为代理指令提供增强与补充引导，提升任务执行效果。
-- [agent-loop-workflow](https://github.com/LeslieWylie/agent-loop-workflow) — 提供可复用的多 agent 协作工作流骨架技能，包含 Loop Guard、Handoff 和 Review 协议。
-- [agent-notes-toolkit](https://github.com/liangminhua/agent-notes-toolkit) — 可移植的智能体笔记工具包，含验证门、脚手架CLI和预设捆绑包，用于提示词工作流。
-- [agent-team-profile](https://github.com/Missher12/deepseek-harness-desktop/tree/HEAD/packages/experimental/agent-team-profile) — 打包代理团队配置为可复用的提示词与人设集合。
-- [agent-team-profile](https://github.com/my-dsh/oh-my-dsh/tree/HEAD/packages/experimental/agent-team-profile) — 打包实验性多智能体协作场景的智能体团队配置。
-- [agent-team-profile](https://github.com/niushuanan/xiaozhuang-dsh/tree/HEAD/packages/experimental/agent-team-profile) — 定义 agent 团队的角色与提示词，供多智能体协作使用。
-- [agent-team-profile](https://github.com/See-Sol-Lab/DeepSeekGUI/tree/HEAD/packages/experimental/agent-team-profile) — 提供打包好的代理团队人设技能，供在 DeepSeek Harness 环境中使用。
-- [agent-team-web-profile](https://github.com/Missher12/deepseek-harness-desktop/tree/HEAD/packages/experimental/agent-team-web-profile) — 提供面向网络的代理团队配置，内含提示词与人设。
-- [agent-team-web-profile](https://github.com/my-dsh/oh-my-dsh/tree/HEAD/packages/experimental/agent-team-web-profile) — 打包面向实验性网页多智能体协作的智能体团队配置。
-- [agent-team-web-profile](https://github.com/niushuanan/xiaozhuang-dsh/tree/HEAD/packages/experimental/agent-team-web-profile) — 带 Web 能力的 agent 团队配置，用于多智能体网页协作流程。
-- [agent-team-web-profile](https://github.com/See-Sol-Lab/DeepSeekGUI/tree/HEAD/packages/experimental/agent-team-web-profile) — 提供打包好的代理团队网页人设技能，供在 DeepSeek Harness 环境中使用。
-- [agent-useful-skills](https://github.com/Azzygoatcoder/agent-useful-skills) — 模块化 AI 科研/工程技能 monorepo（DeepSeek Harness / Claude Code 通用）— plugins/ + skills/ + bin 脚本 + LaTeX 模板，验证环驱动
-- [ai-input-enhancer](https://github.com/zhengzeyong9527-droid/zzy-dsh-prompt-optimizer) — 优化提示词，提升其有效性和清晰度，适用于DeepSeek Harness智能体。
-- [airesearch-plugin](https://github.com/WOOK98/airesearch-plugin) — 面向股票研究的 AIResearch 技能包：单页快照、六视角个股深度研究、盘前 watchlist 简报、行业主题映射与 SEC 文件分析。
-- [aitoubiaoling-bid-review](https://github.com/zslzxy/aitoubiaoling-bid-review) — AI投标灵标书审核 Skill：稳定审核非扫描 PDF/DOCX 的商务标、技术标与通用文档风险
-- [amazon-sucareer](https://github.com/soberbiak/amazon-sucareer) — 面向亚马逊运营求职的证据优先 Skill 套件：将工作素材整理为可核验的证据账本、岗位定位、简历、面试练习和招聘沟通内容。
-- [awesome-deepseek-skills](https://github.com/Whning0513/awesome-deepseek-skills) — 提供经过筛选和验证的Agent技能集合，适用于DeepSeek和DSH。
-- [base](https://github.com/xuedai-mayi/dsh-wenshan/tree/HEAD/deepseek-harness-master/deepseek-harness-master/packages/bundle/base) — 地理野外实习知识图谱插件的基础包。
-- [better-LVGL-for-dsh](https://github.com/sa998aaron/better-LVGL-for-dsh) — 提供在智能体中操作 LVGL 的专业知识和最佳实践。
-- [bigA](https://github.com/kobenfang/bigA) — openclaw-skills BigA · A股智能选股（选股分析·量化交易·股票池）
-- [brand-profile](https://github.com/WayJ/dsh-work/tree/HEAD/plugins/brand-profile) — 为 dsh 框架打包个人工作代理的人设与提示词集合。
-- [btw4DeepseekHarness](https://github.com/wensincai/btw4DeepseekHarness) — 为DeepSeek Harness添加/btw系统命令，用于插入附带说明或上下文。
-- [build-dsh-plugin](https://github.com/AI-Scarlett/build-dsh-plugin) — 提供可复用的代理技能和技能提供者以支持插件开发。
-- [bundle](https://github.com/cyzlmh/dsh-cyber-sec/tree/HEAD/bundle) — 授权的安全评估配置，包含测试工具、技能与专家子代理。
-- [catalog-capabilities-zh](https://github.com/MeowTnT3r/catalog-capabilities-zh) — 一个面向 Codex 的公开 skill：编排当前 Agent 已有的可信安装器，并为 skills、插件和市场能力维护一份有来源依据的中文说明目录
-- [catalog-input-files](https://github.com/Zhiyi-Zhao/codex-catalog-input-files) — 平台无关的 Agent 技能：把任务输入文件的结构（列、键、工作表、表、标签、归档成员、行数等）生成可复用的 Markdown 说明与任务本地 SQLite 索引。支持 30+ 种格式——自动探测分隔符的表格、Excel、Parquet/Feather、JSON/YAML/TOML、SQLite、ZIP/TAR/GZIP、XML/HTML、Jupyter notebook、Stata、RDS/RData、PDF、DOCX、图片——并为 20+ 种编程语言提取代码结构。兼容 OpenAI Codex、Claude Code 与 DeepSeek Harness。
-- [cc-agents](https://github.com/Bcy2020/dsh-cc-ecosystem/tree/HEAD/packages/cc-agents) — 将Claude Code的技能、命令和子代理引入DSH实现兼容。
-- [cc-permissions](https://github.com/jianxx/dsh-cc-plugins/tree/HEAD/packages/bundle/cc-permissions) — 打包设置、权限、钩子、记忆和技能，在 DeepSeek Harness 中复现 Claude Code 功能。
-- [cc-shell](https://github.com/jianxx/dsh-cc-plugins/tree/HEAD/packages/bundle/cc-shell) — 提供 CC 模式代理预设，包含设置级联、权限规则、钩子、记忆和技能。
-- [cc-skills](https://github.com/Bcy2020/dsh-cc-ecosystem/tree/HEAD/packages/cc-skills) — 加载Claude Code的技能定义，复用专业能力。
-- [chat2skill](https://github.com/rxa3c/chat2skill) — 从日常对话中提取并迭代技能，打包供复用。
-- [claude-rules-bridge](https://github.com/cnzgray/dsh-plugins/tree/HEAD/packages/claude-rules-bridge) — 将 Claude 的规则集作为技能导入并应用到 DeepSeek Harness 中以引导行为。
-- [client](https://github.com/Wickaninnish/dsh-skill-manager/tree/HEAD/packages/client) — 自动发现、审计、去重并优化技能，维护安全可控的技能库。
-- [codex-skills](https://github.com/oukeming64-tech/codex-skills) — 打包以证据为先的智能体技能，用于交接审计和文档同步。
-- [coding-coach](https://github.com/xiehuan123/coding-coach) — 通过提示和技巧提供编码辅导。
-- [collaborative-emergent-intelligence](https://github.com/hanshanxue83/collaborative-emergent-intelligence) — 打包协作提示词，增强智能体涌现智能场景。
-- [conservative-code-edits](https://github.com/addxing/conservative-code-edits) — 面向各类 AI 编程代理的保守代码修改守则 Skill，用于约束代理在已有项目中进行最小必要改动，避免无关重构，保护公共基础代码，并在支持深色模式的项目中优先使用动态颜色资源 An agent skill for keeping code changes small, scoped, and project-safe. Works with any AI coding tool that supports skills
-- [craft-mermaid](https://github.com/chunkithwang/craft-mermaid) — 为 AI 智能体提供便携式 Mermaid 图表生成、渲染和视觉审查技能。
-- [crypto-expert-agent](https://github.com/fyfhcgch/dsh-ctf-collaborate/tree/HEAD/dsh-ctf-team/plugins/crypto-expert-agent) — 提供专门解决密码学挑战的代理，给出专家指导与分析。
-- [custom-first-control-prompt](https://github.com/WM-CODER/custom-first-control-prompt) — 向DeepSeek Harness对话中插入自定义提示词。
-- [dao-zang-skill](https://github.com/Godners-Code/dao-zang-skill) — 打包预设技能集，赋予代理特定行为模式。
-- [dashr](https://github.com/fgm-builds/dashr/tree/HEAD/dashr) — 提供统一的工具调用界面，以递归语言模型将上下文视为变量使用。
-- [deep-design](https://github.com/temidayoxyz/deep-design) — 提供设计循环代理预设及设计原则与 QA 技能包，开启设计模式。
-- [deep-structural-analysis-skill](https://github.com/tetckx/deep-structural-analysis-skill) — Deep Structural Analysis — a multi-perspective structural analysis skill for complex social, economic, philosophical, and systemic questions. 16 lenses, 10 structural tools, an attack-loop protocol against analytical priors. Behavior-verified from real usage. MIT licensed.深度结构分析——面向复杂社会、哲学与系统性问题的多学科结构分析技能。16 透镜、10 结构工具、攻击循环协议对抗分析先验。基于实战行为验证。MIT许可。
-- [deepseek-better-harness](https://github.com/guyuefangyuanl/deepseek-better-harness) — 提供三个可独立安装的技能包，用于增强证据通道，无需运行时依赖。
-- [deepseek-harness](https://github.com/rrrrrredy/skill-security-guard/tree/HEAD/integrations/deepseek-harness) — 对 agent 技能进行静态安全扫描，评定 A-F 风险等级并支持 CI 规则测试。
-- [deepseek-harness](https://github.com/tt-a1i/archify/tree/HEAD/integrations/deepseek-harness) — 将架构、流程、时序、数据流等图表生成能力打包为技能，输出带动效的自包含 HTML 并支持清晰导出。
-- [deepseek-harness](https://github.com/whh110112/human-writing-skills/tree/HEAD/plugins/deepseek-harness) — 提供多语言写作技巧和提示词，优化自然表达、风格保持、长文连贯与重点审查。
-- [deepseek-harness-interactive-learning](https://github.com/wsnxxxs/deepseek-harness-interactive-learning) — 启用交互式学习模式，并内置学习活动，适用于 DeepSeek Harness。
-- [deepseek-harness-nested-skill-plugin](https://github.com/chenshutian9610/deepseek-harness-plugin-list/tree/HEAD/packages/deepseek-harness-nested-skill-plugin) — 提供嵌套文件系统技能，可能支持高级文件导航或操作。
-- [deepseek-harness-prompt-optimizer](https://github.com/lizhecome/deepseek-harness-prompt-optimizer) — 提供基于LLM的提示词优化包，帮助用户完善和改进提示以获得更好回复。
-- [dknowc-dsh](https://github.com/dylanzhangzx/dknowc-dsh) — 深知可信办公全家桶 dsh 插件包：深知可信咨询 / 深知可信搜索 / 深知公文写作（skill + MCP 转接）
-- [docgen](https://github.com/JohnXu22786/docgen) — 文档工坊技能包：用于 README 生成、PR 描述、变更日志与代码评审的纯提示词 Agent Skills。
-- [docs-mode](https://github.com/zh851233/docs-mode) — 辅助撰写技术文档并弱化AI生成痕迹，涵盖各类文体。
-- [dseam-skillmcp](https://github.com/ARFCON/dsh-hotplug-hub/tree/HEAD/vendor/dseam-skillmcp) — 提供基于技能的MCP集成，使代理能够利用预定义的能力和工作流程。
-- [dsh](https://github.com/ConradLu2740/pa-dsh/tree/HEAD/packages/dsh) — 通过六个 Cordis 插件将主动记忆和建议接入 DSH。
-- [dsh](https://github.com/ryunana/selfdistill/tree/HEAD/dsh) — 本地蒸馏个人上下文，带人工确认、证据分层与展示。
-- [dsh](https://github.com/Totoro-qaq/Cobsidian/tree/HEAD/integrations/dsh) — 一个维护 Obsidian 知识库的工作流技能，不依赖特定代理。
-- [dsh](https://github.com/Wickaninnish/dsh-skill-manager/tree/HEAD/packages/dsh) — 提供技能管理核心功能，支持发现、审计、去重和优化流程。
-- [dsh_plugin_swift_cycle](https://github.com/Solismuchengxue/dsh_plugin_swift_cycle) — 用户调用、版本固定且可离线验证的治理技能适配器，用于结构化任务执行。
-- [dsh--prompt--enhance](https://github.com/sunzhentao/dsh--prompt--enhance) — DeepSeek Harness提示词增强插件
-- [dsh-a-stock-select](https://github.com/ct188579/dsh-a-stock-select) — 基于 a-stock-data（A股数据源） 开发的 DSH 技能插件：将 a-stock-data V3.6.1 的全部 47 个数据端点内嵌合并，叠加四大策略筛选逻辑、持仓诊断流程与强制风控纪律，做成自包含的 SKILL.md——零外部依赖、开箱即用。同时打包为 npm 插件，支持 dsh 命令一键安装。
-- [dsh-academic-research](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-academic-research) — 提供学术研究相关的技能或提示词。
-- [dsh-academic-research](https://github.com/userInner/dsh-academic-research) — 为 DeepSeek Harness 与 OnPeople 提供基于证据的双语学术研究支持。
-- [dsh-academic-research-skills](https://github.com/nullptr-DZF/dsh-academic-research-skills) — 为 AI 代理提供学术研究提示词和工作流集合。
-- [dsh-academy](https://github.com/literaf/dsh-academy) — 添加学术研究人设，内置引用与数据防捏造规则及双语写作规范。
-- [dsh-active-listening](https://github.com/uckkk/dsh-active-listening) — 有效倾听
-- [dsh-adhd-friendly](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-adhd-friendly) — 提供提示和策略，使AI交互更适应多动症用户。
-- [dsh-adult-vaccine](https://github.com/uckkk/dsh-adult-vaccine) — 成人疫苗
-- [dsh-age-edu](https://github.com/uckkk/dsh-age-edu) — 分龄教育
-- [dsh-agency-agents-zh](https://github.com/GongYuanCaiJi/dsh-agency-agents-zh) — 267 个即插即用的 AI 专家角色定义——从前端开发到区块链安全，从小红书运营到抖音策略（移植自 agency-agents-zh）
-- [dsh-agent-identity](https://github.com/xingyingyuzhui/dsh-agent-identity) — 将 SOUL、AGENTS 等人设文件注入提示词。
-- [dsh-agent-life](https://github.com/jonah791/dsh-agent-life) — 提供代理生命周期技能，可能定义代理的行为或人设。
-- [dsh-agent-loop-engineering](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-agent-loop-engineering) — 打包代理循环工程技术，提升性能和可靠性。
-- [dsh-agent-plugin-market](https://github.com/Diluka/dsh-agent-plugin-market) — DSH（DeepSeek Harness）插件：以 git 仓库为 agent 插件市场，安装并原地加载 Codex/Claude 格式的技能
-- [dsh-agent-presetdev](https://github.com/Neplich/dsh_plugin/tree/HEAD/packages/agent/dsh-agent-presetdev) — 为智能体预设开发环境配置。
-- [dsh-agent-presets](https://github.com/genesis-agents/dsh-plugins/tree/HEAD/dsh-agent-presets) — 提供预设的代理配置库，支持读取资讯源并发布内容。
-- [dsh-agent-rules](https://github.com/huangrx6/dsh-plugin/tree/HEAD/dsh-agent-rules) — 管理技能、MCP服务器及布局设置，优化插件使用体验。
-- [dsh-agent-skill-manager](https://github.com/ArkFishingLab/dsh-agent-skill-manager) — 管理代理技能包，支持导入、列出和激活基于提示词的能力。
-- [dsh-agent-skills](https://github.com/minivv/dsh-agent-skills) — 在 DeepSeek Harness 中发现和管理 Agent 技能，使用户能查找并控制技能集合。
-- [dsh-agents-md](https://github.com/dingyi222666/dsh-agents-md) — 为 dsh 提供基于 md 文件自定义子 agent 和模型的插件。
-- [dsh-aggression](https://github.com/uckkk/dsh-aggression) — 攻击行为
-- [dsh-agora](https://github.com/AgoraIO-Community/dsh-agora) — 打包 Agora 技能，涵盖 RTC、RTM、ConvoAI、CLI 和录制等。
-- [dsh-agriculture-terms](https://github.com/uckkk/dsh-agriculture-terms) — 农业术语
-- [dsh-ai-teacher](https://github.com/hatter123/dsh-ai-teacher) — ai老师帮助你吃透一本pdf
-- [dsh-ai-terms](https://github.com/uckkk/dsh-ai-terms) — AI 术语
-- [dsh-ai-use](https://github.com/uckkk/dsh-ai-use) — AI工具使用
-- [dsh-ai-work-slogan](https://github.com/keman-ai/dsh-skin-pack/tree/HEAD/packages/dsh-ai-work-slogan) — 打包的AI工作相关提示词和技能集合。
-- [dsh-aicc-zhunao](https://github.com/Cola1018/dsh-aicc-zhunao) — 提供 AICC 主脑编排和执行门控的预设。
-- [dsh-aidd](https://github.com/PandaAIDD/dsh-aidd) — 面向AI药物发现的研究工作台，内置17项技能，涵盖虚拟筛选和分子生成。
-- [dsh-air-fryer](https://github.com/uckkk/dsh-air-fryer) — 空气炸锅
-- [dsh-air-plant](https://github.com/uckkk/dsh-air-plant) — 室内绿植
-- [dsh-air-purifier](https://github.com/uckkk/dsh-air-purifier) — 空气净化器选购
-- [dsh-airp](https://github.com/clarkzhao/dsh-airp) — 在 Harness 中开启 AI 角色扮演，支持交互式叙事体验。
-- [dsh-algo-trainer](https://github.com/ZF3373/dsh-algo-trainer) — 提供 ICPC 竞赛编程训练功能，包括同步、分析、计划、复习和模板。
-- [dsh-altitude-sick](https://github.com/uckkk/dsh-altitude-sick) — 高反预防
-- [dsh-always-apply](https://github.com/oThTJx/dsh-skill-always-apply) — 在首次模型请求前注入标记为始终应用的技能。
-- [dsh-amb-light](https://github.com/uckkk/dsh-amb-light) — 氛围照明
-- [dsh-ambiguity-handling](https://github.com/changlianxiya-139/dsh-ambiguity-handling) — 向系统提示词追加歧义处理规则，提升回复清晰度和准确性。
-- [dsh-amount-calc](https://github.com/uckkk/dsh-amount-calc) — 火锅分量计算
-- [dsh-anal-gland](https://github.com/uckkk/dsh-anal-gland) — 肛门腺护理
-- [dsh-anchored-standard](https://github.com/Jungod1121/dsh-anchored-standard) — 两阶段预设：先使用极简工具，首次交互后扩展为完整标准工具集。
-- [dsh-ankle-sprain](https://github.com/uckkk/dsh-ankle-sprain) — 崴脚处理
-- [dsh-anti-loss](https://github.com/uckkk/dsh-anti-loss) — 防脱方案
-- [dsh-anti-slip](https://github.com/uckkk/dsh-anti-slip) — 防滑措施
-- [dsh-anti-theft](https://github.com/uckkk/dsh-anti-theft) — 防盗措施
-- [dsh-antibiotic](https://github.com/uckkk/dsh-antibiotic) — 抗生素使用
-- [dsh-api-budget](https://github.com/uckkk/dsh-api-budget) — 接口延迟预算
-- [dsh-api-design](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-api-design) — 提供 API 设计指南和最佳实践作为技能集。
-- [dsh-api-design](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-api-design) — 提供设计健壮API的最佳实践和模板。
-- [dsh-api-designer](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-api-designer) — 通过迭代反馈指导API设计创建和优化的过程。
-- [dsh-api-documentation](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-api-documentation) — 提供 API 参考和指南的文档技能。
-- [dsh-api-documentation](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-api-documentation) — 提供编写API文档的技能，包含示例。
-- [dsh-api-scaffolding](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-api-scaffolding) — 用于高效搭建新API项目的技能。
-- [dsh-appliance-clean](https://github.com/uckkk/dsh-appliance-clean) — 家电清洁
-- [dsh-appliance-life](https://github.com/uckkk/dsh-appliance-life) — 家电寿命
-- [dsh-arch-advisor](https://github.com/LeeGuanWei-a/awesome-architecture-dsh) — 给 DeepSeek Harness 装一位"读过架构书"的架构顾问：实时查阅 40 教程/31 模板/6 案例，引导设计并产出需求/概要/详细/数据库文档。· Persistent DSH plugin: an in-chat architecture consultant that queries the awesome-architecture knowledge base and guides engineering-doc authoring.
-- [dsh-arch-advisor-offline](https://github.com/LeeGuanWei-a/dsh-arch-advisor-offline) — 给 DeepSeek Harness 装一位"读过架构书"的架构顾问：实时查阅 40 教程/31 模板/6 案例，引导设计并产出需求/概要/详细/数据库文档。· Persistent DSH plugin: an in-chat architecture consultant that queries the awesome-architecture knowledge base and guides engineering-doc authoring.
-- [dsh-architecture](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-architecture) — 提供软件系统的架构设计模式和指导。
-- [dsh-architecture](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-architecture) — 规划并记录软件架构的技能。
-- [dsh-arxiv-search](https://github.com/lixvn888/dsh-arxiv-search) — 打包的 arXiv 论文搜索技能，包含查询模式和结果摘要提示。
-- [dsh-assembly-tools-prompt-strip](https://github.com/blake-r/dsh-plugins/tree/HEAD/packages/dsh-assembly-tools-prompt-strip) — 移除提示词相关工具定义，聚焦核心装配工具，可能用于技能封装。
-- [dsh-asset-alloc](https://github.com/uckkk/dsh-asset-alloc) — 资产配置
-- [dsh-asset-split](https://github.com/uckkk/dsh-asset-split) — 资产配置
-- [dsh-astp](https://github.com/tatuke/agent-switch/tree/HEAD/dsh-astp) — 在不同环境间迁移可移植的 AI 代理角色、身份、工作原则和安全协议。
-- [dsh-at-skill](https://github.com/452926826/dsh-at-skill) — 通过@名称调用技能，并提供编辑器建议。
-- [dsh-auth](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-auth) — 安全实现认证流程的技能。
-- [dsh-awesome-skills](https://github.com/ryasrk/dsh-awesome-skills) — 精选面向智能体的提示词技能集合。
-- [dsh-awiki](https://github.com/AgentConnect/dsh-awiki) — 提供 AWiki 身份与消息功能，可能为 DeepSeek Harness 带来特定人设与交互方式。
-- [dsh-baby-fever](https://github.com/uckkk/dsh-baby-fever) — 宝宝发烧
-- [dsh-back-care](https://github.com/uckkk/dsh-back-care) — 腰背护理
-- [dsh-baijiu-pick](https://github.com/uckkk/dsh-baijiu-pick) — 白酒选择
-- [dsh-bake-fix](https://github.com/uckkk/dsh-bake-fix) — 烘焙失败排查
-- [dsh-balcony-care](https://github.com/uckkk/dsh-balcony-care) — 浇水施肥
-- [dsh-balcony-make](https://github.com/uckkk/dsh-balcony-make) — 阳台改造
-- [dsh-baoyu-skills](https://github.com/GongYuanCaiJi/dsh-baoyu-skills) — 宝玉技能库（移植自 JimLiu/baoyu-skills）
-- [dsh-baozi-steam](https://github.com/uckkk/dsh-baozi-steam) — 蒸制时间
-- [dsh-barking-fix](https://github.com/uckkk/dsh-barking-fix) — 吠叫纠正
-- [dsh-base-makeup](https://github.com/uckkk/dsh-base-makeup) — 底妆技巧
-- [dsh-bash-scripting](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-bash-scripting) — 提供 Bash 脚本技能和最佳实践。
-- [dsh-bash-scripting](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-bash-scripting) — 编写稳健Bash脚本的技能，遵循最佳实践。
-- [dsh-basic-training](https://github.com/uckkk/dsh-basic-training) — 基础训练
-- [dsh-bath-reno](https://github.com/uckkk/dsh-bath-reno) — 卫生间改造
-- [dsh-bean-choice](https://github.com/uckkk/dsh-bean-choice) — 选豆建议
-- [dsh-bedtime](https://github.com/uckkk/dsh-bedtime) — 睡前仪式
-- [dsh-beer-pick](https://github.com/uckkk/dsh-beer-pick) — 啤酒选择
-- [dsh-before-you-build](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-before-you-build) — 提供构建前的指导与最佳实践。
-- [dsh-before-you-build](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-before-you-build) — 在开始构建软件前进行规划的技能。
-- [dsh-behavior-enhancer](https://github.com/Liora2050348900/dsh-behavior-enhancer) — 通过工具调用纪律提示词管理并行执行，失败时收敛到单worker并自动恢复，连续失败后触发用户干预。
-- [dsh-bento](https://github.com/uckkk/dsh-bento) — 便当搭配
-- [dsh-best-time](https://github.com/uckkk/dsh-best-time) — 最佳发布时间
-- [dsh-better-interface](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-better-interface) — 改善用户界面设计的技能。
-- [dsh-better-sidebar-skills](https://github.com/jiuge2467/dsh-studio/tree/HEAD/plugins/dsh-better-sidebar-skills) — 在 DSH 侧边栏中组织和展示技能，便于快速访问和使用。
-- [dsh-better-sidebar-skills](https://github.com/jiuge2467/DSH-WhaleDeck/tree/HEAD/plugins/dsh-better-sidebar-skills) — 在侧边栏中管理和部署技能集合，方便用户组织和应用提示词能力。
-- [dsh-big-clean](https://github.com/uckkk/dsh-big-clean) — 年前大扫除
-- [dsh-big-purchase](https://github.com/uckkk/dsh-big-purchase) — 大额消费决策
-- [dsh-bike-care](https://github.com/uckkk/dsh-bike-care) — 自行车保养
-- [dsh-bike-fit](https://github.com/uckkk/dsh-bike-fit) — 车座调整
-- [dsh-bike-gear](https://github.com/uckkk/dsh-bike-gear) — 骑行装备
-- [dsh-bike-safe](https://github.com/uckkk/dsh-bike-safe) — 骑行安全
-- [dsh-bin-pick](https://github.com/uckkk/dsh-bin-pick) — 收纳盒选购
-- [dsh-bird-cage](https://github.com/uckkk/dsh-bird-cage) — 笼具配置
-- [dsh-blockchain-web3](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-blockchain-web3) — 开发区块链和Web3应用的技能。
-- [dsh-bosnia](https://github.com/uckkk/dsh-bosnia) — 波黑国家
-- [dsh-boss-agent-cli](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-boss-agent-cli) — 打包老板角色的代理人设与提示词，提供技能集合。
-- [dsh-botswana](https://github.com/uckkk/dsh-botswana) — 博茨瓦纳国
-- [dsh-boundary](https://github.com/uckkk/dsh-boundary) — 设定界限
-- [dsh-brain-computer-terms](https://github.com/uckkk/dsh-brain-computer-terms) — 脑机接口术语
-- [dsh-brand-design](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-brand-design) — 创建品牌设计和视觉内容的技能。
-- [dsh-brand-guidelines](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-brand-guidelines) — 提供品牌一致性指南。
-- [dsh-brand-guidelines](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-brand-guidelines) — 建立品牌指南和标准的技能。
-- [dsh-brand-identity](https://github.com/uckkk/dsh-brand-identity) — 品牌设计体系参考
-- [dsh-brand-landingpage](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-brand-landingpage) — 设计高效落地页的技能。
-- [dsh-brazil](https://github.com/uckkk/dsh-brazil) — 巴西国家
-- [dsh-breath-tech](https://github.com/uckkk/dsh-breath-tech) — 呼吸法指导
-- [dsh-breathing](https://github.com/uckkk/dsh-breathing) — 呼吸练习
-- [dsh-bromine](https://github.com/uckkk/dsh-bromine) — 溴元素
-- [dsh-brushing-time](https://github.com/uckkk/dsh-brushing-time) — 刷牙时长
-- [dsh-budget-plan](https://github.com/uckkk/dsh-budget-plan) — 50-30-20预算
-- [dsh-buenos-aires-city](https://github.com/uckkk/dsh-buenos-aires-city) — 布宜诺斯艾利斯市
-- [dsh-bulgaria](https://github.com/uckkk/dsh-bulgaria) — 保加利亚国家
-- [dsh-bundle-calc](https://github.com/uckkk/dsh-bundle-calc) — 套餐设计
-- [dsh-burkina-faso](https://github.com/uckkk/dsh-burkina-faso) — 布基纳法索国
-- [dsh-burundi](https://github.com/uckkk/dsh-burundi) — 布隆迪国
-- [dsh-business](https://github.com/winyh/dsh-business) — 商业策略与商业化插件，覆盖商业模式、定价与渠道价盘、盈利能力、电梯 Pitch 和商业计划。 Evidence-backed business strategy and commercialization tools for business models, pricing architecture, channel economics, profitability, elevator pitches and business plans.
-- [dsh-cad-modeling](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-cad-modeling) — 创建三维CAD模型的技能。
-- [dsh-canvas-design](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-canvas-design) — 设计画布和图形的技能。
-- [dsh-canvas-design-harness](https://github.com/askman-dev/dsh-canvas-design-harness) — 从聊天生成和迭代 Figma 风格画布设计，将规格存为 Git 版本化 HTML。
-- [dsh-capability-index](https://github.com/777-Zen/dsh-capability-index) — 给 DSH agent 的插件库"起飞前检查单"——任务型请求时自动预检插件库并注入 Top-K 适用插件提示，让插件库利用率可预期、不靠运气。Pre-flight plugin-library check for DSH agents — task-type requests trigger a Top-K hint of suitable plugins injected into the runtime context, making plugin usage predictable instead of opportunistic.
-- [dsh-career-ops](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-career-ops) — 提供职业发展与规划指导。
-- [dsh-career-ops](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-career-ops) — 管理职业运营和规划的技能。
-- [dsh-catgirl-plugin](https://github.com/Freakz2z/dsh-catgirl-plugin) — 一个高效 token 的人设运行时，将人格留在界面，把智能留给模型。
-- [dsh-changelog](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-changelog) — 生成发布变更日志的技能。
-- [dsh-channel-assistant](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-channel-assistant) — 协助管理渠道的技能。
-- [dsh-character-profiler](https://github.com/MlittleFriend/dsh-character-profiler) — 创建角色档案，用于角色扮演或叙事，存储性格特征与偏好。
-- [dsh-chat-translate](https://github.com/tttnny/my-dsh/tree/HEAD/plugins/dsh-chat-translate) — 提供技能速查与管理面板，支持分类、搜索和上下文推荐，一键选用。
-- [dsh-chinese-skill-patch](https://github.com/FeatherHunter/dsh-chinese-skill-patch) — 让 DSH 原生识别中文技能名，无需重命名，提升命令发现。
-- [dsh-chinese-thinking](https://github.com/GongYuanCaiJi/dsh-chinese-thinking) — DeepSeek Harness 插件：让 agent 默认用中文思考与回复（移植自 superpowers-zh）
-- [dsh-chinese-thinking](https://github.com/Max-Null/dsh-chinese-thinking) — 为助手提供中文思考风格的提示词或行为。
-- [dsh-chinese-traditional-wisdom-skill](https://github.com/dhicoc/dsh-chinese-traditional-wisdom-skill) — 中华传统智慧（玄枢）AI Agent 技能包的 DeepSeek Harness（dsh）Cordis 插件：八字/紫微/六爻/梅花/奇门/风水/五运六气/体质全融合，本地确定性引擎 + 可视化 Dashboard，一行 dsh plugin add 安装。
-- [dsh-classic-coding](https://github.com/better-er/dsh-classic-coding) — dsh·古法编程插件
-- [dsh-claude-code-templates](https://github.com/GongYuanCaiJi/dsh-claude-code-templates) — 提供 897 个 Claude Code 技能模板，供复用为提示词能力。
-- [dsh-claude-migrator](https://github.com/huanghouchun/dsh-claude-migrator) — Claude → DeepSeek Harness (DSH) 配置迁移插件：自动识别用户主目录与项目根的 .claude/skills、.claude/rules、.mcp.json、CLAUDE.md，skill 按工作区隔离唤醒，MCP 动态注册真实连接，内置可折叠配置中心看板
-- [dsh-claude-skills](https://github.com/GongYuanCaiJi/dsh-claude-skills) — 362 个技能库（移植自 alirezarezvani/claude-skills）
-- [dsh-claudecode-tips](https://github.com/ldgeng/dsh-claudecode-tips) — 将deep diving替换为claudecode式的working tips
-- [dsh-clawshell](https://github.com/jorinyang/dsh-clawshell) — 实现 ClawShell 愿景，包含自我感知、自适应、信任群体、洞察挖掘和知识基因组。
-- [dsh-cli-anything](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-cli-anything) — 提供通过命令行处理任意任务的技能包。
-- [dsh-climate-terms](https://github.com/uckkk/dsh-climate-terms) — 气候术语
-- [dsh-closet-zone](https://github.com/uckkk/dsh-closet-zone) — 衣柜分区
-- [dsh-cloth-mold](https://github.com/uckkk/dsh-cloth-mold) — 衣物防霉
-- [dsh-cloud-cost-optimization](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-cloud-cost-optimization) — 提供分析并降低云基础设施成本的指导与提示词。
-- [dsh-cloud-well-architected](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-cloud-well-architected) — 提供云架构最佳实践。
-- [dsh-cloud-well-architected](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-cloud-well-architected) — 提供基于Well-Architected框架评估和优化云架构的提示词。
-- [dsh-cnwrite](https://github.com/guozede12593312/dsh-cnwrite) — DeepSeek Harness 中文写作助手插件：排版 cn_polish + 写作统计 cn_stats
-- [dsh-cobalt](https://github.com/uckkk/dsh-cobalt) — 钴元素
-- [dsh-code-reading-coach](https://github.com/tobysunsun/dsh-code-reading-coach) — 代码研读教练：交互式引导研读论文对应的开源代码，五段研读法
-- [dsh-code-review](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-code-review) — 提供进行彻底代码审查的结构化提示词，聚焦质量、安全与最佳实践。
-- [dsh-code-simplify](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-code-simplify) — 包含简化复杂代码的提示词，提升可读性和可维护性。
-- [dsh-codebase-design](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-codebase-design) — 提供设计整体代码库架构的技能，促进模块化和可扩展性。
-- [dsh-codebase-scanner](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-codebase-scanner) — 提供系统扫描和分析整个代码库以发现洞察和问题的方法。
-- [dsh-codex-port](https://github.com/STARDUSTLC666/dsh-codex-port) — DeepSeek Harness 技能移植插件：把 ~/.codex 的 Codex 官方插件（186+ 个、583+ 技能）一键移植为 DSH 技能（codex_list/port/status），frontmatter 自动转换、幂等跳过。· Batch-port the Codex plugin family into DSH skills.
-- [dsh-cold-drink](https://github.com/uckkk/dsh-cold-drink) — 冰饮制作
-- [dsh-colleague-creation](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-colleague-creation) — 指导创建具有特定角色的虚拟同事或代理。
-- [dsh-colleague-creation](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-colleague-creation) — 指导在工作区内创建具有特定角色的AI同事或专业代理。
-- [dsh-colombia](https://github.com/uckkk/dsh-colombia) — 哥伦比亚国家
-- [dsh-combination](https://github.com/uckkk/dsh-combination) — 组合数
-- [dsh-comfyui-node-development](https://github.com/shouwang37/dsh-comfyui-node-development) — DeepSeek Harness（DSH）插件：ComfyUI 自定义节点开发浓缩指南，打包为 comfyui-node-dev 技能
-- [dsh-commercial-ui-ux](https://github.com/zjsthmjialin/commercial-ui-ux-codex-skill/tree/HEAD/dsh-commercial-ui-ux) — 提供商业 UI/UX 设计、审查、修复和实现的技能包。
-- [dsh-commit-message](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-commit-message) — 根据代码更改生成清晰、规范的提交信息。
-- [dsh-community-plugins](https://github.com/HubaKing/dsh-community-plugins) — 注册一个全局技能，教导代理如何从 GitHub、dshmarket 和 npm 发现、评估和安装社区插件。
-- [dsh-companion](https://github.com/hytime/dsh-companion/tree/HEAD/packages/dsh-companion) — 捆绑插件、技能和 CLI 工具的陪伴系统，增强用户互动。
-- [dsh-companion](https://github.com/Yihong89/dsh-sister) — 一个温暖、超可爱、派蒙风格萝莉音的「妹妹」陪伴 Agent（DeepSeek Harness 插件）
-- [dsh-compliancehub](https://github.com/wwumit/dsh-skill-hub) — 从远程 JSON 目录安装技能到 DeepSeek Harness 环境。
-- [dsh-compose](https://github.com/uckkk/dsh-compose) — 构图法则
-- [dsh-composer-skill-mention](https://github.com/SisyphusSQ/dsh-plugins/tree/HEAD/packages/dsh-composer-skill-mention) — 在编写器中提及技能，提供技能选择功能。
-- [dsh-config-instructions](https://github.com/Neplich/dsh_plugin/tree/HEAD/packages/feature/dsh-config-instructions) — 配置助手自定义指令或提示词，应用于会话。
-- [dsh-config-skills](https://github.com/Neplich/dsh_plugin/tree/HEAD/packages/feature/dsh-config-skills) — 组织和激活助手的技能集或提示词集合。
-- [dsh-conflict-deal](https://github.com/uckkk/dsh-conflict-deal) — 冲突化解
-- [dsh-congo-dr](https://github.com/uckkk/dsh-congo-dr) — 刚果民主共和国国家
-- [dsh-content-distillation](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-content-distillation) — 将复杂内容提炼为简洁摘要或要点。
-- [dsh-content-distillation](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-content-distillation) — 提供将复杂内容提炼为简洁要点摘要的提示词。
-- [dsh-content-marketing](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-content-marketing) — 提供内容营销和受众互动的策略。
-- [dsh-content-marketing](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-content-marketing) — 提供创建有效内容营销策略和素材的技能。
-- [dsh-context-engineering](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-context-engineering) — 包含工程化对话上下文以提升AI回答质量的技巧。
-- [dsh-contract-review](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-contract-review) — 提供审查合同并识别潜在风险和条款的结构化提示词。
-- [dsh-conversation-outline](https://github.com/YesSanSan/dsh-conversation-outline) — 管理harness中的技能，提供专门的技能组织界面。
-- [dsh-copernicium](https://github.com/uckkk/dsh-copernicium) — 鎶元素
-- [dsh-copper](https://github.com/uckkk/dsh-copper) — 铜元素
-- [dsh-copy-pick](https://github.com/uckkk/dsh-copy-pick) — 字帖选择
-- [dsh-correlation](https://github.com/uckkk/dsh-correlation) — 相关系数
-- [dsh-costa-rica](https://github.com/uckkk/dsh-costa-rica) — 哥斯达黎加国家
-- [dsh-couple-talk](https://github.com/uckkk/dsh-couple-talk) — 伴侣沟通
-- [dsh-covariance](https://github.com/uckkk/dsh-covariance) — 协方差
-- [dsh-cpr](https://github.com/uckkk/dsh-cpr) — 心肺复苏
-- [dsh-cpr-guide](https://github.com/uckkk/dsh-cpr-guide) — CPR急救
-- [dsh-creative-director](https://github.com/lussey820/dsh-creative-director) — DeepSeek Harness 创意指导 Agent 插件：领域判定 + 自适应追问生成深耕领域的美学 brief（短视频/品牌视觉/电商带货/游戏概念），cd_render 渲染生成 prompt，框架逻辑可测试。dsh-plugin / Creative Director
-- [dsh-croatia](https://github.com/uckkk/dsh-croatia) — 克罗地亚国家
-- [dsh-crochet](https://github.com/uckkk/dsh-crochet) — 钩针基础
-- [dsh-cross-team](https://github.com/uckkk/dsh-cross-team) — 跨部门协作
-- [dsh-css-art-styles](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-css-art-styles) — 指导使用CSS创建艺术装饰风格，产生视觉亮点。
-- [dsh-currency-tips](https://github.com/uckkk/dsh-currency-tips) — 货币使用提示
-- [dsh-custom-prompt](https://github.com/johnvictorio/dsh-custom-prompt) — 向全局系统提示注入可编辑的自定义段落，并提供设置页面。
-- [dsh-cutting-guide](https://github.com/uckkk/dsh-cutting-guide) — 扦插繁殖指南
-- [dsh-daily-plan](https://github.com/uckkk/dsh-daily-plan) — 每日练习
-- [dsh-dance-basic](https://github.com/uckkk/dsh-dance-basic) — 舞蹈基本功
-- [dsh-dance-plan](https://github.com/uckkk/dsh-dance-plan) — 学舞规划
-- [dsh-dance-warmup](https://github.com/uckkk/dsh-dance-warmup) — 舞蹈热身
-- [dsh-data-engineering](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-data-engineering) — 指导数据工程工作流，包括管道和转换。
-- [dsh-data-engineering](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-data-engineering) — 提供处理数据工程任务如ETL流程和管道设计的技能。
-- [dsh-data-quality](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-data-quality) — 提供评估和改进数据集内数据质量的框架。
-- [dsh-data-storytelling](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-data-storytelling) — 帮助从数据中构建引人入胜的叙事用于展示。
-- [dsh-data-storytelling](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-data-storytelling) — 指导从数据洞察中创建引人入胜的故事和可视化。
-- [dsh-data-visualization](https://github.com/uckkk/dsh-data-visualization) — 图表类型选择参考
-- [dsh-database-design](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-database-design) — 提供设计高效可扩展数据库模式的技能。
-- [dsh-dataset-curation](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-dataset-curation) — 提供为机器学习或分析而系统整理和清理数据集的方法。
-- [dsh-db-migration](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-db-migration) — 指导以最小风险规划和执行数据库迁移。
-- [dsh-debug-recovery](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-debug-recovery) — 提供调试代码和从错误中恢复的提示词与策略。
-- [dsh-dehumid](https://github.com/uckkk/dsh-dehumid) — 除湿方法
-- [dsh-delhi-city](https://github.com/uckkk/dsh-delhi-city) — 德里市
-- [dsh-denmark](https://github.com/uckkk/dsh-denmark) — 丹麦国家
-- [dsh-deployment-validation](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-deployment-validation) — 提供验证软件部署是否成功且稳定的技能。
-- [dsh-deprecation](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-deprecation) — 指导处理废弃功能和代码迁移。
-- [dsh-design](https://github.com/Viger1/dsh-design) — 提供设计系统技能和审计工具，衡量渲染页面是否符合设计规范。
-- [dsh-design-feishu-docs](https://github.com/welay21312312321/dsh-design-feishu-docs) — Feishu/Lark document design & layout skill for DeepSeek Harness (dsh) — management-readable, brand-consistent, evidence-traceable formatting for long-form docs. 飞书文档设计排版技能（DeepSeek Harness 技能插件）：管理层可扫描、品牌一致、证据可追溯的长文排版。
-- [dsh-design-skills](https://github.com/zhaiyateng/dsh-design-skills) — 提供六种设计美学风格的技能包，帮助网站摆脱千篇一律的AI外观。
-- [dsh-detergent](https://github.com/uckkk/dsh-detergent) — 洗涤剂用量
-- [dsh-dev-cloud](https://github.com/uckkk/dsh-dev-cloud) — 云服务
-- [dsh-dev-databases](https://github.com/uckkk/dsh-dev-databases) — 数据库
-- [dsh-dev-frameworks](https://github.com/uckkk/dsh-dev-frameworks) — 编程框架
-- [dsh-dev-http-tools](https://github.com/uckkk/dsh-dev-http-tools) — Web 技术
-- [dsh-dev-paradigms](https://github.com/uckkk/dsh-dev-paradigms) — 编程范式
-- [dsh-diagram-design](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-diagram-design) — 提供设计图表的技能包，指导创建可视化表示。
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 752 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="workflow"></a>
-
-<details>
-<summary><strong>工作流与自动化</strong> · 显示 248 / 共 778 个</summary>
-
-- [adaptive-update](https://github.com/niushuanan/dsh-adaptive-update/tree/HEAD/payload/adaptive-update/product/plugins/adaptive-update) — 定期检查上游更新，通过限定代理完成兼容工作，并支持原子切换与回滚。
-- [agent](https://github.com/orziz/odai/tree/HEAD/dsh/agent) — 治理 AI agent 任务，对齐目标与事实，规划调度并验证交付。
-- [agent-dag-workflow](https://github.com/GM-HZ/dsh-dag-workflow) — 创建持久化 DAG 工作流，支持代理引导模板、SQLite 恢复和可视化画布编辑。
-- [agent-governance](https://github.com/EnglandTong/governance-multi-agent-harness/tree/HEAD/packages/bundle/agent-governance) — 多代理工作流的治理捆绑包，提供监督与协调。
-- [agent-jit](https://github.com/sybolization/agent-jit) — DeepSeek Harness (dsh) 插件：把 LLM agent loop 中确定性的执行路径编译成 DSL 程序并直接执行，显著降低 token、往返轮次与上下文暴露。A DeepSeek Harness plugin that compiles deterministic agent paths into DSL programs.
-- [agent-loop](https://github.com/Jonah-Wu23/dsh-gungnir/tree/HEAD/packages/agent-loop) — 编排智能体循环，锁定目标、调整策略并通过迭代执行验证成功。
-- [agent-state](https://github.com/HanneLEE/dsh-agent-state/tree/HEAD/agent-state) — 为自主智能体实现状态机，管理长周期任务并防止幻觉。
-- [agent-team](https://github.com/limuyang2/agent-team) — 为 DeepSeek Harness 提供多 Agent 团队协作，支持为助手配置独立模型、Skills、MCP 服务和上下文，并共享工作区。
-- [agent-team-profile](https://github.com/ChisaAlter/Deepseek-Harness-Desktop/tree/HEAD/vendor/deepseek-harness/packages/experimental/agent-team-profile) — 为DeepSeek Harness编排多智能体协作团队，实现任务自动化规划与执行。
-- [agent-team-web-profile](https://github.com/ChisaAlter/Deepseek-Harness-Desktop/tree/HEAD/vendor/deepseek-harness/packages/experimental/agent-team-web-profile) — 在浏览器界面配置协作型智能体团队，支持多智能体协同工作流。
-- [agent-teams](https://github.com/StarPivotNet/dsh-plugins-public/tree/HEAD/packages/agent-teams) — 支持多智能体团队协作，可能用于编排任务。
-- [AgentsGitFlowController](https://github.com/FeatureAgents/AgentsGitFlowController) — 在代理层面自动化 Git 流程控制，编排分支管理和合并工作流。
-- [ai-company-framework](https://github.com/yyyy231209/ai-company-framework) — Company Is a Word. 一句话开一家AI公司 - open-source multi-agent orchestration framework for non-developers. 小白5分钟拥有自己的AI公司，可DIY任意行业、调教子Agent、无限家公司，支持飞书遥控。MIT
-- [aikanban-package](https://github.com/InformationDS/DSHAIKanBan/tree/HEAD/AIKanBan/aikanban-package) — 看板式项目管理插件，支持任务分配、拖拽流转和跨会话记忆交接。
-- [aitoearn-dsh-plugin](https://github.com/lussey820/aitoearn-dsh-plugin) — AiToEarn 内容创作套件 —— DeepSeek Harness 插件（创意指导/脚本/图文/视频生成 + 抖音发布）
-- [app-wework](https://github.com/wecode-ai/Wegent/tree/HEAD/wework/dsh/app-wework) — 为 DSH 环境提供应用框架，用于定义、组织和运行智能代理团队。
-- [approval-autoanswer](https://github.com/CharlotteN7/dsh-plugin-inspector/tree/HEAD/tests/fixtures/approval-autoanswer) — 自动处理多步骤审批流程，预设回复以简化审查过程。
-- [assistant-automations](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/assistant-automations) — 将助手操作步骤串联成可定时或触发的自动化工作流。
-- [assistant-evolution](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/assistant-evolution) — 编排助手的迭代改进流程，实现跨周期的自动进化更新。
-- [assistant-health](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/assistant-health) — 监控助手健康状态并根据诊断自动执行恢复与维护流程。
-- [assistant-policy](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/assistant-policy) — 定义并执行管理助手行为的运营策略，落实自动化规则。
-- [auto-pwa](https://github.com/BHXiang/auto-pwa) — AI驱动的分波分析自动化。
-- [auto-review](https://github.com/Pidreamleaves/dsh-pi-kit/tree/HEAD/packages/auto-review) — 自动审核系统权限请求，简化多步骤流程。
-- [bailinghub-dsh-plugin](https://github.com/bailinghub/bailinghub-dsh-plugin) — 通过配置的 BailingHub 路由提交并跟踪受管理的业务任务。
-- [base](https://github.com/SUONSUN9527/deepseek-harness-flow-arrange/tree/HEAD/packages/bundle/base) — 作为 Harness 基础包，分发编排与执行器协同的工作流。
-- [batch-archive](https://github.com/eh-tools/dsh-plugin/tree/HEAD/plugins/batch-archive) — 批量归档多个会话或条目，简化大量清理工作。
-- [BigTimer](https://github.com/kobenfang/BigTimer) — 管理定时任务和消息推送，自动化时间触发的流程与提醒。
-- [blueprint](https://github.com/taltara/mddl-harness/tree/HEAD/packages/blueprint) — 通过画布拖拽模型和工具，可视化编排并导出真实配置补丁覆盖层。
-- [bundle](https://github.com/georesearch-dsh/georesearch-dsh/tree/HEAD/packages/bundle) — 为 DeepSeek Harness 打包地理研究导向的智能体工作流，编排多步骤研究任务。
-- [bundle](https://github.com/Mason-1011/dsh-task-center/tree/HEAD/packages/bundle) — 跨会话协调任务生命周期，支持认领、定时、配额和看板。
-- [bundle](https://github.com/OpenCnid/deepseek-rlm/tree/HEAD/packages/bundle) — 提供持久的 IPython 状态、可靠快照及原生递归子代理，支持自动化工作流。
-- [bundle-factor-mining](https://github.com/Rtyyy233/dsh-factor-mining-plugin/tree/HEAD/ts/bundle-factor-mining) — 自动化因子挖掘流水线，适用于 Qwen 等小型模型。
-- [candidate-baseline](https://github.com/timwhitez/dsh-self-evolving/tree/HEAD/packages/candidate-baseline) — 实现基于证据、崩溃可恢复的自我进化引擎，自动化迭代改进流程。
-- [candidate-v011-baseline](https://github.com/timwhitez/dsh-self-evolving/tree/HEAD/packages/candidate-v011-baseline) — 提供自我进化引擎的候选基线变体，支持版本化的改进流水线。
-- [cc-hooks](https://github.com/Bcy2020/dsh-cc-ecosystem/tree/HEAD/packages/cc-hooks) — 集成Claude Code的钩子以在事件时触发自动化操作。
-- [chicheng-cron](https://github.com/534119219/chicheng-cron) — DSH 定时任务插件：侧栏「定时任务」入口，cron 定时执行 shell / python / node 脚本、Skill 与 Agent 任务；支持 chicheng-push 与 messaging-core 推送通知、会话归档、移动端适配。
-- [ci-runner](https://github.com/JohnXu22786/ci-runner) — 触发GitHub Actions工作流和本地测试流水线，流式日志并在失败时交给AI处理。
-- [clawock-dsh](https://github.com/KCNyu/clawock/tree/HEAD/examples/dsh/packages/clawock-dsh) — 让代理在真实港美股账户上强制辩论每笔决策，并用代码结算。
-- [codex](https://github.com/Ephemeral-AI-Lab/dsh-plugins/tree/HEAD/plugins/coding-plan/codex) — 面向 Codex 的编码计划变体，编排自动化开发任务。
-- [codex-dsh-bridge](https://github.com/knottttt/codex-dsh-bridge) — 桥接 Codex 将任务分发至 Harness 会话，并集成设置。
-- [codex-moot-escalation](https://github.com/yfzhou0904/dsh-plugin-gallery/tree/HEAD/plugins/codex-moot-escalation) — 当子代理遇到复杂问题时，将任务升级至更强模型处理。
-- [coding-plan](https://github.com/Ephemeral-AI-Lab/dsh-plugins/tree/HEAD/plugins/coding-plan) — 生成结构化的分步编码计划，自动化多阶段开发流程。
-- [collab-bundle](https://github.com/YNM10086/DSH-Collaboration/tree/HEAD/collab-bundle) — 在 DSH 中实现多模型并行调度和多代理协同执行。
-- [constitution-coding](https://github.com/hetu-altas/hetu-hammurabi/tree/HEAD/plugins/constitution-coding) — 实现宪章编程的自动化流水线，包括分析、编码、测试和评审。
-- [context-pruner](https://github.com/JohnXu22786/context-pruner) — 会话上下文分诊插件：自动清理过期、重复、失败、超大与低价值消息，节省 token 并遏制上下文膨胀。
-- [cordis-plugin-sofagent-audit](https://github.com/KongFangXun/sofagent/tree/HEAD/engine/dsh-plugins/cordis-plugin-sofagent-audit) — 按24条企业规则自动审计git差异，支持自我演进的代理工作流。
-- [cordis-plugin-sofagent-daemon](https://github.com/KongFangXun/sofagent/tree/HEAD/engine/dsh-plugins/cordis-plugin-sofagent-daemon) — 运行后台守护进程，编排企业代理的定时任务与流程。
-- [cordis-plugin-sofagent-evolve](https://github.com/KongFangXun/sofagent/tree/HEAD/engine/dsh-plugins/cordis-plugin-sofagent-evolve) — 通过迭代学习与规则优化，自动改进代理的规则体系。
-- [cordis-plugin-sofagent-gate](https://github.com/KongFangXun/sofagent/tree/HEAD/engine/dsh-plugins/cordis-plugin-sofagent-gate) — 基于规则对代理操作进行门控，执行前强制合规检查。
-- [cordis-plugin-sofagent-rollback](https://github.com/KongFangXun/sofagent/tree/HEAD/engine/dsh-plugins/cordis-plugin-sofagent-rollback) — 自动快照代理状态，审计失败时回滚至安全检查点。
-- [cron](https://github.com/picoaide/picoaide-harness/tree/HEAD/packages/host/cron) — 在宿主环境中运行定时任务和 cron 作业。
-- [cronjob-dsh-plugin](https://github.com/peng-huiyang/cronjob-dsh-plugin) — 尝试开发适配deepseek harness的定时任务插件，支持在前端页面直接设置定时任务，实现内部驱动的定时请求，满足一定程度上的脱手需求
-- [daily-briefing](https://github.com/zhouwei713/dsh-daily-kit/tree/HEAD/bundles/daily-briefing) — 将每日简报功能聚合为一键工作流的插件包。
-- [dayreel](https://github.com/peikuo/dayreel) — 将一天的工作会话转化为设计日报与旁白总结视频。
-- [deep-read-summarize](https://github.com/PensiveFei/deep-read-summarize) — 深度阅读与摘要工作流，支持书籍、论文、视频和网页。
-- [DeepJIT](https://github.com/fly3366/DeepJIT) — 将重复的代理工作流编译为热门技能和流程模板，充当 JIT 编译器以加速执行。
-- [DeepSeek Harness 极简模式长会话](https://github.com/wicm84266964/dsh-minimal-mode-compaction) — 为 DeepSeek Harness 极简模式提供可配置阈值的自动上下文压缩，并增加 /compact、/context 与模型可调用的主动压缩工具。
-- [deepseek_herdr](https://github.com/qinglang8609/deepseek_herdr) — 多智能体总指挥插件（DeepSeek Harness 原生版） ——让 DeepSeek 高效打开并指挥一个 claude / opencode / codex 智能体团队，实时看到每个智能体在做什么，通过共享记忆与任务看板编排多人协作。
-- [deepseek-harness](https://github.com/chuspeeism/dashi-taskboard/tree/HEAD/integrations/deepseek-harness) — 将复杂编程任务拆分为多个子任务，委托给AI代理自动协作完成。
-- [deepseek-harness](https://github.com/GCS-ZHN/mcp-sentinel/tree/HEAD/packages/deepseek-harness) — 作为哨兵轮询长时间运行的MCP任务，避免状态循环进入LLM推理路径。
-- [deepseek-harness](https://github.com/getpapi/papi/tree/HEAD/deepseek-harness) — 引导支持 MCP 的 AI 编码工具按结构化计划、构建和审查循环执行，确保项目持续推进。
-- [deepseek-harness](https://github.com/rrrrrredy/beforedone/tree/HEAD/integrations/deepseek-harness) — 强制编码代理在声明完成前提供新的、绑定的验证证据。
-- [deepseek-harness](https://github.com/xiaohou521/fusion-runtime/tree/HEAD/integrations/deepseek-harness) — 运行多模型混合编排运行时，协调编码代理执行任务。
-- [deepseek-harness](https://github.com/zenx0x/allinluna/tree/HEAD/plugins/deepseek-harness) — 在Codex和DeepSeek Harness中资源感知地编排多代理，高效执行任务。
-- [deepseek-harness](https://github.com/ZJU-REAL/Polaris/tree/HEAD/integrations/deepseek-harness) — 编排多阶段科学发现流水线，驱动自主研究流程。
-- [deepseek-harness-automations](https://github.com/syncended/deepseek-harness-automations) — 自动化编排多步骤工作流，协调任务序列与代理操作。
-- [deepseek-harness-channel-bcn](https://github.com/inclusionAI/Avernet/tree/HEAD/src/bcs/crates/plugins/deepseek-harness-channel-bcn) — 协调分布式代理的协作平台，让多个代理共同生活、连接、执行与进化。
-- [deepseek-harness-flow](https://github.com/alison-xx/deepseek-harness-flow) — 为 DeepSeek Harness 提供可视化工作流和多模型评估功能。
-- [deepseek-harness-matt-plugin](https://github.com/sa998aaron/deepseek-harness-matt-plugin) — DeepSeek Harness 插件：内置 Matt Pocock 技能集 + 侧边栏可视化流水线面板（Idea→Triage→Grill→Spec→Tickets→Implement→Review），一键把 /技能 发进会话。Bundled matt skills + visual pipeline sidebar for DSH.
-- [deepseek-harness-mobile](https://github.com/frederico-kluser/deepseek-harness-mobile) — 编排受保护的机器人自动执行任务，在移动环境下管理多个代理。
-- [deepseek-harness-orchestrate](https://github.com/apheli0os/deepseek-harness-orchestrate) — 以声明式 DAG 编排任务，实现自动化多步骤工作流。
-- [deepseek-harness-relay-mcp](https://github.com/tonytanglab/deepseek-harness-relay-mcp) — 从任意 MCP 代理委托长期任务给 DeepSeek Harness，并监控其至完成。
-- [deepseek-kanban-plugin](https://github.com/callmesoul/deepseek-kanban-plugin) — DSH (DeepSeek Harness) 任务看板插件：主机状态机 + git 调度 + 浏览器看板 UI，agent 自动执行任务、审核后自动合并回基础分支
-- [deepseek-knowzcode-plugin](https://github.com/knowz-io/deepseek-knowzcode-plugin) — 为DeepSeek Harness定义测试驱动开发与质量门禁工作流，自动执行代码验证与发布标准。
-- [delivery-review-dsh-plugin](https://github.com/xiaoxiao-svg/delivery-review-dsh-plugin) — 双 Agent 交付协作工作流的 DeepSeek Harness 原生插件。基于 DSH 的 Cordis 插件系统，以 bundle 方式分发，不改动 DSH 源码。
-- [details-demo](https://github.com/yanglongyun/dsh-ramify/tree/HEAD/.dev/details-demo) — 以树状工作区生成、对比和迭代多个可交互方案。
-- [devflow](https://github.com/H97y/dsh-devflow/tree/HEAD/packages/devflow) — 自动化从需求到合并的开发流水线。
-- [devflow-bundle](https://github.com/zhchxiao123/dsh-devflow-plugins/tree/HEAD/packages/devflow-bundle) — 构建基于文件的开发工作流，包含持久化卡片、产物检查、人工审批和只读看板。
-- [DHS-multi-agent-plugin](https://github.com/Li3NGa/deepseek-multi-agent-plugin) — agent工厂 让多个agent协同 deepseek harness插件
-- [dsh](https://github.com/Akimiya-z/codex-guard/tree/HEAD/dsh) — 作为AI生成拉请求的质量门禁，在合并前阻止遗留待办、泄露密钥、草率提交和失败的CI。
-- [dsh](https://github.com/alxshelepenok/grove/tree/HEAD/packages/dsh) — 通过机器校验的不变量和证据，为AI代理实施结构化工作流协议。
-- [dsh](https://github.com/jukanntenn/grill-me-sleek/tree/HEAD/dsh) — 在编码前通过简洁的网页界面引导用户回答问题，以压力测试计划并建立共识。
-- [dsh](https://github.com/justlovemaki/PrismFlowAgent/tree/HEAD/integrations/dsh) — 自动化从全球多渠道抓取资讯、AI 深度总结并分发至多终端，构建完整内容流水线。
-- [dsh](https://github.com/Untidy-cocoabutter173/Flowboard/tree/HEAD/packages/dsh) — 将团队目标、会议、智能体和文档整合到一个工作流中，使DeepSeek Harness成为工作中心。
-- [DSH Workflow](https://github.com/gulagala001/dsh-workflow) — 面向 DSH 0.2.1-rc.2 的可恢复 JavaScript 工作流，支持原生子智能体、嵌套调用、token 预算和 worktree 隔离。包名 dsh-workflow-plus，通过 GitHub Release 分发，未发布 npm。
-- [dsh_workflow](https://github.com/icetomoyo/dsh_workflow) — 把 UltraCode 式多 Agent 调度带给 DSH：可生成、可保存、可治理、可观察、可恢复的 Workflow 层。
-- [dsh_workflow](https://github.com/LoserFox/marisa-distro/tree/HEAD/plugins/dsh_workflow) — 提供工作流引擎，用于编排多步骤自动化流程和任务流水线。
-- [dsh-a2a](https://github.com/dpskh/dsh-a2a) — 构建 Agent 间网格，实现多智能体协作与消息互通。
-- [dsh-a2a](https://github.com/HanphoneJan/dsh-a2a) — 实现A2A协议，支持智能体间通信与编排式任务执行。
-- [dsh-a2a](https://github.com/huangjuhua-aigc/dsh-a2a) — 实现A2A协议，支持工作流中代理间的通信与协作。
-- [dsh-a2a](https://github.com/LoserFox/marisa-distro/tree/HEAD/plugins/dsh-a2a) — 支持智能体间通信，实现自动化协调与任务委托。
-- [dsh-action-outbox](https://github.com/JimchengChina/dsh-action-outbox) — 为工具副作用添加提交前审查，用户可批准后再执行。
-- [dsh-advisor](https://github.com/btspoony/dsh-advisor) — 搭配一个副模型，每轮被动审查并注入见解。
-- [dsh-advisor](https://github.com/glangzh/dsh-advisor) — 给 DeepSeek Harness 的 Agent 增加一位"顾问"：日常任务使用较弱模型（默认模型），遇到真正困难的决策时，Agent 会自动向一个更强的模型咨询。
-- [dsh-advisor](https://github.com/slhssb/dsh-advisor) — 添加独立审查模型，审计代理步骤并在后续步骤中注入指导。
-- [dsh-agency-agents](https://github.com/MichengAI/dsh-agency-agents) — DSH agency agents 基于 DeepSeek Harness 的全行业智能体
-- [dsh-agent-approval](https://github.com/MoonlitDropOfBlood/dsh-agent-approval) — DSH 的自动审批权限插件
-- [dsh-agent-arena](https://github.com/LeemanCheung/dsh-agent-arena) — 运行隔离的多模型编码比赛，支持确定性验证、评分和报告。
-- [dsh-agent-arena](https://github.com/Tikzen/dsh-agent-arena) — 支持多智能体协作、会议、群聊与任务执行。
-- [dsh-agent-bus](https://github.com/MistyBridge/dsh-agent-bus) — 在同一工作区编排多个agent，分配任务、审查结果并运行DAG工作流，无需人工传递消息。
-- [dsh-agent-conductor](https://github.com/akqwpeter-prog/dsh-agent-conductor) — ⚡ DSH 指挥家（动态插件/热更新版）：在会话里派活给 11 种外部 agent CLI（Codex/Claude Code/TraeCode…），cordis_define 秒级安装，不碰 profile。
-- [dsh-agent-delegate](https://github.com/xingyingyuzhui/dsh-agent-delegate) — 委派任务给子代理，可配置深度、角色和工作树。
-- [dsh-agent-frugality](https://github.com/gongyijie85/dsh-agent-frugality) — 实施多代理节俭防御：账本去重、不可变规则、完成门控和廉价审查通道。
-- [dsh-agent-lead](https://github.com/JunguangJiang/dsh-agent-lead) — DSH 带队模式插件：主 Agent 只规划派活监工，改动交给 subagent，每次派活弹窗选子模型
-- [dsh-agent-loop-engineering](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-agent-loop-engineering) — 提供优化 agent 循环性能的工程工作流。
-- [dsh-agent-manager](https://github.com/hrhgit/dsh-agent-manager) — 管理 AI 代理，可能涉及创建工作流中代理的编排与执行。
-- [dsh-agent-orchestration](https://github.com/RossBool/dsh-plugins/tree/HEAD/dsh-agent-orchestration) — 实现协作编排、跨会话团队模式、计划引擎和话题时间轴。
-- [dsh-agent-orchestrator](https://github.com/GooDAnDReaDY/dsh-agent-orchestrator) — 为 DeepSeek Harness 提供多智能体任务分解、DAG 工作流编排和提示缓存。
-- [dsh-agent-relay](https://github.com/Noelune/dsh-agent-relay) — 本地多代理协作中继，带HMAC认证的回环消息代理。
-- [dsh-agent-studio](https://github.com/thissensen/dsh-agent-studio) — 可视化地自定义配置 Agent 的提示词、工具、可见技能、子代理与备用模型，把它们编成一支团队。不写宿主的任何预设文件。
-- [dsh-agent-team](https://github.com/wowyuarm/dsh-agent-team) — 通过工作区、频道和任务管理，组织人类任务并让多个代理协作完成工作流。
-- [dsh-agent-team-gui](https://github.com/toolclub/dsh-agent-team-gui) — 支持持久多模型智能体团队，可复用团队、按智能体策略及协作对话。
-- [dsh-agent-teams](https://github.com/jypjypjypjyp/dsh-agent-teams) — 支持agent团队协作任务，在框架内协调多代理工作流。
-- [dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) — AgentTeams 多智能体团队。
-- [dsh-agent-teams](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-agent-teams) — 支持多 agent 协作和团队编排。
-- [dsh-agent-teams](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-agent-teams) — 将多个代理协调为团队，执行协作工作流。
-- [dsh-agents-swarm](https://github.com/genesis-agents/dsh-plugins/tree/HEAD/dsh-agents-swarm) — 编排多代理协作（swarm），共同处理复杂任务。
-- [dsh-AgentTask](https://github.com/knGear/dsh-AgentTask) — 将多个步骤编排成可执行的自动化任务流程。
-- [dsh-ai-collab](https://github.com/tengfeizhao1219/dsh-ai-collab) — DSH 插件：AI 多角色协作开发框架（文件即通信）—— 一键初始化协作约定文件，任何 DSH 会话通过 ai_collab_init 驱动多角色 AI 协作完成软件项目。
-- [dsh-ai-council](https://github.com/AGSQ11/dsh-ai-council) — 支持角色驱动的企业 AI 审议，多代理协作讨论议题。
-- [dsh-ai-pm](https://github.com/konwait12/dsh-ai-pm) — DSH AI-PM 插件：把 pm-scaffold 的 PRD 工作流接入 DeepSeek Harness——agent 侧 ai_pm_* 模型工具（起草/机器闸门/回溯），GUI 侧需求看板与不可绕过的人工确认闸门。
-- [dsh-anywhere](https://github.com/tangwenhao616-netizen/dsh-anywhere) — 将异地机器纳入集群，并通过SSH执行命令，扩展工作区。
-- [dsh-approval-auto-review](https://github.com/perlied03/dsh-approval-auto-review) — 使用 Codex 风格的自动审查流水线来审批工具调用。
-- [dsh-approval-gate](https://github.com/moon09300731/dsh-approval-gate) — DeepSeek Harness 自动审批门控：Flash 预判不可回补操作，安全自动批准、危险转人工（fail-safe）
-- [dsh-approval-llm](https://github.com/Letter2025/dsh-approval-llm) — 基于模型的权限审批：由独立审查模型自动应答 approval 权限请求。
-- [dsh-approve-for-me](https://github.com/DamonKoy/dsh-plugins/tree/HEAD/packages/dsh-approve-for-me) — 自动审批用户请求，减少多步骤任务中的人工干预。
-- [dsh-approve-for-me](https://github.com/shifan3/dsh-approve-for-me) — 以代为批准模式自动通过安全请求，但高风险破坏性命令仍需人工确认。
-- [dsh-approve-for-me](https://github.com/timeance/dsh-approve-for-me) — 按规则自动审批沙箱操作，可选 LLM 复核并支持人工介入。
-- [dsh-approve-for-me](https://github.com/watericetangcw/dsh-approve-for-me) — 自动审核升级请求，按预设条件批准或拒绝。
-- [dsh-arc-context](https://github.com/PlxloYzb/dsh-arc-context) — 为arc代理提供上下文管理流程，提升效率。
-- [dsh-ATN](https://github.com/ff66ccff/dsh-ATN) — 面向 DeepSeek Harness 的自适应拓扑多智能体预设，提供点对点通信、共享白板、任务交接和实时网络可视化。
-- [dsh-audit-mode](https://github.com/yhfgyyf/dsh-guardian-mode) — 为 DeepSeek Harness 添加守护模式预设，含独立持久化审计。
-- [dsh-aura-scheduler](https://github.com/ljsysfurryACE/dsh-aura-scheduler) — 通过心跳和价值网络主动调度任务，超越纯模型驱动。
-- [dsh-auto-advance](https://github.com/SeaOf0/dsh-redteam-model/tree/HEAD/plugins/dsh-auto-advance) — 自动化多阶段红队操作，覆盖渗透测试、代码审计与安全评估。
-- [dsh-auto-approval](https://github.com/Andy8647/dsh-auto-approval/tree/HEAD/packages/dsh-auto-approval) — 自动批准待处理操作，减少人工干预，简化 DeepSeek Harness 中的工作流程。
-- [dsh-auto-approval-llm](https://github.com/cuddly-guacamole/dsh-auto-approval-llm) — 用大语言模型自动审批操作，超时后回退到人工处理。
-- [dsh-auto-approve](https://github.com/Hanihahaha/dsh-auto-approve) — 自动批准工具调用以简化工作流，减少人工干预。
-- [dsh-auto-evolve](https://github.com/lispking/dsh-auto-evolve) — 自进化插件，观察运行并提出改进，经沙盒验证后应用变更，支持回滚。
-- [dsh-auto-goal-resume](https://github.com/tmeeli/dsh-auto-goal-resume) — DeepSeek Harness 插件:重启后自动续跑有活跃目标(goal)的会话,无需人工说继续。
-- [dsh-auto-guard](https://github.com/Ayle5678/dsh-auto-guard) — 一款DSH (DeepSeek Harness) 插件：类似 Claude Code 中 Auto Mode 的一种命令通过机制，给 dsh中的full access 加一层 LLM 安全网的自动审批插件。
-- [dsh-auto-maintenance](https://github.com/dong3434/dsh-auto-maintenance) — 将诊断、修复、备份和监控编排为自动化的维护流程。
-- [dsh-auto-mode](https://github.com/Nuo-cl/dsh-auto-mode) — 自动处理需要权限的工具调用，通过 LLM 审查后再批准、阻止或请求确认。
-- [dsh-auto-preset-router](https://github.com/yhfgyyf/dsh-auto-preset-router) — 自动将首个 DSH 提示路由至 Standard、PTC、Minimal 或 Cordis，并搭配 V4 Flash，简化初始配置。
-- [dsh-auto-review](https://github.com/jhckevin/dsh-auto-review) — 通过原生桥接与 Linux 沙箱集成，自动化代码审查流程，支持多步骤系统化审查。
-- [dsh-auto-review](https://github.com/Xinlong-Wu/dsh-auto-review) — 添加自动审查权限预设，用于自动化代码审查流程。
-- [dsh-auto-scheduler](https://github.com/Cheng-xiu/dsh-auto-scheduler) — 按用户日程自动启停代理会话。
-- [dsh-autolab](https://github.com/Brain2nd/DSH-AutoLab/tree/HEAD/dsh-autolab) — 控制自治研究流程，本地通信提升效率。
-- [dsh-automation](https://github.com/alpacachen/dsh-automation) — 在DeepSeek Harness中调度和管理一次性及周期性的Agent任务，实现自动执行。
-- [dsh-automation](https://github.com/kumanana66/dsh-automation) — 录制浏览器操作，生成Python+Playwright脚本，定时执行并通过邮件通知。
-- [dsh-automation](https://github.com/MichengAI/dsh-automation) — DSH Automation 基于 DeepSeek Harness 的定时任务、自动化任务插件
-- [dsh-automation](https://github.com/titanwings/dsh-automation) — 定时任务：让 Coding 任务按计划在全新 Agent Session 中运行，保留可审计历史。
-- [dsh-automation-center](https://github.com/usersx/dsh-automation-center) — 集中管理定时任务、新结果会话和跨工作区运行历史。
-- [dsh-automode](https://github.com/log-li/dsh-auto-mode) — 通过规则与分类器自动审批操作，支持熔断并回退人工处理。
-- [dsh-autonomous-research](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-autonomous-research) — 通过自主 agent 工作流自动化研究任务。
-- [dsh-autonomous-research](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-autonomous-research) — 制定多步计划进行自主研究的技能。
-- [dsh-autopilot](https://github.com/245678000000/dsh-autopilot) — 验收驱动的自主任务完成，完成即通过验证。
-- [dsh-autoresearch](https://github.com/EveGoodEvening/dsh-autoresearch) — 编排自动化研究流程，服务于 DeepSeek Harness。
-- [dsh-autoupdate](https://github.com/lc23313/dsh-autoupdate) — 自动化 DeepSeek Harness 更新，包括版本检测、退出时应用、健康检查、自动回滚和熔断机制。
-- [dsh-b2us-schedule](https://github.com/changyinliangbaikai/dsh-b2us-schedule) — dsh定时任务插件，支持延迟、固定间隔、cron表达式，支持执行shell命令，支持发起Agent会话
-- [dsh-background-agents](https://github.com/PerryLink/dsh-background-agents) — 官方子代理接缝上的持久化后台子代理：任意会话中启动，Web 侧边栏看进度、随时留言与打断，支持按子代理限定工具、人格与委托深度。
-- [dsh-backup](https://github.com/a903067276-rgb/dsh-backup) — 自动化备份会话、配置和自定义目录，支持定时或手动触发，打包为 tgz 并轮转。
-- [dsh-backup-sync](https://github.com/csiroqa/dsh-backup-sync) — 为 DeepSeek Harness 提供快照备份、恢复和跨机同步，支持 WebDAV、自动备份和保留策略。
-- [dsh-bangumi](https://github.com/YiRan0/dsh-bangumi) — 追番订阅 DSH 插件：Bangumi 查番 + nyaa/dmhy 搜种 + qBittorrent 自动下载 + 媒体库查重 + 日历 GUI
-- [dsh-batch-regression](https://github.com/PangYiMing/dsh-batch-regression) — 批量运行命令并汇总统计结果，用于回归测试。
-- [dsh-bgjobs](https://github.com/bitsmug/dsh-bgjobs) — 将命令提交为独立于 DSH 进程的后台任务，关闭 DSH 也不影响运行，并提供实时网页面板与离线 CLI/GUI 管理。Runs commands as background jobs that keep executing when DSH exits, with a live web panel and offline CLI/GUI management.
-- [dsh-blind-arena](https://github.com/changer-changer/dsh-blind-arena) — 运行盲测公平竞技场，隔离工作树并共享验证。
-- [dsh-bmi-adjust](https://github.com/uckkk/dsh-bmi-adjust) — 减重计划拆解
-- [dsh-book2skill](https://github.com/omdsh-dev/dsh-book2skill) — 通过五阶段流水线（获取、解析、理解、生成、安装）将书籍转化为技能，含人工审批门。
-- [dsh-bundle](https://github.com/Leo-Ayh-Oday/dsh-orcana/tree/HEAD/packages/dsh-bundle) — 运行时治理包：进度控制、证据新鲜度、完成守卫与能力路由。
-- [dsh-cae-plugin](https://github.com/DaiYuhangSustc/dsh-cae-plugin) — 自然语言驱动的 CAE 插件，一句话即可完成 CAD 到后处理的完整流程。
-- [dsh-captain](https://github.com/KanoNoUta/dsh-captain) — 编排多代理协作，包含规划、执行和审查。
-- [dsh-cbx-orch](https://github.com/zerosloney/dsh-cbx-orch) — 编排持久化编码代理任务，支持持久任务、队列、审查和回滚，跨多个代理。
-- [dsh-ccpg-brand](https://github.com/chumingjun/harness-one/tree/HEAD/dsh-plugins/dsh-ccpg-brand) — 以DAG图可视化编排多智能体工作流，支持实时执行与恢复。
-- [dsh-ccpg-one](https://github.com/chumingjun/harness-one/tree/HEAD/dsh-plugins/dsh-ccpg-one) — 多智能体工作流编排系统的中央入口。
-- [dsh-ccpg-orchestrator](https://github.com/chumingjun/harness-one/tree/HEAD/dsh-plugins/dsh-ccpg-orchestrator) — 协调多智能体执行，管理工作流中的任务依赖与恢复。
-- [dsh-change-center](https://github.com/Chance-Wu/dsh-change-center) — 文件变更的捕获 → 审查 → 拒绝 / 应用 → 回滚中心
-- [dsh-changelog](https://github.com/GongYuanCaiJi/dsh-changelog) — 自动生成发布说明（移植自 @noice-tech/pi-changelog）
-- [dsh-chaos](https://github.com/hanxuanliang/dsh-chaos) — 通过频道、线程和可恢复会话实现持久的多智能体协作。
-- [dsh-ci-cd-bot](https://github.com/bkMoon1024/dsh-ci-cd-bot) — 从聊天界面集成构建、测试和部署流程，自动化 CI/CD 流水线。
-- [dsh-ci-co-pilot](https://github.com/temotee2103/dsh-ci-co-pilot) — 作为 GitHub CI 副驾驶，自动化处理 PR 审查、CI 修复、问题分类与发布说明。
-- [dsh-ci-context](https://github.com/lucas-ward/dsh-ci-context) — 为代理创建注重隐私的 CI 执行上下文，支持安全自动化测试与集成工作流。
-- [dsh-ci-doctor](https://github.com/jkrandom-sudo/dsh-ci-doctor) — CI failure, diagnosed before you open the logs — DeepSeek Harness plugin that watches GitHub Actions for new failures and turns raw logs into structured diagnosis cards · CI 失败，打开日志前就完成诊断 —— DSH 插件：监视 GitHub Actions 新失败，原始日志转结构化诊断卡，签名账本识别复发问题
-- [dsh-cicd](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-cicd) — 自动化持续集成与交付流水线。
-- [dsh-cicd](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-cicd) — 设置和管理CI/CD流水线的技能。
-- [dsh-cinematic-workflow](https://github.com/luoyuejun9/dsh-cinematic-workflow) — 可能提供电影式或分阶段的工作流编排，用于自动化多步骤过程。
-- [dsh-claim-gate](https://github.com/QWE13-ART/dsh-claim-gate) — Turn-boundary claim gate for DSH agents: 声称「已完成/已落地」但本轮无验证输出时机械拦截；有验证输出时软提示对照验证覆盖 + 任务收尾派独立审计。纯同步正则 host hook（agent/turn-stopping），零 LLM、零网络。
-- [dsh-claude-agent](https://github.com/jiang12345-code/dsh-multi-role-debate/tree/HEAD/dsh-claude-agent) — 编排 codex 和 claude 代理进行多角色并行论证，并由 DSH Judge 汇总结果。
-- [dsh-claude-code](https://github.com/Yuki-takuya-kun/dsh-claude-code) — 将 Claude Code 作为 DeepSeek Harness 主循环运行，实时传输轨迹到 Web UI。
-- [dsh-claude-octopus](https://github.com/GongYuanCaiJi/dsh-claude-octopus) — 编排多个智能体协作完成复杂任务，移植自 claude-octopus。
-- [dsh-clawo](https://github.com/Enderfga/dsh-clawo) — 通过 Claw Orchestrator 将子代理委托给跨引擎的委员会。
-- [dsh-cluster](https://github.com/Lanxi26/dsh-cluster) — 在界面上实现画布式的多代理协作。
-- [dsh-code-pipeline](https://github.com/ErrorLst/dsh-code-pipeline) — DSH bundle plugin: 为 code-pipeline 预设（PTC 流水线）动态注入阶段子代理工具（subagent_plan / subagent_impl / subagent_review），各阶段 provider/model/思考等级可在设置页实时配置
-- [dsh-codex-agent](https://github.com/jiang12345-code/dsh-multi-role-debate/tree/HEAD/dsh-codex-agent) — 编排 codex 和 claude 代理进行多角色并行论证，并由 DSH Judge 汇总结果。
-- [dsh-codex-approval](https://github.com/040822/dsh-codex-approval) — dsh-codex-approval插件：仿照Codex的AI自动审批，规则+AI三级风险评估自动放行/拒绝，让dsh沙箱审批自动化
-- [dsh-codex-kanban](https://github.com/sonozaki7/dsh-codex-kanban) — 融合看板与 Codex 聊天，实现 AI 驱动的项目任务管理。
-- [dsh-codex-reasoning-router](https://github.com/chenmzh/dsh-codex-reasoning-router) — 路由推理任务，让 Luna 执行，无工具的 Sol 提供建议。
-- [dsh-codex-workflow](https://github.com/kui123456789/dsh-codex-workflow) — 协调Codex规划与独立审查，同时由DSH执行任务。
-- [dsh-comfy-video-studio](https://github.com/a1303845406/dsh-comfy-video-studio) — 在 DeepSeek Harness 中集成 ComfyUI 和 MiniMax H3，提供视频制作工作流。
-- [dsh-commandcode-provider](https://github.com/CJYLZS/dsh-commandcode-plan-autosync) — 自动将 commandcode 编码计划模型同步到 DeepSeek Harness 会话中，确保跨对话的计划保持最新。
-- [dsh-commander](https://github.com/qwert702/dsh-commander) — 通过调度协议块编排多个对话，主对话协调子对话并接收结果回执。
-- [dsh-compact-after-task](https://github.com/xiaoliang2/dsh-compact-after-task) — 当前任务执行完成后自动压缩会话上下文：当上下文占用达到模型上下文窗口的用户可配置比例（0.05-1，默认 0.5）时触发，可在设置页通过开关与滑块调整。
-- [dsh-companion](https://github.com/beijingwahw/dsh-companion) — DeepSeek Companion — DeepSeek Harness 官方伴侣插件：对话导出/交接摘要/成本优化/全局检索 + 执行轨迹分析、Prompt 工程工作台、多模型竞技场、任务编排、安全与审计（E–J 九大模块，Cordis 插件化）。
-- [dsh-companion-dev](https://github.com/beijingwahw/dsh-companion-dev) — DeepSeek Companion 开发者版 — DeepSeek Harness 官方伴侣插件完整功能集：A–J 九大模块（对话导出/交接摘要/成本优化/全局检索 + 执行轨迹分析、Prompt 工程工作台、多模型竞技场、任务编排、安全审计），Cordis 插件化架构。
-- [dsh-companion-enterprise](https://github.com/beijingwahw/dsh-companion-enterprise) — DeepSeek Companion Enterprise — DeepSeek Harness 企业级伴侣插件：安全审计与 DLP、团队协作与知识管理、任务编排与断点续跑、多模型竞技场、执行轨迹分析、Prompt 工程工作台。
-- [dsh-completion-guard](https://github.com/GreenLv/dsh-completion-guard) — 强制执行任务契约并认证完成状态，验证多步骤工作流的输出结果。
-- [dsh-connector-linker](https://github.com/jiang12345-code/dsh-multi-role-debate/tree/HEAD/dsh-connector-linker) — 协调多个 AI 实体（如 codex/claude）进行并行辩论，通过裁判汇总结果并回传至对话。
-- [dsh-consult](https://github.com/DK-Zhu/dsh-consult) — 协调多个AI模型独立审查证据并综合意见，得出最终答案。
-- [dsh-continual-harness](https://github.com/jasen215/dsh-continual-harness) — 通过持久记忆和定期优化，自动化自我进化流程。
-- [dsh-continue](https://github.com/weibaohui/dsh-continue) — 自动续跑插件 for DeepSeek Harness — 有序规则表：按失败类型路由 继续续跑 / 换模型 / 压缩后继续 / 停止
-- [dsh-contract-drafting-agent](https://github.com/songoao25/dsh-contract-drafting-agent) — 通过 11 阶段律师流程、并行 AI 审查和决策门控，自动化合同起草。
-- [dsh-control-plane](https://github.com/Harzva/dsh-control-plane) — 作为控制面，用于管理和编排 DSH 工作流。
-- [dsh-cortex](https://github.com/iguowz/dsh-cortex) — 低成本多模型编排插件（Cortex）：大模型规划验收，子agent小模型执行，降本保质
-- [dsh-council](https://github.com/fufengyuan/dsh-council) — 支持多智能体协作或编排，可能用于决策流程。
-- [dsh-craft-your-textbook](https://github.com/xx-hub/dsh-craft-your-textbook) — 通过结构化流程帮助定制专属教材。
-- [DSH-Creator](https://github.com/Jackywxsz/DSH-Creator) — Jacky Creator：面向内容创作者的 DeepSeek Harness 本地内容与运营工作台
-- [dsh-crew](https://github.com/stuarthu/dsh-crew) — 编排产品经理、工程师、评审员等角色代理，通过文件共享协同完成工作。
-- [dsh-crew](https://github.com/ZSeven-W/dsh-crew) — 从外部工具分发任务给 DSH 智能体，支持多模态视觉和图像生成。
-- [dsh-critique-loop](https://github.com/Milbaxter/dsh-critique-loop) — 每轮回复后强制进行一轮批判与改进，通过迭代反馈自动优化输出质量。
-- [dsh-cron](https://github.com/fan56/dsh-cron) — 为智能体提供定时调度，支持日历与间隔规则，将任务交付给在线智能体。
-- [dsh-cron](https://github.com/GooDAnDReaDY/dsh-cron) — 调度并执行定时任务与后台自动化，实现 DeepSeek Harness 内的无人值守代理运行。
-- [dsh-cron](https://github.com/kouyichi/dsh-plugins/tree/HEAD/dsh-cron) — 按设定时间间隔自动调度并执行周期性任务。
-- [dsh-cron](https://github.com/omdsh-dev/dsh-cron) — 支持定时任务调度，可触发后续操作或向智能体会话注入消息。
-- [dsh-cron](https://github.com/squirrel20/dsh-cron) — 按 cron 计划为 DeepSeek Harness 运行无人值守的代理和命令任务。
-- [dsh-cron](https://github.com/XiaoWind/dsh-cron) — 新增/cron斜杠命令，用于按cron时间安排定期循环的agent任务。
-- [dsh-cron](https://github.com/ZhuoSir/dsh-cron) — DeepSeek Harness 定时任务插件：对话中自然语言创建，到点自动执行并在会话中回复，支持 cron 表达式与 Web 管理面板
-- [dsh-cron-job](https://github.com/upJiang/dsh-cron-job) — dsh 插件，定时任务+多渠道推送
-- [dsh-cron-panel](https://github.com/a792883583/dsh-cron-panel) — 侧边栏管理定时任务，支持自然语言创建和日志查看。
-- [dsh-cron-scheduler](https://github.com/AlexZhou19871030/dsh-cron-scheduler) — 在 DeepSeek Harness 中调度并执行定时任务，实现自动化重复工作流。
-- [dsh-cron-scheduler](https://github.com/Mappedinfo/dsh-cron-scheduler) — DSH 系统级 cron 定时任务插件:规则存为 Cron 表达式,由用户 crontab 在进程外执行 headless 任务,Web 端管理规则与运行结果
-- [dsh-cron-source-demo](https://github.com/squirrel20/dsh-cron/tree/HEAD/examples/dsh-cron-source-demo) — 演示如何在指定时间自动运行代理或命令任务，实现无人值守的定时执行。
-- [dsh-cron-tasks](https://github.com/Whale-Zhang/dsh-cron-tasks) — 在侧边栏中按 cron/at 计划调度任务，并为每个任务提供独立的运行历史。
-- [dsh-cross-collaboration](https://github.com/gameswu/dsh-cross-collaboration) — dsh跨设备agent协作插件
-- [dsh-ctf-team](https://github.com/fyfhcgch/dsh-ctf-collaborate/tree/HEAD/dsh-ctf-team) — 为团队提供多人CTF题目管理、共享笔记、Agent任务和证据整理能力。
-- [dsh-custom-subagents](https://github.com/ktdhhc/dsh-custom-subagents) — 一个dsh的子agent控制插件
-- [dsh-cybernetics](https://github.com/boomzikazita/dsh-cybernetics) — 实现带有观察者、前馈和反馈机制的控制回路，管理系统稳定性与可控性。
-- [dsh-dag](https://github.com/HEO-Club/DSH-DAG/tree/HEAD/packages/dsh-dag) — 在 DeepSeek Harness 中实现有向无环图（DAG）结构，用于组织和自动化多步骤任务流水线。
-- [dsh-daily-digest](https://github.com/zhaoxuejie/dsh-daily-digest) — DSH 每日工作摘要插件：自动记录任务/会话/错误，一键生成日报/周报 Markdown，Web 悬浮摘要卡
-- [dsh-danus](https://github.com/Fisfzy/dsh-danus) — 编排验证器门控的多智能体数学证明搜索，包含事实图和工人群。
-- [dsh-dashboard](https://github.com/Uddoo/dsh-dashboard) — 将 Linear、GitHub、Jira 等多来源任务编排到统一仪表盘，用于 DeepSeek Harness。
-- [dsh-data-cleaning-agent](https://github.com/duhu2000/dsh-data-cleaning-agent) — 自动化企业数据清洗与富化流程，将原始数据转化为结构化洞察。
-- [dsh-db-migration](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-db-migration) — 管理跨环境的数据库迁移流程。
-- [dsh-debate](https://github.com/lkshjd/dsh-debate) — 多智能体辩论插件，并行组织研究、交叉质询和裁判收敛。
-- [dsh-deep-research](https://github.com/omdsh-dev/dsh-deep-research) — 自适应深度研究编排器（基于官方 workflow 引擎）。
-- [dsh-deepseek-flow](https://github.com/kanghelyu/dsh-deepseek-flow) — 可能在 DSH 中编排多步流程，但信息有限，谨慎归类为工作流。
-- [dsh-delay-tools](https://github.com/keyiadiannao/dsh-delay-tools) — 定时唤醒同一会话回复，支持可中断等待。
-- [dsh-delayed-task](https://github.com/m-guo-2/dsh-delayed-task) — 安排持久化的延迟决策，支持任务暂停并在稍后恢复。
-- [dsh-delegation-suite](https://github.com/wenheguo2/dsh-delegation-suite) — 为 DSH 提供委派功能，用于协调多个代理或进程之间的任务。
-- [dsh-delegation-workflow](https://github.com/Wh1stle05/dsh-delegation-workflow) — 可能用于编排多代理委派工作流。
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 530 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="notify"></a>
-
-<details>
-<summary><strong>通知与集成</strong> · 显示 251 / 共 504 个</summary>
-
-- [@a23842/dsh-notifier](https://github.com/a23842/dsh-notifier) — DeepSeek Harness 多渠道通知插件：注册 send_notification 工具与设置页，向 NotifyX、企业微信应用通知、企业微信机器人、邮件（Resend）、飞书机器人发送通知。
-- [610la-dsh-notification-center](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/610la-dsh-notification-center) — 将多个来源的通知集中到一个面板，便于统一监控和访问。
-- [approval-chime](https://github.com/Pidreamleaves/dsh-pi-kit/tree/HEAD/packages/approval-chime) — 需要审批或后台任务完成时播放提示音并发送系统通知。
-- [ax-feishu-bridge](https://github.com/AX1202/ax-feishu-bridge) — 飞书/Lark 机器人桥接，同时支持 Pi 和 DeepSeek Harness（DSH）双平台，随时随地远程与你的编程助手对话
-- [balance-dsh](https://github.com/Rannist/balance-dsh) — DSH 插件：显示 DeepSeek 账户余额 + 会话 token/费用，含高峰/空闲计费
-- [blocker-notify](https://github.com/Frost-Reed/blocker-notify) — 当代理因审批请求或沙箱拒绝而被阻塞时，通过全局横幅和闪烁的工作区条目实时提醒用户。
-- [bundle](https://github.com/derek2035/dsh-social/tree/HEAD/bundle) — 搭建匿名、AI 代笔的社交网络，供用户交换观点并逐条过审。
-- [cc-dsh-notifier](https://github.com/baobaolaodie/cc-dsh-notifier) — 显示可点击恢复会话窗口的 Windows 桌面通知。
-- [channel-feishu](https://github.com/mapan0424/deepseek-harness-channels/tree/HEAD/packages/channel-feishu) — 集成飞书作为通信渠道，支持在Harness环境中进行通知和交互。
-- [channel-imessage](https://github.com/mapan0424/deepseek-harness-channels/tree/HEAD/packages/channel-imessage) — 将 iMessage 作为通信渠道接入，支持通过苹果信息服务收发消息。
-- [channel-wecom](https://github.com/mapan0424/deepseek-harness-channels/tree/HEAD/packages/channel-wecom) — 为DeepSeek Harness新增企业微信通知渠道，将消息与更新推送至企微用户或群聊。
-- [channels](https://github.com/wsz987/dsh-channels/tree/HEAD/packages/channels) — 接入微信、QQ、钉钉、飞书、Telegram 等 IM，实现统一对话与文件收发。
-- [chicheng-peak](https://github.com/534119219/chicheng-peak) — DSH 峰谷提醒插件：DeepSeek 官方峰谷时段感知——高峰橙/低峰蓝贴边呼吸边框、流光效果、服务端消息推送提醒（自定义标题内容）。Peak/valley breathing border + push reminder for DSH.
-- [chicheng-push](https://github.com/534119219/chicheng-push) — DSH(DeepSeek Harness) Web 消息推送插件：多渠道推送(Server酱/PushPlus/Bark/钉钉/企微/Telegram/飞书/Webhook等)，设置界面提供「推送插件」入口，可被其他插件调用(pushNotifier 服务 / /push/api 接口)
-- [chime](https://github.com/bLueriVerLHR/dsh-better-webui/tree/HEAD/packages/chime) — 播放提示音以通知用户事件或完成状态。
-- [chime](https://github.com/eeyzs1/dsh-plugins/tree/HEAD/packages/chime) — 播放提示音，通知用户界面事件或任务完成。
-- [connect](https://github.com/IvanWu2015/dsh-connect/tree/HEAD/packages/connect) — 连接 DSH 智能体到飞书/钉钉，支持聊天、流式回复和任务安排。
-- [connect-plugin](https://github.com/241793/DSH-Win-GUI/tree/HEAD/src/connect-plugin) — 连接QQBot和微信渠道以接收桌面通知。
-- [deepseek-harness-acp](https://github.com/openma-ai/deepseek-harness-acp) — ACP profile 插件与独立 stdio server，可从 Zed 等 ACP 客户端使用完整 DSH agent，并共享 DSH 凭据与会话。
-- [DeepSeek-harness-dingtalk](https://github.com/sliverp/DeepSeek-harness-dingtalk) — 集成钉钉 Stream 通道，支持文本和图片消息交互。
-- [DeepSeek-harness-lark](https://github.com/sliverp/DeepSeek-harness-lark) — 为DeepSeek Harness添加飞书与Lark的文本和图片通道支持。
-- [deepseek-harness-messenger](https://github.com/syncended/deepseek-harness-messenger) — 将 DSH 与 Telegram 等外部消息平台桥接，用于通知和指令交互。
-- [DeepSeek-harness-qqbot](https://github.com/sliverp/DeepSeek-harness-qqbot) — 将 DSH 接入 QQ 机器人，支持文本和图片消息。
-- [deepseek-harness-relay](https://github.com/sorsama/deepseek-harness-relay) — 为 DSH 网页配置提供经 TLS 的远程访问，支持设备配对与单设备撤销权限。
-- [DeepSeek-harness-wecom](https://github.com/sliverp/DeepSeek-harness-wecom) — 桥接企业微信，收发文本与图片，与 DeepSeek Harness 对话。
-- [deepseek-harness-weixin](https://github.com/qqmqq/deepseek-harness-weixin) — 将命令面板接入微信聊天，实现会话消息的推送与接收。
-- [DeepSeek-harness-weixin](https://github.com/sliverp/DeepSeek-harness-weixin) — 微信 ClawBot 通道插件，支持扫码登录和图文消息。
-- [dingtalk-dsh-assistant](https://github.com/HiQ-AI/dingtalk-dsh-assistant) — 基于 DeepSeek Harness 的钉钉群聊常驻个人助理插件
-- [dingtalk-dsh-assistant](https://github.com/HiQ-AI/dingtalk-dsh-assistant/tree/HEAD/packages/dingtalk-dsh-assistant) — 在钉钉群聊中部署常驻助手，实现即时消息交互与响应。
-- [dingtalk-dsh-observer](https://github.com/HiQ-AI/dingtalk-dsh-assistant/tree/HEAD/packages/dingtalk-dsh-observer) — 监听钉钉群动态，将事件转发给助手进行自动观察与回应。
-- [ds-notify-plugin](https://github.com/JohnWes7/ds-notify-plugin) — 通过外部服务发送 DeepSeek Harness 事件通知。
-- [ds-turn-notify](https://github.com/reimu-create/ds-turn-notify) — 发送轮次通知，可能用于任务完成或状态更新。
-- [DSH_plugins_4U](https://github.com/honghudavy-star/DSH_plugins_4U) — DSH 自建插件集合：微信桥接器 + GUI 微信入口补丁，一键安装
-- [DSH_WebNotification](https://github.com/Zouu-X/DSH_WebNotification) — It is a plug-in that helps sending notifications when agent finishes in DSH. 这是一个DSH的网页提示插件，让Agent跑完任务时会有明确提示
-- [dsh-1bot](https://github.com/yuyi2439/dsh-1bot) — 集成 OneBot 协议，向外部服务传递消息和通知。
-- [dsh-a2a-server](https://github.com/MicroWearld/dsh-a2a-server) — 将 DeepSeek Harness 作为 A2A 服务器接入外部系统。
-- [dsh-acp-for-bitfun](https://github.com/bobleer/dsh-acp-for-bitfun) — BitFun 与 DSH 的 ACP 交互对接。
-- [dsh-agent-notify](https://github.com/chidaic/dsh-agent-notify) — 任务完成或需输入时发送系统通知，可点击直达会话。
-- [dsh-agent-sound-alert](https://github.com/moonlin1213/dsh-agent-sound-alert) — 为 DeepSeek Harness 智能体生命周期事件（如启动和完成）播放 macOS 声音提示。
-- [dsh-alert-sound](https://github.com/Machine-126/dsh-alert-sound) — 为 Web 界面事件播放通知音效和中文语音提醒。
-- [dsh-api-gateway](https://github.com/litestartup-com/dsh-api-gateway) — DeepSeek Harness的开源 API Gateway 插件：任何第三方客户端（包括飞书/钉钉等即时通讯）都能通过REST + SSE接口与你的 Agent 会话交互。
-- [dsh-approval-assistant_0neKbyte](https://github.com/0neKbyte/dsh-approval-assistant_0neKbyte) — deepseek 审批+问答+完成时添加提醒，可设置浏览器、系统通知、弹窗通知，可自拟音效
-- [dsh-approval-notify](https://github.com/Uknown-wang/dsh-approval-notify) — 在 DSH 请求提权审批时发送 Windows 通知和提示音。
-- [dsh-approval-notify](https://github.com/whoisDDD/dsh-approval-notify) — DSH approval/question/completion notifier with native browser notifications and toast fallback. / DSH 审批、提问与完成提醒插件，支持浏览器原生通知和 toast 回退。
-- [dsh-approval-reminder](https://github.com/BHX-WL/dsh-approval-reminder) — 针对待审批事项发送提醒，让相关方实时知晓。
-- [dsh-approval-voice](https://github.com/ZIye1208/dsh-approval-voice) — DSH Web GUI 审批语音提示插件：需要审批/回答的弹窗出现时播放提示音并语音播报
-- [dsh-article-publish](https://github.com/yangyongzhen/dsh-article-publish) — 将 DeepSeek Harness 中的文章发布到 CSDN、掘金和博客园。
-- [dsh-astrbot-gateway](https://github.com/qzy033/dsh-astrbot-gateway/tree/HEAD/plugin/dsh-astrbot-gateway) — 配套 AstrBot 插件的 dsh 侧 cordis 插件：轮询 cache/inbox 领取任务、把结果写回 cache/outbox，并通过本机 AstrBot 接口送出完成通知，让消息以用户自己的聊天账号到达用户。
-- [dsh-attention](https://github.com/Gaq152/dsh-attention) — dsh 提醒插件：别错过需要你的时刻：右下角弹卡片提醒审批与完成，休眠唤醒不卡住
-- [dsh-attention](https://github.com/shaomingbo/dsh-attention) — 通过标签、图标、声音及系统通知提醒用户。
-- [dsh-attention-notify](https://github.com/Unintendedz/dsh-attention-notify) — 为所有需要用户注意的事件发送浏览器通知。
-- [dsh-audio-alert](https://github.com/ellelkktrraaa/dsh-audio-alert) — 为审批请求、询问用户和回合结束等关键节点播放可配置的音频提醒。
-- [dsh-away-notify](https://github.com/Kevin87654/dsh-away-notify) — deepseek-harness插件，当任务完成、而你又不在 DSH 界面时，向 Windows 发送系统通知
-- [dsh-backup-btn](https://github.com/faye0526/dsh-backup-btn) — DSH 一键备份按钮 - 浮动按钮备份 DSH 数据到 GitHub Gist
-- [dsh-balance](https://github.com/PengPeng6845/dsh-balance) — DeepSeek Harness 侧边栏真实 API 余额监控：直连官方 /user/balance，SSE 即时推送，只显示真实数据不做估算。
-- [dsh-balance](https://github.com/shawnyhu/dsh-balance) — 在侧边栏显示DeepSeek API余额，便于快速监控使用量。
-- [dsh-balance-guard](https://github.com/DosterBool/dsh-balance-guard) — DeepSeek Harness 插件：状态栏实时余额 + 本会话花费追踪 + 低余额暂停输出并引导充值
-- [dsh-balance-monitor](https://github.com/alanzhao0128/dsh-balance-monitor) — 监控DeepSeek账户余额，低于阈值时发送提醒。
-- [dsh-bell-notify](https://github.com/Laplace-bit/dsh-bell-notify) — DeepSeek Harness (dsh) 社区插件：为 Agent 生命周期事件合成铃声 + 右下角呼吸状态点，每个事件可上传自定义音频。dsh plugin that rings bells and shows a breathing status dot for Agent lifecycle events.
-- [dsh-brunei](https://github.com/uckkk/dsh-brunei) — 文莱国家
-- [dsh-cache-miss](https://github.com/wefio/dsh-cache-miss) — 在cache miss的时候提示
-- [dsh-capybara-notify](https://github.com/zzx-dear/dsh-capybara-notify) — 可能发送与水豚或特定主题相关的通知，根据名称推断。
-- [dsh-channel-telegram](https://github.com/LosEcher/dsh-channel-telegram) — 通过 Bot API 将 Telegram 消息桥接到各会话的 agent。
-- [dsh-chatnode-wechat](https://github.com/Jesse-njx/dsh-chatnode-wechat) — 通过 iLink 网关在微信里与 DSH agent 聊天、监控与审批：双向文本、会话切换、进度摘要与编号审批提示。
-- [dsh-chatops](https://github.com/ZhuoSir/dsh-chatops) — dsh-chatops 是 DeepSeek Harness 的 IM 桥接插件：微信扫码绑定官方 ClawBot 机器人（腾讯 iLink 协议），或接入飞书自建应用，即可在手机 IM 里列出/切换/驱动所有 DSH 会话——发文字就是发 prompt，任务完成自动推送结果，危险操作推送审批（飞书支持卡片按钮一键批准）。多通道并行、纯官方接口、零公网部署
-- [dsh-check-for-updates](https://github.com/ShanHaiFish/dsh-check-for-updates) — DSH 更新检查插件：首次打开自动检查新版本，取 npm 实际最高版本；左下方更新弹窗 +【更新到】按钮自动执行已校验升级（含安装后对盘校验）；UI 全部使用 DSH 语义化主题 token。
-- [dsh-chime](https://github.com/HtO404/dsh-chime) — 任务完成时播放提示音，支持后台标签页。
-- [dsh-chime](https://github.com/Mystery-God/dsh-chime) — 任务完成时播放提示音，支持音量调节和自定义音频。
-- [dsh-chime](https://github.com/xiaxingtianxia2-glitch/dsh-chime) — DSH 插件：opencode 任务完成提示音（完成/提问/错误三音，原始 mp3 内嵌，零依赖）。官方 bundle 插件，dsh plugin --profile web add: github:xiaxingtianxia2-glitch/dsh-chime#main
-- [dsh-chime-alerts](https://github.com/nienieai/dsh-chime-alerts) — DSH 声音提醒插件:九类 Agent 事件(完成/子任务/后台任务/审批/提问/评审/受阻/打断/失败)独立铃声、音量与开关,浏览器合成音 + Windows 系统蜂鸣,工作区快捷静音
-- [dsh-clawbot](https://github.com/tangwenhao616-netizen/dsh-weixin) — dsh-weixin 增强 fork：多会话、斜杠命令、每会话模型、并发修复
-- [dsh-clawbot-notify](https://github.com/ljnljn2005/dsh-clawbot-notify) — 将 DeepSeek Harness 的通知发送到外部服务 ClawBot。
-- [dsh-client-ui-notifications](https://github.com/huangDouP/dsh-client-ui-notifications) — 推送浏览器和 Windows 通知，闪烁标签页标题并显示徽标，及时提醒用户。
-- [dsh-complete-notify](https://github.com/kaixinbaba/dsh-complete-notify) — 任务完成时播放提示音并弹出小通知（页面内 toast + 后台时系统通知）。纯浏览器方案，零系统依赖，跨 Windows/macOS/Linux。
-- [dsh-completion-sound](https://github.com/jensentsts/dsh-completion-sound) — 在 DSH 完成工作后以声音提醒用户。
-- [dsh-courier](https://github.com/haifeiWu/dsh-courier) — 实现跨会话可靠消息传递，支持按角色寻址，便于编码与评审循环。
-- [dsh-cubox](https://github.com/zhengjy01/dsh-cubox) — 定时同步 Cubox 摘录到 Obsidian，并生成 AI 每日简报。
-- [dsh-deepcanary](https://github.com/Oscar-Williams/dsh-deepcanary) — 提供基于证据的注意力信号、安静通知和可操作收件箱。
-- [dsh-desktop-notify](https://github.com/crazy-L118/dsh-desktop-notify) — AI 回复完成时发送原生桌面通知，可在设置中开关。
-- [dsh-desktop-notify](https://github.com/Mvyvn/dsh-desktop-notify) — 为 DeepSeek Harness 提供桌面通知，及时提醒重要事件和消息。
-- [dsh-desktop-update](https://github.com/JustGenius-s/DSH-Plugs/tree/HEAD/plugins/dsh-desktop-update) — 处理 DSH 桌面更新通知与安装，保持应用最新。
-- [dsh-ding](https://github.com/CAOGGL/dsh-ding) — 对话完成提醒：Agent 空闲（idle）时播放提示音并弹 Windows 原生通知，可配 ding.mp3、音量与防抖节流。
-- [dsh-dingo](https://github.com/february2015/dsh-dingo) — DSH 声音提醒 + 对话直达插件：多对话并行时，哪个对话有回复就出声提醒，点右上角卡片直达对应对话；切到别的应用时还有系统级通知（macOS 通知中心 / Windows toast），点击直达。当前对话当/当当（crisp 档），其他对话叮/叮叮（soft 档）。
-- [dsh-dingtalk](https://github.com/DingTalk-Real-AI/dsh-dingtalk) — 官方钉钉连接器，用于将 DeepSeek Harness 与钉钉集成。
-- [dsh-dingtalk](https://github.com/STARDUSTLC666/dsh-dingtalk) — DeepSeek Harness 钉钉群机器人通知插件：dingtalk_notify/dingtalk_text 两工具，自定义机器人 webhook + HMAC 加签安全模式，手写签名实现、零运行时依赖；纯 Node 全平台。· DingTalk group-robot notifications for DeepSeek Harness agents.
-- [dsh-dingtalk](https://github.com/xmanrui/dsh-dingtalk) — 集成钉钉作为 DeepSeek Harness 的通知或通讯渠道。
-- [dsh-dingtalk-channel](https://github.com/ttmouse/dsh-dingtalk-channel) — 接入钉钉 IM 渠道，提供流式机器人、工具能力和持久会话。
-- [dsh-discord](https://github.com/suuuuuu-1/dsh-discord) — 双向 Discord 桥接，兼作 Harness 的远程控制器。
-- [dsh-discord-bot](https://github.com/Oliver0804/dsh-discord-bot) — 将工作区映射到 Discord，可通过 Discord 远程查询和控制智能体。
-- [dsh-discord-richpresence](https://github.com/0QwQ0/dsh-discord-richpresence) — 将用户可配置的 DeepSeek Harness 交互状态发送到 Discord 作为 Rich Presence。
-- [dsh-discussions-digest](https://github.com/kristol07/dsh-discussions-digest) — 获取并汇总官方 GitHub Discussions 的最新动态，便于快速浏览。
-- [dsh-done-badge](https://github.com/SkuraSshly/dsh-done-badge) — 窗口不在前台时在 Windows 任务栏显示任务完成徽章，返回后自动清除。
-- [dsh-done-notifier](https://github.com/tdeluna024-ui/dsh-done-notifier) — 当 DeepSeek Harness 模型完成回复、等待用户输入时，弹出 macOS 通知并播放童声提示音「老板，我干完活儿了！快来！」（纯 JS，零依赖，无需构建）
-- [dsh-done-notify](https://github.com/Britneycode/dsh-done-notify) — dsh 插件：离开页面时 agent 完成任务/等待审批/提问，弹系统通知，点击跳回会话 · System notifications for DeepSeek Harness when agents need you while you're away
-- [dsh-dudulu](https://github.com/Cmjingahaha/dsh-dudulu) — 嘟一声 · DSH 任务完成提示音插件：Agent 回合完成时播放提示音，带设置面板（音量/试听/上传）
-- [dsh-email-push-master](https://github.com/JamesYasR/dsh-email-push-master) — 发送邮件通知或推送，可能用于 DSH 的提醒或更新。
-- [dsh-event-relay](https://github.com/joao-paulo-santos/dsh-event-relay) — 通过SSE将服务端事件推送到浏览器界面，实现实时通知。
-- [dsh-feishu](https://github.com/0x0101010/dsh-feishu) — 为 DeepSeek Harness 添加飞书长连接通道，无 npm 依赖。
-- [dsh-feishu](https://github.com/andyfan1094/dsh-feishu) — 接入飞书自建应用，WebSocket 接收消息、OK 回执并在原会话回复。
-- [dsh-feishu](https://github.com/fan56/dsh-feishu) — 通过飞书/Lark 的向外机器人驱动现有会话，含恢复选择器与运行状态卡片。
-- [dsh-feishu](https://github.com/itr-del/dsh-feishu) — 作为 cordis 插件，将飞书 IM 接入 DSH。
-- [dsh-feishu](https://github.com/itsnone-liu/dsh-feishu) — 飞书/Lark 桥接，支持长连接、卡片流和斜杠命令。
-- [dsh-feishu](https://github.com/PGZXB/dsh-feishu) — DeepSeek Harness 的飞书 UI：面板驱动控制台，每个斜杠命令都是控制面板卡片上的按钮，卡内审批与提问，流式卡片，扫码一次完成配置。
-- [dsh-feishu](https://github.com/xmanrui/dsh-feishu) — 通过扫码把飞书机器人接入DeepSeek Harness
-- [dsh-feishu-bot](https://github.com/452926826/dsh-feishu-bot) — 将飞书机器人接入DeepSeek Harness项目与对话。
-- [dsh-feishu-bot](https://github.com/TingRuDeng/dsh-feishu-bot) — 从飞书私聊驱动、监控和审批本地代理，并与网页界面共享会话。
-- [dsh-feishu-bot](https://github.com/zyfgood/dsh-feishu-bot) — 飞书机器人指挥deepseek Harness工作
-- [DSh-feishu-bot](https://github.com/wangsan71/DSh-feishu-bot) — 给飞书和Lark的一个机器人组件，可以连接本地的dsh
-- [dsh-feishu-bridge](https://github.com/ailoushu666/dsh-feishu-bridge) — 将Harness与飞书对接，实现消息和通知。
-- [dsh-feishu-bridge](https://github.com/fengs2021/dsh-feishu-bridge) — DSH 飞书机器人桥接插件：飞书消息进 DSH 会话，流式交互卡片实时回复（思维链/正文/工具链分区，打字机效果）
-- [dsh-feishu-bridge](https://github.com/minyang2020/dsh-feishu-bridge) — 桥接飞书，实现消息推送与通知集成。
-- [dsh-feishu-bridge](https://github.com/wz-heng/dsh-feishu-bridge) — 连接飞书机器人，通过聊天消息触发 Harness 代理运行并返回结果。
-- [dsh-feishu-bridge](https://github.com/zhbdream/dsh-feishu-bridge) — 将飞书消息桥接到本机 DeepSeek Harness 代理，支持通过飞书交互。
-- [dsh-feishu-channel](https://github.com/whoisjiahao/dsh-feishu-channel) — 飞书 × DeepSeek Harness 遥控器：在飞书聊天里驱动 DSH agent——流式富卡片、一键审批、按模型能力传图、费用与峰谷计量
-- [dsh-feishu-channel](https://github.com/WyattJHayes/dsh-feishu-channel) — 集成飞书，实现消息通知与基于频道的互动。
-- [dsh-feishu-chat](https://github.com/Qing45/dsh-feishu-chat) — 桥接飞书机器人与 agent，实现双向聊天和工作区路由。
-- [dsh-feishu-gateway](https://github.com/kriskwok/dsh-feishu-gateway) — 将DeepSeek Harness与飞书集成，支持聊天、持久会话、Markdown回复和主动推送。
-- [dsh-feishu-integration](https://github.com/yangwuan55/dsh-feishu-integration) — 飞书双向集成，提供摘要、回复路由、绑定界面和二维码配置。
-- [dsh-feishu-mcp](https://github.com/zhengjy01/dsh-feishu-mcp) — DeepSeek Harness 的飞书（Lark）OpenAPI MCP 连接：桥接官方 @larksuiteoapi/lark-mcp，把 IM / 多维表格 / 云文档 / 日历 / 云盘 API 暴露为 mcp__feishu__* 工具，支持用户令牌 OAuth。
-- [dsh-feishu-notifier](https://github.com/blooming-fang/dsh-feishu-notifier) — DeepSeek Harness 飞书通知插件：在需要用户操作或对话结束时发送飞书机器人提醒，并支持持久化配置。
-- [dsh-feishu-notify](https://github.com/omdsh-dev/dsh-feishu-notify) — 为dsh新增飞书的卡片通知：会话结束/需要等待输入
-- [dsh-feishu-plugin](https://github.com/yangzhaofeng496/dsh-feishu-plugin) — 作为飞书机器人桥接器，将 DeepSeek Harness 与飞书连接。
-- [dsh-feishu-remote](https://github.com/ShiXiangYu2/dsh-feishu-remote) — 通过飞书控制智能体，接收任务并返回结果与通知。
-- [dsh-feishucard](https://github.com/cmfok/dsh-feishucard) — DeepSeek Harness <-> Feishu (Lark) bridge with streaming reply card / 自研 DSH 飞书桥：长连接 + 流式回复卡片（工具面板/状态符号/限流熔断兜底）
-- [dsh-for-mofox-ada](https://github.com/fuilyha56-wq/dsh-for-mofox-ada) — 将 DSH 与 Neo-MoFox 集成，可能用于外部通信或控制。
-- [dsh-fschannel](https://github.com/cershuang/dsh-fschannel) — 将DSH与飞书集成，实现消息和频道通信。
-- [dsh-gateway](https://github.com/aa2246740/dsh-gateway) — 统一对接 Slack 与飞书应用，集中管理消息通道。
-- [dsh-helper](https://github.com/jiuaiwo/dsh-helper) — 在任意 DSH 会话把本机文件投递到微信（复用已装的 IM 插件）。另可按 cron 在全新会话里跑定时任务、用光晕标记工作区活动、在会话标题栏显示活跃指示、回复完成时响提示音、开关 macOS 侧栏毛玻璃，以及一键重启宿主。微信登录走 IM 插件自身，本插件不保存任何凭据。
-- [dsh-herald](https://github.com/bululuburuarua666/dsh-herald) — 通过页面提示、浏览器横幅和系统通知多渠道发送任务完成提醒，浏览器关闭时也可接收。
-- [dsh-herdr](https://github.com/Lbryany/dsh-herdr) — 集成Herdr生命周期状态到插件系统，及时通知用户状态变化。
-- [dsh-herdr-site](https://github.com/WuJiaoJue/dsh-herdr-site) — 通过自定义协议向 Herdr 服务报告代理的工作、空闲或阻塞状态。
-- [dsh-hiboard-push](https://github.com/Entity-Him/dsh-hiboard-push) — 将任务完成消息推送到鸿蒙负一屏卡片，兼容 OpenClaw 技能。
-- [dsh-high-fee-alert](https://github.com/GuoFengyu110429/dsh-high-fee-alert) — 一个由DSH制作的插件，用于在峰谷中的峰时段进行提醒以节省费用。
-- [dsh-im](https://github.com/xmanrui/dsh-im) — 通过扫码或机器人凭据把IM机器人接入DeepSeek Harness（支持飞书、微信、钉钉、企业微信、QQ、Telegram、Discord和WhatsApp）。 Connect IM bots to DeepSeek Harness via QR code or credentials (8 channels).
-- [dsh-im-bridge](https://github.com/BiBoyang/dsh-im-bridge) — 微信（iLink）双向桥：turn 完成/批准请求推送、聊天内批准与消息注入、持久去重与长回复收敛分段；通道层为多 IM 预留。
-- [dsh-im-bridge](https://github.com/shaobeichen/dsh-im-bridge) — 不用一直在电脑前，远程操控Deepseek Harness，在飞书 / 企业微信 / Telegram 里指挥 DeepSeek Harness：远程派活 · 结果通知 · 危险操作审批
-- [dsh-im-channel](https://github.com/shrekcg/dsh-lark-bridge) — 将 DeepSeek Harness 接入飞书/Lark 的双向通道：持久会话、群聊、流式卡片、40 个飞书 MCP 工具
-- [dsh-im-connect](https://github.com/MichengAI/dsh-im-connect) — DSH IM Connect 基于 DeepSeek Harness 的IM链接插件，无缝链接微信、企业微信、钉钉、QQ、飞书等
-- [dsh-im-gateway](https://github.com/jelech/dsh-im-gateway) — 将多种 IM 桥接至 DSH 智能体会话，支持斜杠命令控制。
-- [dsh-im-gateway](https://github.com/lijian-ui/dsh-im-gateway) — 为 DeepSeek Harness 提供多 IM 通道接入的网关插件：钉钉 / QQ / 个人微信，支持扫码绑定与流式回复。
-- [dsh-im-gateway](https://github.com/zhuiyueya/dsh-im-gateway) — 通过聚合 IM 网关，将 DSH agent 接入微信、飞书等 20+ 聊天平台。
-- [dsh-im-hub](https://github.com/ThreeBody6666/dsh-im-hub) — 作为多平台 IM 网关，将 DeepSeek Harness 接入飞书、企业微信和 Telegram 进行聊天交互。
-- [dsh-im-qq](https://github.com/988hj7tczd-oss/dsh-im-qq) — 让 DeepSeek Harness 接入 QQ 官方机器人（q.qq.com）——通过 QQ 私聊/群聊/频道 @ 直接与完整 agent 对话（工具/记忆/子代理/文件系统/审批护栏，与 Web UI 同源）。WS 长连接、会话隔离、审批按钮、白名单 fail-closed。
-- [dsh-imessage](https://github.com/fatatalia/dsh-imessage) — dsh iMessage 插件：监听/路由/自动回复/typing/已读回执，随 dsh web 启停
-- [dsh-imessage](https://github.com/photon-hq/dsh-imessage) — 将 iMessage 集成为传输通道并提供设置界面，支持基于消息的交互。
-- [dsh-inform](https://github.com/mobaixingyao/dsh-inform) — dsh-inform 是一款为 deepseek harness开发的任务提醒插件，能够在 DSH 完成任务、需要批准 或 需要回答 时自动调用系统通知发出提醒
-- [dsh-internal-comms](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-internal-comms) — 促进团队内部沟通和更新通知。
-- [dsh-journal-monitor](https://github.com/SIMON-WORLD/dsh-journal-monitor) — 监控系统日志并在DeepSeek Harness中发送相关事件通知。
-- [dsh-koin-lily-news](https://github.com/x1shang/dsh-koin-lily-news) — 菲奖得主强推的百合新闻订阅DSH插件
-- [dsh-lan-pass](https://github.com/x2802490130-prog/dsh-lan-pass) — DSH 局域网密码门禁：手机/平板输密钥访问 Web UI，会话实时同步，内置 randomUUID polyfill。
-- [dsh-lark](https://github.com/keepview/dsh-lark) — 通过飞书与智能体对话，话题对应会话。
-- [dsh-lark](https://github.com/omdsh-dev/dsh-lark) — 将飞书作为 DSH 的机器人渠道，支持消息交互与通知推送。
-- [dsh-lark](https://github.com/sugarforever/dsh-lark) — 将 DeepSeek Harness 与飞书集成，支持消息、通知和协作工作流。
-- [dsh-lark-all](https://github.com/tkwkeven/dsh-lark-all) — 连接飞书，支持消息互通、文件传输和重启通知。
-- [dsh-lark-bot](https://github.com/PlutoKeating/dsh-lark-bot) — dsh-lark-bot：把 DeepSeek Harness (dsh) 桥接进飞书/Lark 的 bot：流式卡片、项目工作区、并行任务、多角色 Agent、跨会话通知、对话内模型/密钥管理与安全网守护（dsh 崩溃后飞书仍可自救）。A bridge bot connecting DeepSeek Harness (dsh) into Feishu/Lark: streaming cards, workspaces, parallel tasks, multi-role agents, cross-session notify, in-chat model/key management, and a safety-net guardian.
-- [dsh-lark-bot](https://github.com/tarraencompassing61/dsh-lark-bot) — 将DeepSeek Harness接入飞书/群聊，支持移动端驱动编码、任务与项目协作。
-- [dsh-lark-bridge](https://github.com/1210316560/dsh-lark-bridge) — 将 DeepSeek Harness 与飞书消息桥接，用于通知。
-- [dsh-lark-bridge](https://github.com/bihangchi9-creator/dsh-lark-bridge) — 将编码代理接入飞书群聊，便于项目协作。
-- [dsh-lark-bridge](https://github.com/chenxin105/dsh-lark-bridge) — 飞书智能体桥接deepseek-harness插件
-- [dsh-lark-bridge](https://github.com/imetn/dsh-lark-bridge) — DeepSeek Harness 的飞书/Lark 双向控制器，支持 Project 与 Session 路由、交互卡片、审批、附件和任务控制。
-- [dsh-lark-bridge](https://github.com/JMOKSZ/dsh-lark-bridge) — 连接飞书与 DeepSeek Harness，通过机器人实现流式卡片、审批按钮和附件等代理交互。
-- [dsh-lark-bridge](https://github.com/leo-lab-2026/dsh-lark-bridge) — 连接 DeepSeek Harness 与飞书，可能用于消息或通知。
-- [dsh-lark-bridge](https://github.com/moyu-good/dsh-lark-bridge) — 在飞书中运行编程代理，支持思考过程展示、审批卡片与斜杠命令。
-- [dsh-lark-channel](https://github.com/JunguangJiang/dsh-lark-channel) — 作为飞书机器人，镜像会话并通过交互卡片同步话题，实现消息通知与集成。
-- [dsh-lark-connector](https://github.com/4t145/dsh-lark-connector) — 将 Harness 连接到飞书，实现通过消息平台进行通知和交互。
-- [dsh-lark-link](https://github.com/amlyczz/dsh-lark-link) — 连接飞书/ Lark，支持扫码认证、多模式 Agent、卡片命令与可靠消息收发。
-- [dsh-lark-meeting-notifier](https://github.com/yeruizhi/dsh-lark-meeting-notifier) — 一个只有副作用的DeepSeekHarness插件：在你跟 AI 聊得神魂颠倒时，提醒你「该去跟碳基生命开会了」。
-- [dsh-lark-web-auth](https://github.com/Awesome-AI-Pedia/dsh-lark-web-auth) — deepseek飞书登录插件，对话隔离
-- [dsh-liangwengu](https://github.com/mozhuanzuojing/dsh-liangwengu) — 梁文谷提醒：DeepSeek API 定价高峰/空闲时段提醒（DSH/Cordis bundle）— 卡通弹窗+系统通知+提示音+30分钟倒计时
-- [dsh-listen-npm](https://github.com/jsoncode/dsh-listen-npm) — 监听查看设置的npm包的下载情况
-- [dsh-live](https://github.com/zhoushuoshi-code/dsh-live) — 手机伴侣插件，让您远程审批操作、跟踪进度并查看结果。
-- [dsh-livis-connector](https://github.com/fyy99/dsh-livis-connector) — 集成 Livis，提供应用内授权和中继管理以连接外部服务。
-- [dsh-llm-wechat](https://github.com/sulfide2085/dsh-llm-wechat) — DeepSeek Harness 微信网关适配插件：复用 DeepSeekAdapter + 流式 think 标签转译
-- [dsh-luban-auth](https://github.com/yin52133/dsh-luban/tree/HEAD/packages/dsh-luban-auth) — 为工作台提供局域网认证，保护本地网络客户端的访问安全。
-- [dsh-luban-server-mode](https://github.com/yin52133/dsh-luban/tree/HEAD/packages/dsh-luban-server-mode) — 支持以服务器模式运行 Harness，便于远程访问与集成。
-- [dsh-macos-notify](https://github.com/CrombastiC/dsh-macos-notify) — 通过macOS系统通知发送事件提醒，如任务完成或需要用户操作时。
-- [dsh-macos-notify](https://github.com/nijika-boyfriend/dsh-macos-notify) — 在任务完成、执行出错或等待审批时触发带提示音的 macOS 原生系统通知。
-- [dsh-maestro-notifier](https://github.com/ddtcorex/dsh-maestro-notifier) — 向 Telegram 等外部服务发送通知，并开放注册表以支持更多提供商。
-- [dsh-maestro-remote](https://github.com/ddtcorex/dsh-maestro-remote) — 通过 cloudflared 隧道提供远程访问，支持 PIN 认证并发送 Telegram 通知。
-- [dsh-mail-assistant](https://github.com/freedomkk-qfeng/dsh-mail-assistant) — 连接IMAP/SMTP邮件服务器，让智能体在用户明确授权下收发电子邮件。
-- [dsh-markstream](https://github.com/boomboomxx/dsh-markstream) — 支持从外部来源进行流式更新。
-- [dsh-meego](https://github.com/Lilien-xu/dsh-meego) — 将 DeepSeek Harness 与飞书项目/Meego 集成，实现任务和项目的同步对接。
-- [dsh-memos-bridge](https://github.com/Swd146296/dsh-memos-bridge) — 连接 Memos 服务，实现笔记同步与集成。
-- [dsh-meow-smooth](https://github.com/Phant0Meow/dsh-meow-smooth) — 手机端ui交互优化，让手机端dsh真正可用。你可以躺着coding了。 电脑、手机都支持的通知系统。AI跑任务，你切出去刷b站了，AI跑完任务或者中途提问，会发通知给你。 还有一些ui交互方面的细节优化。
-- [dsh-message](https://github.com/Stu-KatoMegumi/dsh-message) — dsh-message 是面向 DeepSeek Harness 的统一消息接入插件，仅包含微信、飞书、QQ、企业微信和钉钉。项目采用一套 Host/Client 插件、统一设置页和统一 HTTP Harness 会话链路，并在五个渠道上共享提示词、长期记忆和会话策略。并且可以定制鲸鱼娘的soul哦~
-- [dsh-message-gateway](https://github.com/a792883583/dsh-message-gateway) — 将企业微信、Telegram、Discord、QQ 和邮件桥接到网页界面，支持会话、流式回复和压缩。
-- [dsh-messager](https://github.com/ly6170/dsh-messager) — 基于Deepseek Harness+DeepSeek开发的适用于Deepseek Harness的消息提醒信使，可使用飞书、企业微信、钉钉、Telegram、Discord进行通知推送
-- [dsh-messaging](https://github.com/andiven/dsh-messaging) — 集成飞书/Telegram等多平台消息，支持能力自动降级。
-- [dsh-messaging](https://github.com/EvenLRs/dsh-messaging) — 作为消息网关，连接 DSH 与外部消息平台。
-- [dsh-messenger-gateway](https://github.com/GooDAnDReaDY/dsh-messenger-gateway) — 将 Telegram 与 DeepSeek Harness 桥接，支持会话、控制和语音笔记。
-- [dsh-mobile-access](https://github.com/TongaiLinC/dsh-mobile-access) — DeepSeek Harness 移动端访问插件 —— 让手机 / 平板通过局域网或 VPN 访问 DeepSeek Harness Web GUI，并内置 PC 端审批门禁、LAN / VPN / 公网自动识别 与 网络模式切换。
-- [dsh-mobile-link](https://github.com/Cheng-xiu/dsh-mobile-link) — 通过Cloudflare隧道和多种推送渠道实现手机访问。
-- [dsh-mobile-pairing](https://github.com/NOirBRight/dsh-mobile-pairing) — 将移动设备与 Harness 配对，支持远程控制和通知。
-- [dsh-mobile-push-notify](https://github.com/233fxr-collab/dsh-mobile-push-notify) — 向配对手机发送桌面原生提醒和 PWA/Web 推送通知，及时告知任务完成状态。
-- [dsh-mqtt](https://github.com/UllrAI/dsh-mqtt) — 通过 MQTT 提交、引导、观察和取消 DeepSeek Harness 会话的协议驱动与 Agent Worker 网关。
-- [dsh-msg-hub](https://github.com/AbcdefgXW/dsh-msg-hub) — 接入微信、QQ、飞书渠道，实现消息接收与主动推送。
-- [dsh-my-notify](https://github.com/baosfeng/my-dsh-plugins/tree/HEAD/plugins/dsh-my-notify) — 向外部渠道发送通知和提醒，集成第三方服务。
-- [dsh-napcatqq-remote](https://github.com/riki-forsure/dsh-napcatqq-remote) — 基于 NapCatQQ / OneBot 11 的 DeepSeek Harness QQ 远程操控插件，支持文件、图片、表情、任务追加与会话切换。
-- [dsh-narra-channel](https://github.com/NetMind-AI/dsh-narra-channel) — 将DeepSeek Harness与Narra Messenger平台连接，实现第三方渠道集成。
-- [dsh-network-proxy](https://github.com/lxp731/agents-plugins/tree/HEAD/dsh-network-proxy) — 在回复完成时发送桌面通知并播放提示音，阈值可配置。
-- [dsh-niao-message](https://github.com/dsh-niao/dsh-niao-message) — macOS 系统通知插件：在「异常终止 / 需要你操作 / 正常完成」三大场景弹通知中心横幅，点击横幅直达指定应用。
-- [dsh-notif-demo](https://github.com/gameswu/dsh-notifacation-frame/tree/HEAD/examples/dsh-notif-demo) — 提供 DeepSeek Harness 通知消息的统一管理框架。
-- [dsh-notifacation-frame](https://github.com/gameswu/dsh-notifacation-frame) — dsh通知消息统一管理框架
-- [dsh-notification](https://github.com/Acidmoon/DIzzy-DSH/tree/HEAD/third-party/dsh-notification) — 处理 DSH 内的通知，可能用于各类事件提醒或消息。
-- [dsh-notification](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/Acidmoon-DIzzy-DSH/third-party/dsh-notification) — 在应用内显示任务完成、错误或新消息等事件的通知。
-- [dsh-notification](https://github.com/nishit130/dsh-notification) — 在代理完成回合、出错或等待批准时通知你，无需盯着标签页。
-- [dsh-notification](https://github.com/omdsh-dev/dsh-notification) — 回合完成桌面通知，按结果分控 + 关键词过滤。
-- [dsh-notification](https://github.com/PeanutsDou/peanut-dsh-plugin/tree/HEAD/dsh-notification) — 在消息完成或出错时发送桌面或系统通知。
-- [dsh-notification-center](https://github.com/610la/dsh-notification-center) — DSH 通知中心插件：对话/任务完成、报错、等待批准等事件触发浏览器通知 + 21 种匹配音效
-- [dsh-notification-sounds](https://github.com/qq33357486/dsh-notification-sounds) — 在 Harness 等待或完成任务时播放声音通知。
-- [dsh-notifications](https://github.com/Ycet/dsh-notifications) — 为会话事件发送网页通知，实时提醒用户。
-- [dsh-notifier](https://github.com/baobaolaodie/cc-dsh-notifier/tree/HEAD/plugins/dsh-notifier) — 发送Windows桌面通知，点击可恢复会话窗口焦点。
-- [dsh-notifier](https://github.com/DjangoAILab/dsh-plugins/tree/HEAD/plugins/manual/dsh-notifier) — 向外部服务发送通知，及时告知用户事件或结果。
-- [dsh-notifier](https://github.com/jypjypjypjyp/dsh-notifier) — 审批/完成/错误事件通知：浏览器 Notification + 系统原生 toast（Windows PowerShell WinRT / macOS osascript / Linux notify-send，均无需额外安装）；提示音可配、每条通知独立显示不互相替换、非安全上下文自动降级横幅
-- [dsh-notifier](https://github.com/nanami-0713/dsh-notifier) — DSH 插件：任务结束 / 需要用户决策时弹窗提醒（web toast + 桌面通知），类似 Codex / Claude Code 体验
-- [dsh-notifier](https://github.com/THEWOLFWALKER/dsh-notifier) — 为 DSH 提供统一通知推送，单 API 支持 8 个渠道，可自动触发或工具调用。
-- [dsh-notifier](https://github.com/wingsky-1/dsh-plugin-hub/tree/HEAD/packages/dsh-notifier) — 向外部服务或渠道发送事件通知。
-- [dsh-notifier](https://github.com/YZz-S/dsh-notifier) — 从 Web 界面发送系统通知，无需构建即可使用。
-- [dsh-notifier-plugin](https://github.com/hotpot-labs/dsh-notifier-plugin) — dsh 干完活之后通知你，【轻量级】通知插件，只通知，不交互，mac/windows/linux 操作系统支持，dsh 在干活时你可以摸鱼
-- [dsh-notify](https://github.com/aokamoaki/dsh-notify) — 在对话回合结束、出错或需要批准时发送 Windows 通知和声音。
-- [dsh-notify](https://github.com/baka-world/dsh-notify) — 通过系统通知发送 DeepSeek Harness 事件提醒。
-- [dsh-notify](https://github.com/Dawn388887/dsh-notify) — 在agent完成或出错时发送桌面通知和远程浏览器通知。
-- [dsh-notify](https://github.com/fxomomi/dsh-notify) — DeepSeek Harness桌面通知插件：模型开始输出、完成整轮、或需要你的处理（权限审批 / 提问 / 计划评审）时，发送浏览器桌面通知。
-- [dsh-notify](https://github.com/goatliamia/dsh-runtime-react/tree/HEAD/plugins/dsh-notify) — 向外部服务发送通知，避免模型对确定性问题重复思考。
-- [dsh-notify](https://github.com/having5548/dsh-notify) — 通过应用内提示、Windows 原生通知和操作中心提供统一通知。
-- [dsh-notify](https://github.com/hmlyx/dsh-notify) — 在 DeepSeek Harness 中显示提醒气泡，用于事件、AI 请求和各类通知的提示。
-- [dsh-notify](https://github.com/Huauauaa/dsh-notify) — DeepSeek Harness HTTP 通知插件
-- [dsh-notify](https://github.com/ikashana/dsh-notify) — 通过多种渠道发送任务监控提醒，支持人工确认和语音。
-- [dsh-notify](https://github.com/Lubaoshuai/dsh-notify) — 通过可调用的工具和外部调度提醒，向多个平台推送通知。
-- [dsh-notify](https://github.com/NkhszkQAQ/dsh-notify) — dsh 插件：任务完成推送手机通知（Bark / Server酱 / webhook）
-- [dsh-notify](https://github.com/pedesdestiny/dsh-notify) — 在回合完成或需要批准时发送桌面通知，让你及时了解重要事件。
-- [dsh-notify](https://github.com/qgx1992/dsh-notify) — DSH 通知显示层插件：全局 toast 栈，订阅桌面壳 __dshExo 桥事件，点击经官方 sessions runtime 程序化激活会话；无壳时降级订阅 sessions store 自绘。可插拔通知显示层的 web 侧。
-- [dsh-notify](https://github.com/TARS-snail/dsh-notify) — 仅当用户离开时，为会话更新发送桌面通知提醒。
-- [dsh-notify](https://github.com/weekitmo/dsh-notify) — 通过桌面提醒、标签未读数和侧边栏指示器发送完成和状态通知。
-- [dsh-notify](https://github.com/wumu-366/dsh-notify) — 作为 DeepSeek Harness 的通知发送中心。
-- [dsh-notify](https://github.com/yangyongzhen/dsh-notify) — 将任务完成通知推送到 ServerChan、钉钉、飞书等渠道。
-- [dsh-notify](https://github.com/zhengjy01/dsh-notify) — 在 macOS 和 Linux 上显示回合完成、工作流结束和审批提醒的桌面通知。
-- [dsh-notify-bark](https://github.com/pc439527/dsh-notify-bark) — Bark 推送通知到 iPhone：回合完成、等待回答、等待授权等事件由 Host 端发送。
-- [dsh-notify-bell](https://github.com/ZYar-er/dsh-notify-bell) — 为完成、审批、提问、受阻、错误等事件播放语义化提示音。
-- [dsh-notify-center](https://github.com/SingleOne/dsh-notify-center) — 发送原生桌面和 webhook 通知以提醒事件。
-- [dsh-notify-desktop](https://github.com/JochenYang/dsh-plugins/tree/HEAD/packages/dsh-notify-desktop) — 发送桌面通知，与外部通知系统集成。
-- [dsh-notify-me](https://github.com/chromoany/dsh-notify-me) — 模型需要你操作（审批、方案确认、提问）或后台回复完成时，弹出系统通知、提示音并标记标签页标题；可在设置页开关并切换通知语言。
-- [dsh-notify-on-complete](https://github.com/pitetow/dsh-notify-on-complete) — 在运行结束、提问或审批时发送桌面通知，零依赖。
-- [dsh-notify-sound](https://github.com/xxxxxxxyu/dsh-notify-sound) — 代理回复完成时播放可配置的声音提示。
-- [dsh-notify-win](https://github.com/Andyqwe44/dsh-notify-win) — 在任务完成或需要用户输入时，发送原生 Windows 通知并闪烁任务栏。
-- [dsh-notify-windows](https://github.com/SeverusZh/dsh-notify-windows) — 将DSH通知集成到Windows系统，可能通过Toast或托盘提醒。
-- [dsh-notify-xc](https://github.com/xchannel1987/dsh-notify-xc) — 向外部聊天或消息服务发送通知，让用户随时了解事件动态。
-- [dsh-notify-yimit](https://github.com/YiMlT/dsh-notify-yimit) — DeepSeek Harness 通知插件:在 **任务完成 / 任务出错 / 运行中 / 等待审批 / 等待回答** 时提醒用户。 通知标题为对话标题;系统通知与自定义通知均支持**点击跳转到对应会话**。
-- [dsh-ocsf-forwarder](https://github.com/CharlotteN7/dsh-ocsf-forwarder) — 将会话活动以OCSF 1.9.0格式发送到SIEM。
-- [dsh-omnibridge](https://github.com/One1turn/dsh-omnibridge) — 将 DeepSeek Harness 连接到 19 个消息平台，如 QQ、Telegram、Discord、Slack 和飞书，实现多平台通信。
-- [dsh-on-imessage](https://github.com/yuunnn/dsh-on-imessage) — 将DSH与iMessage集成，通过苹果消息平台实现通知或交互。
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 253 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="model"></a>
-
-<details>
-<summary><strong>模型与账号接入</strong> · 显示 254 / 共 826 个</summary>
-
-- [all](https://github.com/DamonBao/dsh-codex-suite/tree/HEAD/packages/all) — 提供包含 OpenAI Codex 模型接入和账户用量统计的插件套件。
-- [auth](https://github.com/daifuyang/dsh-plugin/tree/HEAD/plugins/auth) — 提供 DeepSeek Harness 的登录与认证流程，管理用户凭据与会话。
-- [balance](https://github.com/sumomok/dsh-plugins/tree/HEAD/packages/balance) — 显示账户余额与消费数据。
-- [balance-show](https://github.com/JavierNier/balance-show) — 显示账户余额（分色阶）及每会话实时令牌用量与费用，含峰谷定价。
-- [base](https://github.com/PineKings/deepseek-harness-desktop/tree/HEAD/packages/bundle/base) — 为 DeepSeek 模型增加可选视觉能力和本地一键安装的桌面支持。
-- [better-model-provider](https://github.com/sanshanya/better-model-provider) — 为兼容 OpenAI 的提供商声明每个模型的能力，如推理等级和视觉支持，并在设置界面配置。
-- [bridge](https://github.com/HomoLand/dshp-balance-hp/tree/HEAD/bridge) — 在 DSH 和主页系统之间桥接余额管理，可能用于 API 使用。
-- [bundle](https://github.com/ARCJ137442/dsh-plugin-custom-provider-raw-key/tree/HEAD/packages/bundle) — 允许自定义设置提供商令牌，不限制必须使用 sk- 前缀。
-- [bundle](https://github.com/d4551/cloudflare-dsh/tree/HEAD/packages/bundle) — 提供 Cloudflare AI Gateway 模型接入及 MCP 透传和相关工具。
-- [ccs-balance](https://github.com/kikomaotu/ccs-balance) — DSH 插件：同步 cc-switch 各 provider 余额，按日/月/总量统计 token 用量与花费（支持中转站币种与汇率设置）
-- [cedardsh-model-probe](https://github.com/maiziman/cedardsh-model-probe) — 检测自定义 DeepSeek Harness 模型的推理和图像支持能力。
-- [claude-in-dsh](https://github.com/GeekRicardo/claude-in-dsh) — 在 dsh web 里用本机 Claude Code 驱动会话：原生渲染、权限档、模型/effort、命令面板、broker 托管进程
-- [claude2dsh](https://github.com/kirkchinese/claude2dsh) — 将 Claude 集成到 DeepSeek Harness，可能作为模型提供方或适配器。
-- [codex-enabler](https://github.com/MoriTang/dsh-plugins/tree/HEAD/plugins/codex-enabler) — 启用 Codex 模型访问，可能用于添加或管理模型提供商凭据。
-- [codex-plugin-dsh](https://github.com/wingoo/codex-plugin-dsh) — 将本地 Codex 应用服务器作为模型提供方接入 DeepSeek Harness。
-- [codex-provider](https://github.com/DamonBao/dsh-codex-suite/tree/HEAD/packages/codex-provider) — 接入 OpenAI Codex 模型，支持 ChatGPT 登录和原生设置。
-- [codex-subscription](https://github.com/yfzhou0904/dsh-plugin-gallery/tree/HEAD/plugins/codex-subscription) — 管理 DeepSeek Harness 用户的 Codex 订阅方案与计费详情。
-- [codex-usage](https://github.com/yfzhou0904/dsh-plugin-gallery/tree/HEAD/plugins/codex-usage) — 在 DeepSeek Harness 中跟踪并展示 Codex API 用量指标。
-- [coding-subscription-provider](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/coding-subscription-provider) — 提供基于订阅的编码模型访问服务。
-- [commandcode-go-for-dsh](https://github.com/gonegirl07/commandcode-go-for-dsh) — 集成 Command Code Go 作为计划提供商，并跟踪用量。
-- [cortiq-dsh-llm-router](https://github.com/infosave2007/cortiq-router/tree/HEAD/packages/dsh-llm-cortiq-router) — LLM 请求路由器。通过 allaigate 语义路由器按任务类型（代码、数学、翻译等）和复杂度（低/中/高）对每个提示词分类，然后将调用委托给已注册的、提供所选模型的提供商插件。可配置路由规则、复杂度阈值、按会话选择的策略档位，并自带 7 种语言的文案。
-- [cost-meter](https://github.com/zhouwei713/dsh-daily-kit/tree/HEAD/packages/cost-meter) — 跟踪和计量 API 使用成本，用于预算监控。
-- [cost-monitor](https://github.com/JavenLu233/dsh-cost-monitor/tree/HEAD/packages/cost-monitor) — 监控并显示 DeepSeek Harness 会话的令牌费用。
-- [credentials](https://github.com/Very12345/sai-dsh-plugins/tree/HEAD/packages/credentials) — 管理 sai 编码代理的凭据和认证。
-- [credentials-keychain](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/credentials-keychain) — 安全存储与管理模型接入所需的 API 密钥与凭据。
-- [deepsee](https://github.com/chang416/deepsee) — 将视觉任务路由到 Gemini，编码任务路由到 DeepSeek，优化性能。
-- [deepseek-account](https://github.com/sunyuhuirong/deepseek-account) — 管理 DeepSeek 账号凭证和 API 访问，为 DeepSeek Harness 提供模型接入。
-- [deepseek-ai-dsh-api-cost](https://github.com/MoyunLee/deepseek-ai-dsh-api-cost) — DSH生态的DeepSeek API费用监控插件
-- [deepseek-balance](https://github.com/classic-takeoff/DSH_plugins/tree/HEAD/plugins/deepseek-balance) — 在多模型或账号间均衡请求，用于管理API成本和用量。
-- [deepseek-billing](https://github.com/xinCodes/deepseek-billing-plugin/tree/HEAD/packages/deepseek-billing) — 显示 DeepSeek API 余额并估算当前会话费用。
-- [deepseek-harness-antigravity-oauth](https://github.com/Eridani075/deepseek-harness-antigravity-oauth) — 为 DeepSeek Harness 接入 Google Antigravity 的 Gemini 模型，支持 OAuth 认证。
-- [deepseek-harness-billing](https://github.com/zoyluoblue/deepseek-harness-billing) — 在侧边栏、设置和/balance命令中显示DeepSeek API账户余额。
-- [DeepSeek-Harness-chat-billing](https://github.com/rayadesune/DeepSeek-Harness-chat-billing) — 类原生计费插件
-- [deepseek-harness-model-config](https://github.com/MarvekG/deepseek-harness-model-config) — 配置 DeepSeek Harness 的模型设置，可能包括提供商和密钥管理。
-- [Deepseek-Harness-plug](https://github.com/Bxfjjb/Deepseek-Harness-plug) — 我的dsh插件
-- [deepseek-harness-usage](https://github.com/Arslan-jh/dsh-deepseek-usage) — 显示账户余额和每日人民币消费。
-- [deepseek-harness-usage](https://github.com/syncended/deepseek-harness-usage) — 追踪令牌用量、模型成本、趋势及活动热力图。
-- [deepseek-harness-wallet](https://github.com/feibi-mochi/deepseek-harness-wallet) — 多供应商钱包标签：官方 DeepSeek 余额、本会话花费与 token、第三方合计 token、一键充值、低余额提醒。
-- [deepseek-harness-zcode_mask](https://github.com/magian1127/deepseek-harness-zcode_mask) — 将 ZCode 编程模型接入 DeepSeek Harness，保持请求头一致，实现无缝访问。
-- [deepseek-peak-valley-router](https://github.com/Eligahyu/deepseek-peak-valley-router) — DeepSeek Harness 峰谷定价自动模型路由插件:高峰自动用 deepseek-v4-flash 省钱,空闲自动用 deepseek-v4-pro 提质量,用户显式选择始终优先
-- [DeepSeek-vision](https://github.com/ToryReina/deepseek-vision/tree/HEAD/DeepSeek-vision) — 集成视觉能力，使界面支持图像理解与分析。
-- [DeepSeek-VisionPlus](https://github.com/qq247505/DeepSeek-VisionPlus) — 将图像理解路由到免费视觉模型池，自动降级、限速并实时监测。
-- [dockyard-dsh](https://github.com/4sa1ary9/dockyard-dsh) — 提供商选择器，支持Codex、Grok等。
-- [dockyard-dsh](https://github.com/AITabby/dockyard-dsh) — 为 DeepSeek Harness 提供的 macOS 专属原生账号池与提供方插件。
-- [ds-balance](https://github.com/eh-tools/dsh-plugin/tree/HEAD/plugins/ds-balance) — 在界面中展示 DeepSeek 账户余额信息。
-- [ds-balance](https://github.com/Lateautumns/ds-balance) — 管理 API 密钥余额和模型供应商路由。
-- [dsh](https://github.com/openllmsh/dsh) — 通过OpenLLM（兼容OpenAI）路由Harness并注册其MCP，附带CLI与守护进程引导。
-- [DSH Connect](https://github.com/Canary-Builds/dhs-connect) — 通过官方 Codex app-server 的 OAuth 登录，将 ChatGPT 模型接入 DeepSeek Harness，无需 OpenAI API 密钥。
-- [dsh-account-balance](https://github.com/lovstudio/dsh-account-balance) — 查看和管理 DeepSeek Harness 账户余额，涉及 API 用量与额度信息。
-- [dsh-adaptive-effort](https://github.com/imkingjh999/dsh-adaptive-effort) — 根据 MiniMax 复杂度评分和令牌账本自动调整每轮推理强度。
-- [dsh-adaptive-model-router](https://github.com/alaxrpg/dsh-adaptive-model-router) — 自动发现、评估并分级可用模型，为子代理请求智能路由。
-- [dsh-adaptive-model-router](https://github.com/icyaaaww/dsh-adaptive-model-router) — 按自适应标准为每轮对话确定性选择最合适的模型。
-- [dsh-add-headers-to-completions](https://github.com/mc-lhz/dsh-add-headers-to-completions) — 添加headers到dsh的ChatCompletions请求中，可用于接入OpenCode的免费v4-flash、hy3等模型
-- [dsh-advanced-model-editor](https://github.com/u9521/dsh-advanced-model-editor) — 在 Web UI 中管理自定义模型提供商、参数和请求设置。
-- [dsh-advisor-group](https://github.com/xingzhen199186/dsh-advisor-group) — 主模型在专业/长尾/高风险或不确定问题上召集多个专家顾问模型，以复古 CRT 聊天组卡片展示。一次 ask_advisors 自动跑满自动深挖流水线（驱动模型追问 → 顾问接力 → 综合结论），真流式 SSE、11 个平台 26 个供应商预设、可配置每日配额、停止/继续聊天，以及可选的顾问工具调用（readonly/all/off）。
-- [dsh-agent-preset-router](https://github.com/CTWCTW9999/dsh-agent-preset-router) — 使用快速模型路由器为每个会话自动选择最佳代理预设。
-- [dsh-agent-pricing](https://github.com/Way2LOose4/dsh-agent-pricing) — 实时显示会话费用、今日用量图表，并同步官方价格估算成本。
-- [dsh-agent-router](https://github.com/peterwangze/dsh-agent-router) — DeepSeek Harness 多模型路由插件：让专业的事情交给专业的 agent——自定义视觉/翻译/语音/子代理等专业 agent 并绑定独立模型，多模态账号一键登录、账号池健康路由与实时用量统计
-- [dsh-agentic-router](https://github.com/lhwwxy/dsh-agentic-router) — 根据任务需求智能路由代理请求到合适的模型或服务。
-- [dsh-agy](https://github.com/chaos-03x/dsh-agy) — 提供 Google Antigravity OAuth 认证与模型访问，支持多账号池和请求轮换。
-- [dsh-agy-link](https://github.com/amlyczz/dsh-agy-link) — 集成Google Antigravity模型，支持流式聊天和OAuth登录。
-- [dsh-agy-safe](https://github.com/Jonah-Wu23/dsh-agy-safe) — 接入已登录的 Antigravity CLI，作为聊天和子代理模型提供方。
-- [dsh-ai-models](https://github.com/uckkk/dsh-ai-models) — AI 模型
-- [dsh-ai-wallet](https://github.com/gouzijing0821/dsh-ai-wallet) — 暂无描述，可能与AI模型账号管理有关。
-- [dsh-allrouter](https://github.com/mario03690/dsh-allrouter) — 将 AllRouter 注册为提供商，支持模型切换并报告实际成本。
-- [dsh-aloof](https://github.com/aloof-ai/dsh-aloof) — 把 Aloof 接成 DeepSeek Harness（dsh）的原生工具。一张自带地址的接入令牌，粘一串就能用。
-- [dsh-anthropic-oauth](https://github.com/TrueNix/dsh-anthropic-oauth) — 将 Claude Code 的 OAuth 凭据接入 DeepSeek Harness，并自动刷新。
-- [dsh-antigravity](https://github.com/LiZhenNet/dsh-antigravity) — Google Antigravity 模型提供者，支持 OAuth、配额跟踪与推理路由。
-- [dsh-antigravity](https://github.com/OpenSaozi/dsh-antigravity) — 接入 Google Anti Gravity Coding Plan，作为 Gemini、Claude 等模型的 LLM 提供商。
-- [dsh-antigravity-auth](https://github.com/suntianc/dsh-antigravity-auth) — 为控制台添加Antigravity OAuth登录和认证功能，确保安全访问。
-- [dsh-anyrouter](https://github.com/shaomingbo/dsh-anyrouter) — 通过专用中继传输接入Claude和GPT/Codex，实现多提供商使用。
-- [dsh-api-balance](https://github.com/githublogin0101/dsh-api-balance) — DSH 插件：多平台 AI 账户余额悬浮监控
-- [dsh-api-balance](https://github.com/neltharion11/dsh-api-balance) — 在侧边栏显示DeepSeek API余额，并作为工具提供给模型。
-- [dsh-api-balance](https://github.com/Vast-Unhurried/dsh-toolkit/tree/HEAD/packages/dsh-api-balance) — 展示API余额与费用，便于监控账户使用情况。
-- [dsh-api-key-pool](https://github.com/xiaozhe7772222/dsh-api-key-pool) — 管理API密钥池，实现轮换、故障转移、冷却恢复及可视化配置。
-- [dsh-api-meter](https://github.com/Adachi-Hougetsu/dsh-api-tools/tree/HEAD/dsh-api-meter) — 计量和追踪 DeepSeek Harness 的 API 用量。
-- [dsh-api-meter](https://github.com/BigAdam-h/dsh-api-meter) — 多供应商 API 用量/余额监控插件（DeepSeek Harness）
-- [dsh-Api-monitor](https://github.com/linshufan21/Deepseek-Harness-Api-monitor) — 监测DeepSeek Harness的API余额，提供实时用量跟踪。
-- [dsh-ark-plan](https://github.com/snow-The/dsh-ark-plan) — 在火山方舟计划上激活 DeepSeek v4 flash，注入默认配置并自检。
-- [dsh-ark-quota](https://github.com/zpliao123/dsh-ark-quota) — 管理火山引擎Ark编码计划配额，含侧边组件、持久凭证及自动刷新。
-- [dsh-attention](https://github.com/zhaozixi/dsh-attention) — 功能不明；根据名称可能涉及注意力机制或模型内部。
-- [dsh-auth](https://github.com/optttt/dsh-auth) — deepseek harness web 登录认证插件
-- [dsh-auth](https://github.com/radaren/dsh-auth) — 管理 DeepSeek Harness 的认证流程，可能涉及 API 密钥或用户凭证。
-- [dsh-auth-everying](https://github.com/chenbin-dev/dsh-auth-everying) — 导入本地 Claude、Codex、Grok、Gemini、Copilot、OpenCode 与 CC Switch 配置。 为支持的官方供应商提供 OAuth 登录。 从 OpenAI 兼容网关的 /v1/models 与 /models 发现 CC Switch 模型。
-- [dsh-AuthInOne](https://github.com/Stormycry-cryp/dsh-AuthInOne) — 提供认证登录、模型切换、图像回退、令牌分析与同端口重启功能。
-- [dsh-authmux](https://github.com/Q-xuan/dsh-authmux) — 为订阅制模型提供商提供统一登录入口，简化API密钥管理。
-- [dsh-auto-model-router](https://github.com/ADVeRTs13/dsh-auto-model-router) — 通过 L0–L3 分级将用户输入路由到最佳模型，支持成本模式和关键词评分。
-- [dsh-auto-model-router](https://github.com/JianTG/dsh-auto-model-router) — 根据问题复杂度自动切换模型
-- [dsh-auto-router](https://github.com/ChaoYuZhang001/dsh-auto-router) — 提供可配置的模型自动路由层级，优化模型选择。
-- [dsh-auto-vision](https://github.com/soarguo/dsh-auto-vision) — 为不支持图片的模型桥接识图：粘贴的截图（含工具结果内嵌图片）由配置的视觉模型识别，描述以折叠上下文条目写入会话历史，用户消息保持原样；自动为已配置模型补 image 输入声明，零手动配置。
-- [dsh-autotier](https://github.com/PerryLink/dsh-autotier) — DeepSeek Harness 自动模型分层路由：一条用户指令进、一条分层决策出——复杂意图强档规划、廉价档执行，无需手动切换模型。
-- [dsh-auxiliary](https://github.com/dsh-plugins/dsh-auxiliary) — 将辅助视觉和上下文压缩任务路由至专用模型端点。
-- [dsh-bailian-models](https://github.com/CroissanTTs/dsh-bailian-models) — 百炼（DashScope）模型目录预置插件。内置 36 个主流文本模型（Qwen / DeepSeek / GLM / Kimi / MiniMax），按百炼官方文档适配推理强度（等级型 / 预算型 / 开关型 / 仅思考型）、上下文窗口与输出上限。自动识别已有百炼路由并补齐缺失的方言声明。
-- [dsh-balance](https://github.com/crazywoola/dsh-balance) — 在设置页管理 API 余额及相关账户配置。
-- [dsh-balance](https://github.com/eka3os/dsh-balance) — 在DeepSeek-harness Web端显示官方开放平台API的所剩余额
-- [dsh-balance](https://github.com/kkbsgg/dsh-balance) — 管理 DeepSeek Harness 客户端的 API 余额和使用详情。
-- [dsh-balance](https://github.com/kongshan-zhuyu/dsh-balance-quota/tree/HEAD/packages/dsh-balance) — 管理API余额与配额，跟踪消耗并执行限额。
-- [dsh-balance](https://github.com/linshule/dsh-balance) — DeepSeek API 余额 + OpenCodeGo 余量实时显示插件（dsh web GUI）：可拖拽双段徽章与详情弹层 + DeepSeek/OpenCodeGo 两个设置页；Key 仅存本机 ~/.dsh/ds-balance.json，OpenCodeGo Key 自动读取 DSH 凭据
-- [dsh-balance](https://github.com/lkshjd/dsh-balance) — 会话头部插件，通过API路由和轮询组件显示账户余额。
-- [dsh-balance](https://github.com/rayzhu1109/dsh-balance) — 记录 API 余额与用量历史，便于追踪消费趋势。
-- [dsh-balance-and-cost](https://github.com/boooooooer/dsh-balance-and-cost) — 追踪DeepSeek余额与模型成本，展示官方定价及各模型、各会话统计。
-- [dsh-balance-by-token](https://github.com/jsoncode/dsh-balance-by-token) — DeepSeek Harness（dsh）双面插件（宿主 + 浏览器半边）：查看 DeepSeek 账户余额， 按 token 用量估算费用，价格按模型 × 高峰/空闲时段在线配置。所有能力收敛在 统一弹框中（侧边栏底部「余额」入口），另在会话头部提供实时 「当前会话 ≈xx CNY | 余额 xx CNY」按钮。界面中英双语（跟随宿主 UI 语言）。
-- [dsh-balance-guard](https://github.com/bunipai/dsh-balance-guard) — 提供仪表盘面板，实时监控 DeepSeek API 账户余额。
-- [dsh-balance-local](https://github.com/chenpengye/dsh-balance-local) — 在设置面板和输入框显示 API 余额，密钥保留在主机端。
-- [dsh-balance-meter](https://github.com/healing1/dsh-balance-meter) — DeepSeek Harness 的余额计量器，可能显示剩余 API 额度或使用量。
-- [dsh-balance-monitor](https://github.com/Rainronin/dsh-balance-monitor) — 一个好看、简单、实用的余额监视器｜DeepSeek Harness 插件：官方余额快照 + ds_balance 工具 + 峰谷计价区间 + Matrix/原生双风格徽章
-- [dsh-balance-plugin](https://github.com/Francis-Xavier-code/dsh-balance-plugin) — deepSeek 余额监控与用量统计（DSH 动态 Cordis 插件）：余额监控 · 官方充值入口 · 用量统计 · 三方插件管理
-- [dsh-balance-plugin](https://github.com/lucaslus/dsh-balance-plugin) — 实时显示 DeepSeek、Kimi 和 Qwen 三家服务商的账户余额。
-- [dsh-balance-plugin](https://github.com/luhaifeng666/dsh-balance-plugin) — 用于DSH中查询当前KEY对应账户的余额
-- [dsh-balance-quota](https://github.com/kongshan-zhuyu/dsh-balance-quota) — 一块可以配置余额、监测模型监控状态、以及配置模型多模态设置的插件
-- [dsh-balance-stats](https://github.com/hhy66/dsh-balance-stats) — DSH 余额与消耗面板（dsh-balance-stats）
-- [dsh-balance-stats](https://github.com/pangzi499/dsh-balance-stats) — 展示账户余额、会话成本、Token用量及发票汇总信息。
-- [dsh-balance-tide](https://github.com/huanyuLv/dsh-balance-tide) — DeepSeek Harness (DSH) Web 插件: 余额 + 峰谷计价潮汐提示。显示 DeepSeek 账户余额与本会话花费, 并在余额前提示当前峰/谷价格档位、距切换倒计时与使用建议。
-- [dsh-balance-widget](https://github.com/HarryLi-7/dsh-tools/tree/HEAD/dsh-balance-widget) — 提供余额查询脚本和网页小部件，用于监控账户余额。
-- [dsh-better-api](https://github.com/131CDA1/dsh-better-api) — dsh-better-api：为自定义模型添加 [推理强度] 编辑能力
-- [dsh-better-model-select](https://github.com/sxy-kumako/dsh-better-model-select) — DSH 插件：模型列表跟随 provider API 实时更新 + 各 provider 用量徽标 (GLM/MiniMax coding plan, DeepSeek/OpenRouter/Kimi balance)
-- [dsh-better-model-setting](https://github.com/HiSeax/dsh-better-model-setting) — 替代默认模型页，管理提供商、推理力度、重试、排序与凭据状态。
-- [dsh-better-model-thinking-control](https://github.com/Guyao146/dsh-better-model-thinking-control) — DSH 插件：为 OpenAI 兼容中转站按模型管理思考强度，并自动识别公开能力
-- [dsh-better-reasoning-effort](https://github.com/HaoyueQin/dsh-better-reasoning-effort) — 在模型页面为第三方模型编辑推理强度，含知识库与协议推断支持。
-- [dsh-bigmodel-catalog](https://github.com/OpenSaozi/dsh-bigmodel-catalog) — 将智谱 BigModel 和 GLM 编程计划模型集成到 DeepSeek Harness 的模型清单中。
-- [dsh-bill](https://github.com/Jannchie/dsh-bill) — 按会话统计费用并生成归因报告，基于 LLM 定价。
-- [dsh-billing](https://github.com/mahiro6/dsh-billing) — 简陋deepseekharness计费插件,可查询显示余额.设置预算,累计汇总。
-- [dsh-billing](https://github.com/Wanbinyu/dsh-billing) — 汇集社区计费相关插件，可能用于管理 DSH 使用量和费用。
-- [dsh-billing-dashboard](https://github.com/rickyfu0625-cell/dsh-billing-dashboard) — DeepSeek Harness 用量看板插件：余额 / 消费 / token / 7 日趋势 / 一键充值
-- [dsh-billing-tui](https://github.com/Ethanz11-creat/dsh-billing-tui) — 实时统计令牌消耗与费用（分峰谷计费），通过状态栏和命令展示 ASCII 鲸鱼收据。
-- [dsh-budget](https://github.com/frozo-ai/dsh-budget) — 对API支出设置硬性上限，自动降级模型并在计费前阻止超预算调用。
-- [dsh-budget-guard](https://github.com/haoku123/dsh-budget-guard) — 计量 LLM 成本，实施预算拦截（拒绝/警告），支持 DeepSeek 峰谷定价。
-- [dsh-bundle-balance](https://github.com/kongshan-zhuyu/dsh-balance-quota/tree/HEAD/packages/dsh-bundle-balance) — 汇总并分配多个账户或提供商的捆绑余额。
-- [dsh-bundle-yardmaster](https://github.com/pakgrou-porg/yardmaster/tree/HEAD/packages/dsh-bundle-yardmaster) — 通过两级选择与放置流程，从单一本地端点路由大语言模型请求。
-- [dsh-camel](https://github.com/JuwanXu/dsh-camel) — 为免费 DeepSeek 模型配置速率限制与韧性机制，提升限流场景下的可靠性。
-- [dsh-cc-switch](https://github.com/LKRCharon/dsh-cc-switch) — 通过 CLI、斜杠命令和 agent 工具将 cc-switch 提供商配置同步到 DeepSeek Harness 模型路由。
-- [dsh-ccpg-llm-guard](https://github.com/chumingjun/harness-one/tree/HEAD/dsh-plugins/dsh-ccpg-llm-guard) — 守卫LLM交互，过滤提示和输出以确保安全合规。
-- [dsh-ccswitch](https://github.com/upJiang/dsh-ccswitch) — dsh 直接连接 ccswith 的所有可用模型，包括密钥以及 auth 登录
-- [dsh-ccswitch-importer](https://github.com/wtiaw/dsh-ccswitch-importer) — 导入 CCSwitch Codex 配置并在 DeepSeek Harness 中设置按模型的推理参数。
-- [dsh-chatgpt-codex](https://github.com/sudipnext/dsh-chatgpt-codex) — 通过浏览器和设备码流程添加 ChatGPT OAuth 和 Codex 模型，无需 API 密钥。
-- [dsh-chatgpt-free](https://github.com/WLV-ZEDD/dsh-chatgpt-free) — 通过桥接标准 ChatGPT 网页，为 DeepSeek Harness 提供无需 API 密钥的免费模型接入。
-- [dsh-chatgpt-subscription](https://github.com/Aa728848/dsh-chatgpt-subscription) — 在 DeepSeek Harness 中提供 ChatGPT 订阅状态显示。
-- [dsh-chatgpt-subscription](https://github.com/songoao25/dsh-chatgpt-subscription) — 通过官方 OAuth 绑定 ChatGPT 账号，在 DSH 内使用订阅配额对话 ChatGPT 模型。
-- [dsh-claude](https://github.com/Norman-else/dsh-claude) — 将本地 Claude Code CLI 作为 DSH Agent Preset 运行，支持会话恢复、权限桥接、活动展示，以及 Claude Code 的 Skills、Hooks、Plugins 和 MCP 配置。
-- [dsh-claude-bridge](https://github.com/shaneconner/dsh-claude-bridge) — 通过Claude Code CLI，将Claude Pro/Max订阅作为模型提供商接入。
-- [dsh-claude-cli](https://github.com/katsos/dsh-claude-cli) — 以本地 Claude Code CLI 作为模型后端。
-- [dsh-claude-code-local](https://github.com/NGdust/dsh-claude-code-local) — 将本机安装的 Claude CLI 作为本地模型提供方运行。
-- [dsh-claude-oauth](https://github.com/grloper/dsh-claude-oauth) — 在 Web 设置中新增 Claude 板块，通过临时的双栈回环回调服务器执行 PKCE OAuth 流程，使 Claude Pro 或 Max 订阅可作为模型提供方使用，无需手动粘贴令牌。交换所得凭据写入 ~/.claude/.credentials.json 与 ~/.dsh/.credentials.yaml，模型列表读取自 /v1/models 接口，并展示 5 小时与 7 天订阅额度用量及重置倒计时。
-- [dsh-claude-provider](https://github.com/MoFeng2223/dsh-claude-provider) — 为 DeepSeek Harness 增加自定义 Claude 提供商支持，可调用 Anthropic 模型。
-- [dsh-claude-subscription](https://github.com/x5427876/dsh-claude-subscription) — 管理Claude订阅，可能处理API密钥和模型提供方路由。
-- [dsh-claude-usage](https://github.com/leonardoxr/dsh-claude-usage) — 为 DeepSeek Harness 显示 Anthropic Claude 套餐用量指示器，帮助跟踪 API 消耗。
-- [dsh-client-masquerade](https://github.com/ymh0000123/dsh-client-masquerade) — 伪造客户端身份请求头，让自定义提供方伪装成 Claude Code 或 Codex。
-- [dsh-cline-free-provider](https://github.com/jiesou/dsh-cline-free-provider) — 集成 Cline 免费模型作为提供方，允许使用免费模型选项。
-- [dsh-cliproxy](https://github.com/DevViking-Persike/dsh-cliproxy) — 将代理请求路由到本地CLI代理，以访问个人CLI订阅。
-- [dsh-cliproxyapi](https://github.com/new-Beginner/dsh-cliproxyapi) — 基于 CLIProxyAPI，在 DeepSeek Harness 内免独立后台直接使用 Codex 与 Antigravity 订阅账号。
-- [dsh-cliproxyapi-provider](https://github.com/ChadCSong/dsh-cliproxyapi-provider) — 自动发现本地 CLIProxyAPI 服务，将模型目录、推理设置和原生图片输入能力同步到 DeepSeek Harness。
-- [dsh-cloud-gateway](https://github.com/MrLukezy/dsh-cloud-gateway) — 为云部署添加登录墙和公共网关，管理访问和模型路由。
-- [dsh-cloud-model-providers](https://github.com/BitDG/dsh-cloud-model-providers) — 接入蚂蚁数科 MaaS 与 NVIDIA NIM 的流式模型提供商。
-- [dsh-codebuddy](https://github.com/Lbryany/dsh-codebuddy) — 集成 CodeBuddy OAuth，提供动态模型和推理控制。
-- [dsh-codebuddy-auth](https://github.com/cainiao1992/dsh-codebuddy-auth) — 将 CodeBuddy 集成为模型提供方，支持 OAuth 登录、令牌刷新和模型同步。
-- [dsh-codebuddy-models](https://github.com/evlon/dsh-codebuddy-models) — 把本机已登录的 CodeBuddy / WorkBuddy（腾讯代码助手） 订阅作为 dsh（DeepSeek Harness） 的原生 provider 接入，启用后 CodeBuddy 模型会直接出现在 dsh 的模型选择器中，可像其它模型一样被 agent 调用。
-- [dsh-codebuddy-plugin](https://github.com/taikaikaikai-pixel/dsh-codebuddy-plugin) — 接入CodeBuddy模型，支持18种模型、网络搜索和图像生成。
-- [dsh-codex](https://github.com/ddll8023/dsh-codex) — 将 OpenAI Codex 作为模型提供商，通过 ChatGPT Plus/Pro OAuth 认证接入。
-- [dsh-codex](https://github.com/softspark/dsh-codex) — 添加本地认证的 Codex 服务提供者，通过 ChatGPT 订阅接入。
-- [dsh-codex](https://github.com/Yan-Zero/dsh-codex) — 通过 OpenAI Codex 登录流程，在 DeepSeek Harness 中使用 ChatGPT 订阅。
-- [dsh-codex](https://github.com/yoshino-xiao7/dsh-codex) — 社区维护的插件，为 DeepSeek Harness 提供 OAuth、模型选择、图片支持及流式恢复功能。
-- [dsh-codex-adapter](https://github.com/diwer/dsh-codex-adapter) — 登录 ChatGPT 即可在 Harness 使用订阅模型，无需 API Key。支持 GPT / DeepSeek 切换、图片理解与内置工具。
-- [dsh-codex-auth](https://github.com/suntianc/dsh-codex-auth) — 复用 Codex CLI 的 ChatGPT 登录态注册 `openai-codex` LLM 路由，并在 DSH Web 设置中提供 GPT Auth 控件。
-- [dsh-codex-auth-bridge](https://github.com/shaomingbo/dsh-codex-auth-bridge) — 桥接 Codex 与 DeepSeek Harness 的认证，简化登录流程。
-- [dsh-codex-auth-plugin](https://github.com/tnnevol/fn-os-apps/tree/HEAD/plugins/dsh-codex-auth-plugin) — 管理 Codex 的 API 密钥认证，保障模型安全接入。
-- [dsh-codex-connect](https://github.com/franksong2702/dsh-codex-connect) — 通过 ChatGPT OAuth 将 OpenAI Codex 模型接入 DeepSeek Harness，并提供可选的搜索与图片工具。
-- [dsh-codex-connect-plus](https://github.com/stoneface10/dsh-codex-connect-plus) — 为 DeepSeek Harness 添加 ChatGPT OAuth 认证、Codex 模型和 gpt-image-2 工具。
-- [dsh-codex-keychain](https://github.com/CpfPatrick/dsh-codex-keychain) — 新增 ChatGPT OAuth 登录，密钥存储在系统钥匙串中。
-- [dsh-codex-oauth](https://github.com/birat-chapagain/dsh-codex-oauth) — 通过 OAuth 认证，让 DeepSeek Harness 使用 OpenAI Codex 订阅。
-- [dsh-codex-oauth](https://github.com/eons2long/dsh-codex-oauth) — 为Codex集成提供OAuth认证。
-- [dsh-codex-oauth](https://github.com/WNJXYK/dsh-codex-oauth) — 通过 OpenAI 订阅接入 GPT 模型、图像生成与网络搜索。
-- [dsh-codex-provider](https://github.com/Hu9956/dsh-codex-provider) — 将 OpenAI Codex 作为 provider 接入，支持设备码登录、令牌刷新及设置面板。
-- [dsh-codex-relay](https://github.com/necokeine/dsh-codex-relay) — 通过本地 Codex 应用服务器，为 DSH 增加 Codex 模型提供方。
-- [dsh-codex-shared-pool](https://github.com/502399493zjw-lgtm/dsh-codex-shared-pool) — 集成 Codex 账号共享池，实现社区共享 API 访问。
-- [dsh-codex-shim](https://github.com/OpenTritium/dsh-codex-shim) — 让 GPT 模型在 DeepSeek Harness 中顺畅工作。
-- [dsh-codex-subscription](https://github.com/WSL043/dsh-codex-subscription) — 在 DeepSeek Harness 中直接使用 ChatGPT/Codex 订阅，无需 OpenAI API Key 或 Codex CLI，支持 OAuth 登录、订阅搜索与额度显示 | ChatGPT/Codex subscription plugin for DSH
-- [dsh-codex-subscription](https://github.com/yequ172672/dsh-codex-subscription) — 复用 Codex CLI 本地订阅，在 DeepSeek Harness 中使用 ChatGPT 模型，无需 API 密钥。
-- [DSH-CODEX-SUBSCRIPTION-POOL](https://github.com/Eve-146T/DSH-CODEX-SUBSCRIPTION-POOL) — 聚合多个 OpenAI Codex 订阅，实现共享认证与使用。
-- [dsh-codex-switch](https://github.com/ZChenW/dsh-codex-switch) — 管理 ChatGPT OAuth、多账号切换和 Codex 模型访问，用于 DeepSeek Harness。
-- [dsh-codex-usage](https://github.com/scientisbo/dsh-codex-usage) — 聚合 Codex 订阅配额与 DeepSeek 余额用量。
-- [dsh-coding-plans](https://github.com/pengzhou267-ai/dsh-coding-plans) — 通过原生 OAuth LLM 适配器集成多个编程套餐订阅。
-- [dsh-coding-subscription-oauth](https://github.com/lninghaha/dsh-coding-subscription-oauth) — 为 SuperGrok、ChatGPT Plus 等编码模型添加 OAuth 订阅认证，免去粘贴 API 密钥。
-- [dsh-commandcode](https://github.com/wjf1/dsh-commandcode) — 为 DeepSeek Harness 接入 Command Code 模型，支持目录同步、重试与多凭证。
-- [dsh-commandcode-go-provider](https://github.com/jiesou/dsh-commandcode-go-provider) — 接入 Command Code Go API 作为提供商，含订阅和兼容层。
-- [dsh-commandcode-provider](https://github.com/Mars-Sea/dsh-commandcode-provider) — 将 Command Code 集成进 DSH 作为模型提供商，支持实时模型目录与推理强度。
-- [dsh-commandcode-provider](https://github.com/Victor-770/dsh-commandcode-provider) — 将 Command Code 接入为模型提供方，使用 Studio API 密钥。
-- [dsh-compaction-current-model](https://github.com/JK-LIL/dsh-compaction-current-model) — 将手动 /compact 摘要请求路由到前端当前模型，确保处理一致性。
-- [dsh-connect-minimaxcode](https://github.com/JeffTsuiCUG/dsh-connect-minimaxcode) — 把本机已登录的 MiniMax Code 桌面 App 的模型接入 DeepSeek Harness：零配置、无需 API Key，Anthropic Messages 兼容接入，模型目录实时取自上游接口。在对话框底部和插件页显示剩余积分余额与即将到期的积分。只读复用桌面 App 的登录态，唯一写入是按客户端原格式续期已过期的登录态，不启动登录动作。非官方插件，与 MiniMax、DeepSeek 均无关联；依赖客户端的非公开接口，仅供学习与研究使用。
-- [dsh-connect-trae](https://github.com/dingminhua/dsh-connect-trae) — 将本地登录的 Trae 模型接入 DeepSeek Harness，并提供只读积分概览。
-- [dsh-connect-workbuddy](https://github.com/dingminhua/dsh-connect-workbuddy) — 接入本地 WorkBuddy 模型，提供只读积分概览与模型管理。
-- [dsh-continue](https://github.com/JuwanXu/dsh-continue) — 提供安全可配置的会话延续与网络恢复，缓解 DeepSeek Harness 的干扰。
-- [dsh-copilot-sdk](https://github.com/GongYuanCaiJi/dsh-copilot-sdk) — 将 GitHub Copilot 订阅桥接到 DeepSeek Harness，实现模型接入。
-- [dsh-cost](https://github.com/zydg/dsh-cost) — deepseek harness的每轮token消费预估以及余额查询小插件
-- [dsh-cost-governor](https://github.com/yushuosun/dsh-cost-governor) — 通过模型级计费、定价与用量仪表板执行成本预算。
-- [dsh-cost-insights](https://github.com/elviass/dsh-cost-insights) — 为 DeepSeek Harness 添加本地用量与费用分析，包括 Token、缓存活动、API 余额、模型价格和日期范围统计。
-- [dsh-cost-meter](https://github.com/AnakinCao/dsh-cost-meter) — 估算会话成本，并在状态栏显示账户余额和按会话计费。
-- [dsh-cost-meter](https://github.com/Creakono/dsh-cost-meter) — Automatically calculate the cost based on the configured price list. 自动按配置的价目表算价格花费。当前未启用峰谷价格，后续还请自行在配置页添加
-- [dsh-cost-meter](https://github.com/enoughpower/dsh-desktop-mac/tree/HEAD/plugins/dsh-cost-meter) — 在桌面环境中追踪并显示模型使用成本。
-- [dsh-cost-meter-plus](https://github.com/WZZNNE/DSH-CyberWorkStation/tree/HEAD/plugins/dsh-cost-meter-plus) — 跟踪和计量 DSH CyberWorkStation 的成本使用，提供详细的支出指标。
-- [dsh-cost-tracker](https://github.com/Angelyeye/dsh-cost-tracker) — 提供仪表盘追踪 LLM 令牌用量与成本，含工具和 API。
-- [dsh-credential-manager](https://github.com/accpowered/dsh-credential-manager) — 管理命名用户凭据，提供面向模型的工具、Shell 变量和设置页。
-- [dsh-credentials-mysql](https://github.com/sandersyao/dsh-credentials-mysql) — DeepSeek Harness 基于 MySQL 的后端凭证库插件 (ctx.credentials)
-- [dsh-credits](https://github.com/Gaq152/dsh-credits) — 管理 DeepSeek Harness 的积分，可能用于跟踪账户余额。
-- [dsh-cursor-subscription](https://github.com/orrinzeng/dsh-cursor-subscription) — 在 DeepSeek Harness 内直接登录 Cursor 账户，使用订阅而无需 API 密钥或外部 IDE。
-- [dsh-custom-model-config](https://github.com/PeanutsDou/peanut-dsh-plugin/tree/HEAD/dsh-custom-model-config) — 允许在界面中配置自定义模型端点、API密钥和参数。
-- [dsh-custom-provider](https://github.com/linziyanleo/dsh-custom-provider) — 在 DeepSeek Harness 中配置静态的 OpenAI Chat Completions、OpenAI Responses 和 Anthropic Messages 提供方。
-- [dsh-custom-provider-reasoning](https://github.com/534119219/dsh-custom-provider-reasoning) — dsh 插件：让自定义提供方（pi-ai 手写路由）的所有模型都能选择思考强度（推理等级），选择经原厂适配器真正发往线上。A dsh plugin giving every custom-provider model selectable reasoning effort, wired through the stock pi-ai adapter.
-- [dsh-custom-provider-settings](https://github.com/supersealwqas/dsh-custom-provider-settings) — DeepSeek Harness 第三方 API 与自定义模型设置插件：支持请求头、User-Agent、模型列表、图像输入和思考等级 | WebUI plugin for third-party APIs and custom models with request headers, image input, and reasoning levels
-- [dsh-custom-reasoning](https://github.com/gao-gao-zai/dsh-custom-reasoning) — 自定义推理设置或行为，可能针对不同模型。
-- [dsh-dcs-engine](https://github.com/helibeiqi/dsh-dcs-engine) — 为 DSH 协议栈合成动态能力，充当信用引擎。
-- [dsh-deepseek-account](https://github.com/shynloc/acks-dsh-plugins/tree/HEAD/work-os/dsh-deepseek-account) — 连接并管理 DeepSeek 账户，处理 DeepSeek 模型提供方的认证和 API 访问。
-- [dsh-deepseek-balance](https://github.com/Bob-Bo1/dsh-deepseek-balance) — 在界面中展示 DeepSeek API 余额和本地 Flash/Pro 使用成本。
-- [dsh-deepseek-balance](https://github.com/CN-Leo/dsh-deepseek-balance) — deepseek-harness 插件，实时查询deepseek账号余额
-- [dsh-deepseek-balance](https://github.com/freespace8/dsh-plugins/tree/HEAD/plugins/dsh-deepseek-balance) — 监控管理 DeepSeek 余额，提供用量看板与峰谷成本洞察。
-- [dsh-deepseek-balance](https://github.com/kyya/dsh-deepseek-balance) — 在侧边栏实时显示 DeepSeek API 余额，便于账号管理。
-- [dsh-deepseek-balance](https://github.com/lin-cheng-lab/dsh-deepseek-balance) — DeepSeek API 余额监视器：DSH 右下角悬浮徽章 + 7天/30天用量费用图表
-- [dsh-deepseek-balance](https://github.com/MatsMQ/dsh-deepseek-balance) — 在头部徽章和设置页展示 DeepSeek 账户余额。
-- [dsh-deepseek-balance](https://github.com/qianTouchFish/dsh-deepseek-balance) — 监控 DeepSeek API 用量与余额，帮助管理成本。
-- [dsh-deepseek-balance](https://github.com/Stellight/dsh-deepseek-balance) — 实时显示 DeepSeek 账户余额，并提供官方充值入口。
-- [dsh-deepseek-balance-query](https://github.com/dumbnessrf/dsh-deepseek-balance-query) — 查询并显示 DeepSeek API 账户余额。
-- [dsh-deepseek-billing](https://github.com/golitter/dsh-deepseek-billing) — 在 DSH 中查看 DeepSeek API 账户余额及计费信息
-- [dsh-deepseek-chat](https://github.com/ColdCGH/dsh-deepseek-chat) — 为 DSH 集成 DeepSeek 聊天模型提供方，启用对话能力。
-- [dsh-deepseek-chat](https://github.com/lhenlihai-hub/dsh-deepseek-chat) — 为平台接入 DeepSeek 聊天模型能力，支持无缝对话交互。
-- [dsh-deepseek-console](https://github.com/whisperflo/dsh-deepseek-console) — DeepSeek 账户控制台：实时余额监控 / 用量统计 / 全局悬浮 HUD（官方 API 直连，Key 仅存本机）
-- [dsh-deepseek-dashboard](https://github.com/WSL043/dsh-native-deepseek-balance) — 在 DeepSeek Harness 中简洁、私密地显示 DeepSeek API 现金余额。
-- [dsh-deepseek-model-router](https://github.com/ZI-LV68/dsh-deepseek-model-router) — 根据配置将请求路由到不同的 DeepSeek 模型。
-- [dsh-deepseek-monitor](https://github.com/HaoyueQin/dsh-deepseek-monitor) — 在设置卡片中监控DeepSeek余额和平台用量，并显示实时余额标签。
-- [dsh-deepseek-monitor](https://github.com/moyuer233/dsh-deepseek-monitor) — DeepSeek Harness 插件，在聊天界面展示 DeepSeek 账户余额、今日/本月/累计 token 用量与费用，支持拖拽排序面板配置，并提供可选的本地代理记录 API 用量。
-- [dsh-deepseek-relay](https://github.com/LXFLGH/dsh-deepseek-relay) — 为 DeepSeek Harness 适配 DeepSeek 中继站并控制推理努力。
-- [dsh-deepseek-usage](https://github.com/ben7am1n/dsh-deepseek-usage) — 展示 DeepSeek 账户余额和 token 用量，帮助监控成本。
-- [dsh-deepseek-usage](https://github.com/scientisbo/dsh-deepseek-usage) — 展示 DeepSeek 用量与余额的简洁面板。
-- [dsh-deepseek-usage](https://github.com/yyb16yyb-hub/dsh-deepseek-usage) — 在 Web UI 和设置面板中实时展示 API 用量、余额、令牌统计和费用估算。
-- [dsh-deepseek-usage-dashboard](https://github.com/izz-BLUE/dsh-deepseek-usage-dashboard) — 通过仪表盘监控每日 token 用量、费用估算和余额。
-- [dsh-deepseek-vision](https://github.com/Cheng-cheng9669/dsh-deepseek-vision) — 为 DSH 接入 DeepSeek 网页视觉能力，支持图像交互。
-- [dsh-deepseek-vision-router](https://github.com/mochgolf/dsh-deepseek-vision-router) — 透明地对图像进行预处理，并路由到视觉模型处理。
-- [dsh-deepseek-web-adapter](https://github.com/huermi/dsh-deepseek-web-adapter) — 提供免费 DeepSeek 网页版服务作为模型提供方，无需 API 密钥。
-- [dsh-delegate-router](https://github.com/penguin-oo/dsh-delegate-router) — 自动在低成本与高性能模型间路由子代理调用，并支持手动覆盖。
-- [dsh-draw-router](https://github.com/xiaozhe7772222/dsh-draw-router) — 将图像生成请求路由到多个 OpenAI 兼容模型端点，自动发现可用模型。
-- [dsh-ds-vision-auto-route](https://github.com/litianshuo110/dsh-ds-vision-auto-route) — 将含图像的消息路由到可配置的视觉模型。
-- [dsh-dual-auto](https://github.com/lengquan88/dsh-dual-auto) — 在低成本和高成本模型间自动路由请求，并具备逃逸学习反馈机制。
-- [dsh-effort](https://github.com/AI-Galaxy-GPU/dsh-effort) — DeepSeek Harness 插件:在 Web GUI 中为会话选择模型的推理程度(reasoning effort),星光推理选择器一键切换 Off / 默认 / High / Max。
-- [dsh-effort-config](https://github.com/benzhoupo/dsh-effort-config) — 通过设置配置推理努力级别、默认路由和模型 token 预算。
-- [dsh-elegent-balance-tracker](https://github.com/X-avier-W/dsh-elegent-balance-tracker) — DeepSeek Harness 计费插件：当前会话成本 + 官方余额（官方峰谷价 / 每分钟余额对齐 / 期间实时扣减）
-- [dsh-engine-switch](https://github.com/Yuki-takuya-kun/dsh-engine-switch) — 按 Agent 预设将会话路由到可插拔循环引擎，内置 Claude Code。
-- [dsh-env-switcher](https://github.com/Oyama-Mahiro-F/dsh-env-switcher) — 用于切换不同的 API 环境或模型提供商。
-- [dsh-ernie-image](https://github.com/omdsh-dev/dsh-ernie-image) — 集成文心一言模型，提供图像生成能力，支持创意创作。
-- [dsh-everything-oauth](https://github.com/4sa1ary9/dsh-everything-oauth) — 在Windows上启用Codex、Grok和Claude等多种AI模型的订阅登录。
-- [dsh-everything-oauth](https://github.com/kam74515-boop/dsh-everything-oauth) — 把本机 Codex / Grok / Claude / OpenCode / CC Switch 登录态导入 DSH，在设置里自选来源并启用模型。
-- [dsh-experience-plugin](https://github.com/SouleyMoni1/dsh-experience-plugin) — 为自定义API模型配置各模型的推理等级，提供预设和设置页编辑功能。
-- [dsh-ext-vision-proxy](https://github.com/jin123-alpha/dsh-ext-vision-proxy) — 通过外部视觉API，让纯文本模型具备图像分析能力。
-- [dsh-fare-meter](https://github.com/bunipai/dsh-fare-meter) — 实时统计 API 使用费用，为对话计费提供参考。
-- [dsh-finish-reason-patch](https://github.com/Canson666/dsh-finish-reason-patch) — 将gpt之类的项目在dsh中出现without finish reason的情况解决，可以正常使用gpt模型
-- [dsh-free-model](https://github.com/jsoncode/dsh-free-model) — OpenRouter free-models browser & one-click model config for DeepSeek Harness (DSH) — newest-first, local search, platform tabs. DSH 免费模型浏览器：按最新排序、本地搜索、一键添加到模型列表
-- [dsh-free-vision](https://github.com/freespace8/dsh-plugins/tree/HEAD/plugins/dsh-free-vision) — 集成免费视觉模型，实现图像理解能力而无需额外费用。
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 572 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="dev"></a>
-
-<details>
-<summary><strong>开发与运行时</strong> · 显示 255 / 共 1636 个</summary>
-
-- [_template](https://github.com/messiahyl/dsh-plugins/tree/HEAD/packages/_template) — 提供 DSH 插件开发的 monorepo 模板，包含安装源和第三方目录。
-- [_template](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/_template) — 提供创建新dsh插件的模板。
-- [acp](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/acp) — 为 DSH 插件生态提供开发工具集，增强其他插件的功能。
-- [acp](https://github.com/jeremy9682/dsh-cursor-codex/tree/HEAD/acp) — 通过 ACP 代理包、MCP 服务器和配置模板，将 DSH 连接到 Cursor 与 Codex，实现无缝集成。
-- [acp-app](https://github.com/Missher12/deepseek-harness-desktop/tree/HEAD/packages/bundle/acp-app) — 为 DeepSeek Harness SDK 提供桌面应用外壳，面向 macOS Intel 构建。
-- [acp-app](https://github.com/my-dsh/oh-my-dsh/tree/HEAD/packages/bundle/acp-app) — DeepSeek Harness的ACP应用集成包，可能包含开发辅助组件。
-- [acryl-development-canvas](https://github.com/acryldev/acryl-development-canvas) — ACRYL Host 和 Client Cordis 插件，提供由 PTY 驱动的开发工作区，包含终端、文件、浏览器和聊天标签。
-- [adapter-dsh](https://github.com/Yan-Zero/dsh-std/tree/HEAD/packages/adapter-dsh) — 提供适配器，用于集成DSH与标准工具。
-- [adaptive-perf](https://github.com/winliyou/dsh-plugins/tree/HEAD/packages/adaptive-perf) — 可能是面向开发者的性能调优插件，但仅凭名称难以确定具体功能。
-- [adversarial-review](https://github.com/JohnXu22786/adversarial-review) — 对抗式多视角代码评审：多个独立评审视角并行攻击改动，再由仲裁层合并、去重并按严重度分级输出报告，全程只读。
-- [agent](https://github.com/jsdvjx/dshn/tree/HEAD/packages/agent) — 通过安全中继网络实现本地 dsh web 界面的公网转发。
-- [agent-body](https://github.com/1420079678-ctrl/agent-body) — 面向 DeepSeek Harness 的器官化插件层。插件以「器官」声明能力、感知与反射：神经冲动把命令路由给负责它的器官，心跳在全身循环状态，反射弧无需模型调用即可命中执行，睡眠期巩固把运行经历写成记忆卡。工具 schema 按意图显影，以减少提示词 token。
-- [agent-debugging-probe](https://github.com/wang-kaopu/dsh-cordis-devtools/tree/HEAD/e2e/fixtures/agent-debugging-probe) — 端到端测试探针，用于验证代理调试能力及错误诊断流程。
-- [agent-discipline](https://github.com/FranklinZaneDurant/agent-discipline) — 给 AI 编码 Agent 的仓库工作纪律插件（DeepSeek Harness bundle）：方法论提示段 + 工件脚手架（AGENTS.md/特性清单/验证门）+ 合规审计。
-- [agent-team-monitor](https://github.com/sky-unicorn/dsh-enhanced-plugins/tree/HEAD/packages/agent-team-monitor) — 实时监控与控制 Claude Code 和 Codex 子代理，提供桌面通知与社区插件管理。
-- [agent-team-profile](https://github.com/whitelonng/dshcode/tree/HEAD/packages/experimental/agent-team-profile) — 为 DeepSeek Harness 开发环境提供实验性的 agent 团队配置。
-- [agent-team-web-profile](https://github.com/whitelonng/dshcode/tree/HEAD/packages/experimental/agent-team-web-profile) — 为 DeepSeek Harness 开发环境提供基于 web 的实验性 agent 团队配置。
-- [aifred-dsh-task-ledger](https://github.com/qiaoji1990-alt/aifred-dsh-task-ledger) — 为DeepSeek Harness提供任务生命周期和幂等事件账本，可独立使用或通过桥接集成Aifred。
-- [ainfo](https://github.com/huyang218/dsh-plugins/tree/HEAD/packages/ainfo) — 为插件开发与诊断提供代理信息工具。
-- [aiops](https://github.com/jarvan1/dsh-aiops/tree/HEAD/packages/aiops) — 仓库内AI运维子包，可能提供AI功能的开发或运行支持。
-- [all](https://github.com/whyihaveyou/dsh-suite/tree/HEAD/packages/all) — 提供实时插件目录，含小时刷新、每日兼容测试、内置商店和脚手架。
-- [api-client](https://github.com/SparkElf/dsh-plugins-plus/tree/HEAD/packages/api-client) — 为插件开发提供API客户端，便于与DeepSeek服务通信。
-- [api-monitor](https://github.com/jcleener/api-monitor) — DSH 插件：常驻 API 用量监控 —— DeepSeek/SiliconFlow/OpenCode Go/火山引擎 余额与配额、会话树 token 与花费（侧边栏入口 + 浮动窗）
-- [api-relay-audit](https://github.com/toby-bridges/api-relay-audit) — 对AI API中继和代理进行本地安全审计，检测注入、替换、异常和钱包风险。
-- [approval](https://github.com/songyang0603/dsh-codex/tree/HEAD/packages/approval) — 实现代码变更的审批系统，在执行潜在风险操作前需要人工验证。
-- [archgraph](https://github.com/derekhu0002/archgraph) — 基于架构图的 Agent 工程框架，为复杂智能体系统提供结构支持。
-- [assistant-evaluation](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/assistant-evaluation) — 为 dsh 增强套件提供助手输出评估，实现自动化的质量检查和评分。
-- [assistant-heartbeat](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/assistant-heartbeat) — 提供心跳监测与遥测信号，追踪助手的存活与运行状态。
-- [ast-mcp-server](https://github.com/yailPeralta/ast-mcp-server) — 提供MCP服务器和批量CLI，用于结构化代码读取与审查编辑。
-- [audit](https://github.com/ZTCNO0NE/dsh-loom/tree/HEAD/fixtures/plugin-evolution/audit) — 审计插件演化变更，提供确定性验证和冷应用。
-- [auditor](https://github.com/qing3a/dsh-plugin-verify/tree/HEAD/auditor) — 命令行工具，运行 mock-llm 循环以验证插件完整性，检查瀑布链与副作用并生成报告。
-- [auditrail](https://github.com/JohnXu22786/auditrail) — 提供安全审计和会话取证，记录完整的工具调用链详情。
-- [bad](https://github.com/hinayoung23/dsh-cordis-plugin-kit/tree/HEAD/test/fixtures/bad) — 用于开发测试的无效插件包名测试夹具。
-- [bad-tag](https://github.com/CharlotteN7/dsh-plugin-inspector/tree/HEAD/tests/fixtures/bad-tag) — 插件检查器的测试夹具，演示带错误标签的插件。
-- [base](https://github.com/091022yyj/deepseek-harness-desktop/tree/HEAD/packages/bundle/base) — 桌面版的核心基础包，提供运行时组件。
-- [base](https://github.com/0reki/deepseek-harness-desktop/tree/HEAD/packages/bundle/base) — DSH桌面应用的基础包，提供核心开发与运行基础设施。
-- [base](https://github.com/8b-is/deepsiper-enthea/tree/HEAD/packages/bundle/base) — 代理驱动的LLM评估框架的基础包。
-- [base](https://github.com/afterDDL/dsh-creator-shared-blueprint/tree/HEAD/packages/bundle/base) — 提供共享接口，便于理解、讨论、修改和扩展智能体。
-- [base](https://github.com/BenHuHuan/dhs-tuicode/tree/HEAD/packages/bundle/base) — CLI 编码代理的核心包，支持极简与路由配置，含 MCP 与代理，兼容 Windows。
-- [base](https://github.com/cherrchen/deepseek-harness-electron/tree/HEAD/packages/bundle/base) — 为跨平台Electron桌面构建提供核心打包逻辑。
-- [base](https://github.com/deepseeker-app/DeepSeeker/tree/HEAD/packages/bundle/base) — DeepSeek Harness 桌面应用的基础包，提供核心运行时支持。
-- [base](https://github.com/Ghost011118/dsh-plugin-marketplace/tree/HEAD/packages/bundle/base) — 提供构建 DeepSeek Harness 插件所需的核心运行时原语，包括 API 与类型定义。
-- [base](https://github.com/isaccanedo/deepseek-harness/tree/HEAD/packages/bundle/base) — 提供 DeepSeek Harness 插件系统的基础运行时包。
-- [base](https://github.com/KeepLost/harniverse/tree/HEAD/packages/bundle/base) — 通用编码代理包的基础子包，提供运行时基础组件。
-- [base](https://github.com/luxiu666/OmniOps/tree/HEAD/packages/bundle/base) — 提供插件开发所需的基础工具与共享运行时。
-- [base](https://github.com/my-dsh/oh-my-dsh/tree/HEAD/packages/bundle/base) — 基础捆绑包，可能包含供其他插件使用的核心工具和共享依赖。
-- [base](https://github.com/niushuanan/xiaozhuang-dsh/tree/HEAD/packages/bundle/base) — 提供基础发行包，包含 Harness 插件的核心开发设施。
-- [base](https://github.com/omdsh-dev/dsh-science/tree/HEAD/packages/bundle/base) — 为 DeepSeek Harness 提供可复现 Python 和 R 工作的基础运行时与依赖设施。
-- [base](https://github.com/papachong/deepseek-harness-tui/tree/HEAD/packages/bundle/base) — 为 DeepSeek Harness 提供开发终端插件的基础包。
-- [base](https://github.com/peiyuwang54/deepseek-harness-cli/tree/HEAD/packages/bundle/base) — 提供DeepSeek Harness CLI工具和插件开发的核心运行时库。
-- [base](https://github.com/pzchenhui/teacher-workbench/tree/HEAD/packages/bundle/base) — 为教师工作台提供核心基础功能，可能包含共享库或工具。
-- [base](https://github.com/See-Sol-Lab/DeepCode/tree/HEAD/packages/bundle/base) — 作为 DeepCode 扩展开发的基础包，提供核心 API 和工具函数。
-- [base](https://github.com/smallhug/dsh-tauri/tree/HEAD/packages/bundle/base) — 基于 Tauri 的桌面工作台基础包，提供核心运行时和集成。
-- [base](https://github.com/snzhi000-sys/harness-macos-desktop-plugin-suite/tree/HEAD/packages/bundle/base) — 桌面捆绑包的基础包，提供原生打包与运行时基座。
-- [base](https://github.com/WZZNNE/DSH-CyberWorkStation/tree/HEAD/core/packages/bundle/base) — 提供 DSH CyberWorkStation 的核心基础包，包含启动器、插件和皮肤工作室的一键部署包。
-- [base](https://github.com/xwtaidev/dsh-app/tree/HEAD/packages/bundle/base) — Tauri 桌面应用的基础包，为 DSH 应用提供基础框架。
-- [base](https://github.com/zzyyyds88/dsh-solo-leveling/tree/HEAD/packages/bundle/base) — 基础套件含门禁、默认值、移动适配、桌宠和任务套件。
-- [baseline-bundle](https://github.com/logandoo/vibeweaver-dsh/tree/HEAD/bench/baseline-bundle) — 用于测试vibeweaver插件的基础捆绑包，提供标准开发环境。
-- [basic-plugin](https://github.com/jo32/DeepDeck/tree/HEAD/plugins/bun-plugin-builder/src/test-fixtures/basic-plugin) — 作为测试夹具插件，用于冒烟测试 bun 插件构建器。
-- [benign-control](https://github.com/CharlotteN7/dsh-plugin-inspector/tree/HEAD/tests/fixtures/benign-control) — 插件检查器的测试夹具，作为良性对照案例。
-- [benign-plugin](https://github.com/shaoshi20/dshscan/tree/HEAD/benchmark/cases/benign-plugin) — 作为DSH插件安全扫描器基准测试的良性用例。
-- [benign-plugin](https://github.com/swell05/dsh-whale-tank/tree/HEAD/tests/fixtures/benign-plugin) — 鲸鱼缸沙盒的良性插件测试夹具。
-- [bga-dsh-workbench](https://github.com/bingoogolapple/bga-dsh-workbench) — 提供面向开发者的工作台环境与工具集。
-- [boot-failure-plugin](https://github.com/iiwish/dsh-testkit/tree/HEAD/fixtures/boot-failure-plugin) — 模拟插件启动失败的测试夹具，用于一致性测试。
-- [both](https://github.com/swell05/dsh-whale-tank/tree/HEAD/templates/skeleton/both) — 鲸鱼缸沙盒的插件开发骨架模板。
-- [brockdsaver](https://github.com/kirigayakazima/brockdsaver) — 提供 DSH 启动前修复和插件诊断功能。
-- [broken-manifest](https://github.com/Eligahyu/dsh-sentinel/tree/HEAD/test/fixtures/broken-manifest) — 静态扫描插件代码安全风险并给出风险评分。
-- [broken-plugin](https://github.com/swell05/dsh-whale-tank/tree/HEAD/tests/fixtures/broken-plugin) — 鲸鱼缸沙盒的损坏插件测试夹具。
-- [browser-runtime](https://github.com/wecode-ai/Wegent/tree/HEAD/wework/dsh/browser-runtime) — 提供浏览器执行环境，支持前端或网页自动化操作。
-- [bun-plugin-builder](https://github.com/jo32/DeepDeck/tree/HEAD/plugins/bun-plugin-builder) — 为 Bun 提供插件构建器，用于编译和打包 Harness 插件。
-- [bundle](https://github.com/Baiiduu/dsh-eslint-security-sast/tree/HEAD/packages/bundle) — 提供基于ESLint的安全静态分析工具，帮助开发者发现并修复代码中的安全漏洞。
-- [bundle](https://github.com/Baiiduu/dsh-semgrep-sast/tree/HEAD/packages/bundle) — 集成 Semgrep 静态分析进行安全扫描，帮助开发者尽早发现漏洞。
-- [bundle](https://github.com/GrayCodeTeam/graycode-for-dsh/tree/HEAD/packages/bundle) — 提供构建和测试 DSH 插件的开发工具与实用程序。
-- [bundle](https://github.com/justwe-bot/dsh-browser/tree/HEAD/packages/bundle) — 将浏览器自动化组件打包为框架的开发包。
-- [bundle](https://github.com/Shizuku-keop/dsh-health/tree/HEAD/bundle) — 诊断 DeepSeek Harness 会话循环，分析振荡、停滞、令牌使用等，并提供 CLI 和实时监控工具。
-- [bundle](https://github.com/zaizaizhao/dsh-branchmark/tree/HEAD/packages/bundle) — 为开发者提供知识摘录、可追溯会话树和注意力分叉，帮助管理专注力。
-- [candidate-wrapper](https://github.com/1052326311/dsh-plan-lattice/tree/HEAD/eval/pilots/driver/candidate-wrapper) — 包装ICAE候选驱动程序，用于评估DSH中针对不安全续跑的漂移防火墙。
-- [cc-tui](https://github.com/jianxx/dsh-cc-plugins/tree/HEAD/packages/bundle/cc-tui) — 为插件开发提供终端界面工具包，含预设配置，便于在 dsh 环境中调试与使用。
-- [ch2-greeter](https://github.com/godcreator02/dsh-mechanics-lab/tree/HEAD/experiments/03-supply/self-registration/fixtures/ch2-greeter) — 一个可复跑实验的研究夹具，用于探索 DeepSeek Harness 插件系统的自注册机制。
-- [channel-adapter](https://github.com/wsz987/dsh-channels/tree/HEAD/templates/channel-adapter) — 为接入各 IM 平台到 harness 的通道适配器提供开发模板。
-- [clean](https://github.com/245678000000/dsh-shield/tree/HEAD/fixtures/plugins/clean) — 为 DeepSeek Harness 代理使用的工具提供安全验证层。
-- [clean](https://github.com/PerryLink/dsh-skill-pack-security/tree/HEAD/verify/fixtures/vet/clean) — 作为干净插件的测试夹具，用于验证 plugin_vet 扫描器的行为。
-- [clean-dsh-plugin](https://github.com/MicroMilo/upstream-radar/tree/HEAD/examples/fixtures/clean-dsh-plugin) — 扫描 DSH 插件以发现依赖和兼容性问题，生成可修复的报告。
-- [clean-plugin](https://github.com/Eligahyu/dsh-sentinel/tree/HEAD/test/fixtures/clean-plugin) — 静态扫描插件代码以发现安全风险。
-- [cleverer-dsh](https://github.com/Classicoke/cleverer-dsh) — 包含 11 个插件和 6 个技能，强制执行纪律并改进 Harness 行为的插件套件。
-- [client](https://github.com/ydhrdh/dsh-marketplace/tree/HEAD/plugin/client) — 提供插件市场界面，用于浏览、搜索和安装社区插件。
-- [client-tell](https://github.com/dphmoblie/dsh-error-tell/tree/HEAD/packages/client-tell) — 在Web界面启动前检测可能崩溃的插件并禁用，防止启动失败。
-- [Code2Skill](https://github.com/leechen298/Code2Skill) — 从现有代码生成函数、MCP、Agent 技能和测试包。
-- [codegraph](https://github.com/JohnXu22786/codegraph) — 代码知识图谱：把代码库解析为可查询的 SQLite 索引，回答谁调用这个函数、依赖什么、改动的波及范围等问题。
-- [codegraph](https://github.com/Mingbing-get/dsh-plugins/tree/HEAD/codegraph) — 为开发者提供代码图可视化工具。
-- [codex2dsh](https://github.com/BigBlueBaby/codex2dsh) — 将 Codex 会话转换为 DSH 格式，便于迁移复用。
-- [comment-fp](https://github.com/BotonJ/dsh-plugin-sentinel/tree/HEAD/test/fixtures/comment-fp) — 插件安全审计器的测试夹具，可能用于自动化测试。
-- [console](https://github.com/vlln/plugin-registry/tree/HEAD/packages/plugin/console) — 提供管理插件的控制台与官方插件开发技能。
-- [content](https://github.com/blx0102/create-dsh-content-plugin/tree/HEAD/templates/content) — 从模板生成DSH内容自动化插件脚手架，支持多种主流内容平台。
-- [continuation](https://github.com/goatliamia/dsh-runtime-capabilities/tree/HEAD/experiments/native-pp/rc/continuation) — 调整模型对确定性与不确定性问题的思考策略，提升运行时实验的响应准确性。
-- [controlled-experiment-probe](https://github.com/wang-kaopu/dsh-cordis-devtools/tree/HEAD/e2e/fixtures/controlled-experiment-probe) — 用于 Cordis 开发工具端到端测试套件中的受控实验探针。
-- [cordis-inspect-probe](https://github.com/wang-kaopu/dsh-cordis-devtools/tree/HEAD/e2e/fixtures/cordis-inspect-probe) — 检查 Cordis 运行时状态的测试夹具，验证内部通信与状态。
-- [cordis-plugin-graph](https://github.com/acryldev/cordis-plugin-graph) — 在设置中新增“插件关系图”标签页，用 Cytoscape 实时渲染可缩放的 Cordis 上下文关系图：插件 fiber 作为按生命周期状态着色的节点，可切换显示 inject 依赖、已解析的 provider、以及 Loader 树的嵌套关系。
-- [cordis-plugin-sofagent-commons](https://github.com/KongFangXun/sofagent/tree/HEAD/engine/dsh-plugins/cordis-plugin-sofagent-commons) — 提供SofAgent插件套件共用的工具函数与公共组件。
-- [cordis-plugin-sofagent-fde](https://github.com/KongFangXun/sofagent/tree/HEAD/engine/dsh-plugins/cordis-plugin-sofagent-fde) — 实现核心FDE harness层，支撑企业级代理执行与管理。
-- [cordis-plugin-sofagent-inject](https://github.com/KongFangXun/sofagent/tree/HEAD/engine/dsh-plugins/cordis-plugin-sofagent-inject) — 向代理工作流注入自定义规则，实现动态策略与行为更新。
-- [core](https://github.com/Elinpf/dsh-ops-plugins/tree/HEAD/packages/ops-access/core) — 运维访问的核心包，为其他运维插件提供基础功能。
-- [core](https://github.com/ophielel/deepseek-forge/tree/HEAD/packages/core) — 提供核心开发工具，包括审批守卫和运行时支持，用于构建 DeepSeek Harness 插件。
-- [cost](https://github.com/ZTCNO0NE/dsh-loom/tree/HEAD/fixtures/plugin-evolution/cost) — 计算并跟踪插件演化过程的成本。
-- [cot-lint](https://github.com/YuanyuanMa03/cot-lint) — 扫描仓库中 AI 助手留下的思维链泄露痕迹，检查文档和注释中的会话记录。
-- [courier](https://github.com/godcreator02/dsh-mechanics-lab/tree/HEAD/experiments/03-supply/four-ways/fixtures/courier) — 一个可复跑实验的研究项目，用于探索 DeepSeek Harness 插件系统的基本原理。
-- [credential-exfil](https://github.com/CharlotteN7/dsh-plugin-inspector/tree/HEAD/tests/fixtures/credential-exfil) — 插件检查器的测试夹具，演示凭据窃取行为。
-- [cue-omni-reader-guard](https://github.com/sensedeal/cue-skills/tree/HEAD/dsh/cue-omni-reader-guard) — 作为全能阅读器的守护，确保文档处理的安全与可靠。
-- [cursor-provider](https://github.com/jeremy9682/dsh-cursor-codex/tree/HEAD/cursor-provider) — 为 Cursor 提供 LLM 后端接入，使 DSH 可充当其模型提供方。
-- [custom-catalog](https://github.com/zaimokuza-yoshiteru/dsh-plugin-hub/tree/HEAD/examples/custom-catalog) — 提供 CLI 和基础设施，用于创建和管理带策略的自定义插件目录。
-- [dataops-managed](https://github.com/SparkElf/dsh-plugins-plus/tree/HEAD/packages/dataops-managed) — 维护 DeepSeek Harness 的独立插件集，支持通过配置组合包安装。
-- [db-console](https://github.com/eh-tools/dsh-plugin/tree/HEAD/plugins/db-console) — 为开发者提供数据库管理控制台，方便在环境中执行查询和操作。
-- [declared-bin-bad](https://github.com/1052326311/dsh-plan-lattice/tree/HEAD/eval/fixtures/plugins/declared-bin-bad) — 测试针对长时间运行DSH代理的陈旧变更和不安全续跑的漂移防火墙。
-- [deepseek](https://github.com/Innocent-children/dev-flow/tree/HEAD/packages/deepseek) — 为Codex和DeepSeek Harness提供显式范围、验证预算和持久任务状态，实现进程控制与恢复。
-- [deepseek-harness](https://github.com/eh-tools/dsh-plugin/tree/HEAD/plugins/deepseek-harness) — 为 DeepSeek Harness 插件提供核心开发运行设施。
-- [deepseek-harness](https://github.com/jermaine123123/agent-context-editor/tree/HEAD/adapters/deepseek-harness) — 提供跨代理的上下文编辑器适配层，用于集成 Pi 与 DeepSeek Harness 环境。
-- [deepseek-harness-auth](https://github.com/taichuy/deepseek-harness-auth) — 处理 DeepSeek Harness 的认证，可能管理用户登录和会话凭证。
-- [deepseek-harness-evolver](https://github.com/shinjiyu/deepseek-harness-evolver) — 补充 DSH 创作者模式，支持暂存、评分并固化内存中的插件试运行。
-- [deepseek-harness-external-migration](https://github.com/buguoshixc/deepseek-harness-external-migration) — **DeepSeek-Harness Migration Plugin** 是一款专为 [DeepSeek-Harness](https://github.com/deepseek-ai/deepseek-harness) 设计的插件，旨在帮助开发者无缝迁移其他主流 AI 编程助手（Codex、Claude Code、Qcoder、OpenCode）的个性化配置及历史会话记录。无需手动复制粘贴，即可在 DeepSeek-Harness 中继续之前的工作流，大幅降低切换成本。
-- [deepseek-harness-hub](https://github.com/MarecGents/deepseek-harness-hub) — 提供 Windows 桌面项目，作为 DeepSeek Harness 的开发和集成插件。
-- [deepseek-harness-insights](https://github.com/mapan0424/deepseek-harness-insights) — 提供非官方的 DeepSeek Harness 使用洞察与分析，跟踪插件和功能使用情况。
-- [deepseek-harness-plugin-from-scratch](https://github.com/Opr4Mp3r/deepseek-harness-plugin-from-scratch) — 从零开始创建生产级插件的代码审计指南。
-- [deepseek-harness-plugin-mcp](https://github.com/bobleer/deepseek-harness-plugin-mcp) — 作为MCP服务器，让agent能发现、安装并运行DSH插件。
-- [deepseek-harness-reliability-governor](https://github.com/chenjie1129/deepseek-harness-reliability-governor) — 以证据门控完成并验证可信代码执行，提升智能体的可靠性。
-- [deepseek-harness-skillx](https://github.com/drowned-fish1/deepseek-harness-skillx) — 安全地发现、审计并采用外部代理技能，防御提示注入和诱饵攻击。
-- [deepseek-harness-token](https://github.com/zoyluoblue/deepseek-harness-token) — 汇总各会话令牌用量，提供统计页、热力图、连续记录和分模型明细。
-- [deepseek-harness-web](https://github.com/kanneiren/dsh-windows-manager/tree/HEAD/plugins/deepseek-harness-web) — 提供轻量级 Windows 托盘管理器，控制实例。
-- [deepseek-harness-workbench-plugin](https://github.com/loadingvx/deepseek-harness-workbench-plugin) — 提供插件开发工作台，辅助构建与测试。
-- [deepseek-protocol-doctor](https://github.com/Whning0513/deepseek-protocol-doctor) — 检查 DeepSeek 工具循环、推理内容、严格模式及 SSE 流以诊断协议问题。
-- [deepseek-token-dashboard](https://github.com/Funnyvalentine00/deepseek-token-dashboard/tree/HEAD/deepseek-token-dashboard) — 在界面中显示简单的 token 计数器，用于跟踪使用量。
-- [demo-plugin](https://github.com/swell05/dsh-whale-tank/tree/HEAD/tests/fixtures/demo-plugin) — 隔离 DSH_HOME，提供开发骨架、副作用检测与沙箱复原，并支持第三方插件体检的 DSH 插件开发沙盒工具。
-- [desktop-balance](https://github.com/Easyhoov/deepseek-harness-desktop-windows/tree/HEAD/plugins/desktop-balance) — 将 DSH 封装为 Windows 桌面应用，免装 Node.js，内置文件、终端、Git、浏览器侧边栏工作台，托盘常驻。
-- [desktop-bundle](https://github.com/jesspig/deepseek-harness-desktop/tree/HEAD/packages/desktop-bundle) — 将 DeepSeek Harness 打包为原生桌面应用，无需修改上游仓库。
-- [desktop-bundle](https://github.com/Zenith-Lxz/dsh-foundry/tree/HEAD/packages/desktop-bundle) — 提供官方 DeepSeek Harness 的无补丁桌面发行版，简化安装流程。
-- [desktop-file-changes](https://github.com/Easyhoov/deepseek-harness-desktop-windows/tree/HEAD/plugins/desktop-file-changes) — 桌面工作台中的文件变更跟踪组件，支持版本控制与历史查看。
-- [desktop-marketplace](https://github.com/Easyhoov/deepseek-harness-desktop-windows/tree/HEAD/plugins/desktop-marketplace) — 桌面工作台中的社区插件商店，支持浏览、安装与管理 DSH 插件。
-- [detached-dispatch](https://github.com/CharlotteN7/dsh-plugin-inspector/tree/HEAD/tests/fixtures/detached-dispatch) — 提供测试夹具数据，帮助开发者验证插件检查器的行为。
-- [deterministic-agent](https://github.com/zhouCode/dsh-squad/tree/HEAD/tests/fixtures/deterministic-agent) — 用于多 Agent 系统测试与开发的确定性 Agent 测试夹具。
-- [dev-buddy](https://github.com/zhouwei713/dsh-daily-kit/tree/HEAD/bundles/dev-buddy) — 为编码工作流提供开发辅助工具的插件包。
-- [dev-harness-dsh](https://github.com/Dev-Wiki/dev-harness-dsh) — DeepSeek Harness 的开发工具，用于构建和测试插件。
-- [diff-engine](https://github.com/CH4ACKO3/dsh-render-engine/tree/HEAD/packages/diff-engine) — 提供计算代码版本差异的引擎，用于调试和审查。
-- [dirty-uninstall-plugin](https://github.com/iiwish/dsh-testkit/tree/HEAD/fixtures/dirty-uninstall-plugin) — 模拟脏卸载场景的测试夹具，用于生命周期测试。
-- [disables-approval](https://github.com/CharlotteN7/dsh-plugin-inspector/tree/HEAD/tests/fixtures/disables-approval) — 插件检查器的测试夹具，展示禁用审批提示的插件。
-- [drive9-dsh](https://github.com/drive9-ai/drive9-dsh) — 提供 Drive9 插件的开发运行支撑框架。
-- [dsh](https://github.com/AngelosZou/graphlint/tree/HEAD/integrations/dsh) — 检查 DSH 插件代码中的错误和改进点，集成到开发工作流中。
-- [dsh](https://github.com/JW53222/faultseed/tree/HEAD/adapters/dsh) — 提供确定性钩子，阻止代理削弱测试或桩类型检查，并附失败测试验证。
-- [dsh](https://github.com/omdsh-dev/Qwen-MM-Plugins/tree/HEAD/packages/dsh) — 集成 Qwen 多模态模型及相关开发支持工具。
-- [dsh](https://github.com/openguardrails/openguardrails/tree/HEAD/integrations/agent/dsh) — 定义AI代理安全的中立协议和基准，并提供DSH集成以执行安全策略。
-- [dsh](https://github.com/snzhi000-sys/harness-macos-desktop-plugin-suite/tree/HEAD/plugins/cowork/packages/dsh) — 桌面插件套件中的开发工具包，提供插件构建的脚手架和实用功能。
-- [DSH](https://github.com/Sean-Gao/DSH) — DSH插件
-- [dsh_review](https://github.com/CodeIdeal/dsh_review) — 以 Codex CLI 风格为 dsh 提供交互式代码审查界面。
-- [dsh-2origin](https://github.com/dongsheng123132/dsh-2origin) — 对代理轨迹进行状态投影、差异对比和不可变冻结以验证。
-- [dsh-3d-plugin-graph](https://github.com/jelly-000/dsh-3d-plugin-graph) — 将 DSH 插件生态以实时 3D 图呈现，反映真实 Cordis 运行时状态与关联。
-- [dsh-a11y-scan](https://github.com/988hj7tczd-oss/dsh-a11y-scan) — 对本地 HTML 文件、构建产物或 URL 执行 WCAG 无障碍扫描，并以多种格式输出违规报告。
-- [dsh-about](https://github.com/YannZhou/dsh-about) — DeepSeek Harness 设置中心「关于」分区插件：版本信息 + 检查更新（npm latest/next）+ 一键更新自动重启 + GitHub 版本记录 | Settings About tab: check updates & one-click update
-- [dsh-access-review-proof](https://github.com/dongsheng123132/dsh-access-review-proof) — 用于访问控制的审查验证工具。
-- [dsh-acp](https://github.com/dangpangch/dsh-acp) — 为Agent Client Protocol提供交互工具，辅助开发与调试代理交互。
-- [dsh-acp-enhanced](https://github.com/grunmin/dsh-acp-enhanced) — 增强的 ACP 服务器，桥接 Zed 编辑器，提供遥测、模型切换和会话管理功能。
-- [dsh-acp-plugin](https://github.com/agentic-control-plane/dsh-acp-plugin) — 在执行前对每次工具调用实施策略检查，加强安全性和治理能力。
-- [dsh-action-parity](https://github.com/dongsheng123132/dsh-action-parity) — 跨界面绑定操作并回放，用于代理系统的一致性验证。
-- [dsh-adapter](https://github.com/lnabc03/bright-drift/tree/HEAD/packages/dsh-adapter) — 监控工作区变化，并在每一步将外部修改的差异注入到Agent上下文中。
-- [dsh-adb-logcat](https://github.com/dxsdyhm/dsh-adb-logcat) — 在Web界面中以Android Studio风格展示ADB日志，方便调试移动应用。
-- [dsh-admin](https://github.com/xiaokang6/dsh-admin) — 管理插件，支持手动重启和自动版本检查。
-- [dsh-admin-bridge](https://github.com/zjlww/dsh-admin-bridge) — 提供受限的短期管理员访问，不存储sudo密码。
-- [dsh-admin-gateway](https://github.com/myfire2014/dsh-admin-gateway) — dsh-admin-gateway DeepSeek Harness (dsh) 管理员验证网关插件。 只需一个绑定在 Cloudflare 的域名
-- [dsh-agent-budget](https://github.com/vibeinging/dsh-agent-budget) — agent 树 token 预算管理。
-- [dsh-agent-doctor](https://github.com/MkaliezZ/dsh-agent-doctor) — 检查模型可见的工具表面，诊断健康和安全问题。
-- [dsh-agent-evolution](https://github.com/FriendsHL/dsh-agent-factory) — 支持预设感知的代理组合与基线/候选实验，便于开发调试。
-- [dsh-agent-harness-audit](https://github.com/Leeaoyin/dsh-agent-harness-audit) — 审查代理框架稳定性，通过运行检查并报告问题以保障维护与可靠性。
-- [dsh-agent-loop-guard](https://github.com/GooDAnDReaDY/dsh-agent-loop-guard) — 运行时保护，防止工具调用和助手输出循环导致无限循环。
-- [dsh-agent-observe](https://github.com/dsh-plugin-evaluation/dsh-agent-observe) — 为代理提供可观测性与安全评估，记录行为和风险。
-- [dsh-agent-plugin-bridge](https://github.com/dubeno/dsh-agent-plugin-bridge) — 将符合Agent Plugin规范的插件适配到DSH生态
-- [dsh-agent-plugins](https://github.com/SisyphusSQ/dsh-plugins/tree/HEAD/packages/dsh-agent-plugins) — 一个可组合插件集合，为 DeepSeek Harness 提供可复用的构建模块。
-- [dsh-agent-policy](https://github.com/xingyingyuzhui/dsh-agent-policy) — 定义共享策略模式，不拦截工具。
-- [dsh-agent-registry](https://github.com/xingyingyuzhui/dsh-agent-registry) — 管理工作区 Agent 的登记、隔离与归档。
-- [dsh-agent-run-logger](https://github.com/bluefateludi/dsh-agent-run-logger) — 记录代理运行、模型步骤、工具调用和 token 用量到 JSONL 文件。
-- [dsh-agent-terminal](https://github.com/xujiping/dsh-plugins/tree/HEAD/packages/dsh-agent-terminal) — 为 DSH 插件 monorepo 提供代理终端组件，可能面向开发者使用。
-- [dsh-agentdebugx](https://github.com/AgentDebugX/AgentDebugX/tree/HEAD/integrations/dsh-agentdebugx) — 面向 agentic AI 系统的调试框架，帮助诊断故障、归因原因并验证修复。
-- [dsh-agentmonitor](https://github.com/Qianrushixiaobai/dsh-agentmonitor) — 在DeepSeek Harness侧边栏提供多智能体监控面板，展示状态和活动。
-- [dsh-agents-plugins](https://github.com/openma-ai/dsh-agents-plugins) — 将 Codex 或 Claude Code 插件桥接到 DSH，复用现有生态。
-- [dsh-akn-plugin](https://github.com/symmetryseeker/dsh-akn-plugin) — 面向 Harness 开发者的插件，可能提供调试或扩展工具。
-- [dsh-aliyun-mcp](https://github.com/zhengjy01/dsh-aliyun-mcp) — DeepSeek Harness 的阿里云 OpenAPI MCP 连接：静态凭证 + 官方 MCP Proxy，把 ECS / OSS / 域名 / DNS / 函数计算等 OpenAPI 暴露为 mcp__aliyun__* 工具。
-- [dsh-all](https://github.com/myflx/hundun-dsh/tree/HEAD/packages/dsh-all) — 包含 DeepSeek Harness 环境所有组件和插件的综合捆绑包。
-- [dsh-allinone](https://github.com/LoserFox/marisa-distro/tree/HEAD/dsh-allinone) — 集成多个插件于单一包中，简化安装与部署流程。
-- [dsh-analytics](https://github.com/hccccc01333/dsh-analytics) — 为 DeepSeek Harness 收集并展示分析数据，可能追踪使用或性能指标。
-- [dsh-anchored-monitor](https://github.com/Aik358/dsh-anchored-monitor) — 实时监控思维链，进行指纹检测和干预，提供网页覆盖层和 JSONL 实验日志。
-- [dsh-anchored-preset-installer](https://github.com/kirkchinese/dsh-anchored-preset-installer) — 安装锚定工作流的预设配置。
-- [dsh-ankh-guard](https://github.com/Khorsheed/dsh-ankh-guard) — 防止 Agent 自我修改把服务改崩的守护插件（dsh 插件）：绿色构建凭证绑定 git HEAD，改坏不许重启；watchdog 无感重启 + canary 自动回滚
-- [dsh-annotate](https://github.com/BrambleXu/dsh-annotate) — 面向 Vibe Coding 的浏览器元素标注插件：直接选取页面元素，并将结构化视觉反馈发送给 DeepSeek Harness Agent。
-- [dsh-aoci-panel](https://github.com/donyue7/dsh-aoci-panel) — 在会话视图标签中新增 AOCI 标签页，展示当前项目的 AOCI 索引概览、治理状态与条目浏览。需先安装 AOCI CLI。
-- [dsh-APEX_Plugin](https://github.com/GTC2080/dsh-APEX_Plugin) — 提供极简启动引导和按需标准工具，用于实验性 APEX 开发。
-- [dsh-api](https://github.com/kelemiao/dsh-api) — 通过官方 ApiProxy 路由，暴露本地 HTTP API 供其他智能体控制会话。
-- [dsh-api](https://github.com/lilming123/dsh-api) — 为 DeepSeek Harness 提供设置、工作区注册表和主机伴侣桥接的 HTTP 控制平面路由。
-- [dsh-api-client](https://github.com/MkaliezZ/dsh-api-client) — 默认阻止远程主机和敏感请求头的本地优先 HTTP 调试工具。
-- [dsh-api-cost](https://github.com/CCCq-C/dsh-api-cost) — 实时显示当前会话的API使用费用。
-- [dsh-api-scaffolding](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-api-scaffolding) — 脚手架生成 API 项目结构，加速开发。
-- [dsh-api-usage-monitor](https://github.com/DrFaithinT/dsh-api-usage-monitor) — DeepSeek Harness 动态 Cordis 插件：实时读取当前使用的 LLM API，在设置页呈现当前用量、分对话用量，并可扫描会话日志读取历史用量。
-- [dsh-app](https://github.com/rickylabs/harness/tree/HEAD/packages/dsh-app) — 提供协调层，用于在单体仓库中构建和管理 DeepSeek Harness 插件包。
-- [dsh-app-updater](https://github.com/m1452700576/dsh-app-updater) — 更新dsh客户端
-- [dsh-approval-gate](https://github.com/GooDAnDReaDY/dsh-approval-gate) — 主机侧命令安全闸门：拦截已识别的危险操作，并在无法检查命令时请求 DSH 审批。
-- [dsh-archive-manager](https://github.com/huangrx6/dsh-plugin/tree/HEAD/dsh-archive-manager) — 管理技能、MCP 服务器和布局设置，支持导入、详情与多格式预览。
-- [dsh-archive-purge](https://github.com/LiuJunheng/DeepSeekHarnessGreen/tree/HEAD/plugins/dsh-archive-purge) — 提供绿色便携版启动器，一键运行DeepSeek Harness，不污染系统盘。
-- [DSH-arena](https://github.com/Apageoflove/DSH-arena) — 提供本地优先的实验与评估工作台，帮助开发者测试和比较不同配置。
-- [dsh-artifact-promotion-proof](https://github.com/dongsheng123132/dsh-artifact-promotion-proof) — 离线验证不可变工件是否遵循声明的晋升链，辅助审计。
-- [dsh-attestation-proof](https://github.com/dongsheng123132/dsh-attestation-proof) — 为构建和产物提供离线内容寻址的证明。
-- [dsh-atuin](https://github.com/RealAlexandreAI/dsh-atuin) — 将 DSH 的用户提示记录到 atuin 终端历史中，供后续检索和分析。
-- [dsh-audit-bundle](https://github.com/dongsheng123132/dsh-audit-bundle) — 跨独立证据源构建内容寻址审计索引，用于验证。
-- [dsh-audit-log](https://github.com/ssdyg4444-sys/dsh-audit-log) — 记录运行时数据流审计日志，追踪每个插件与协程的变更归属。
-- [dsh-audit-missing](https://github.com/baiyang123/dsh-audit-missing) — DSH 提交前任务遗漏审核：扫描当前工作区未提交改动，读取设计文档，派 DSH subagent 将「设计文档承诺的点」与实际实现做差集比对，输出缺失/未完成项；附带 token 成本分析、跨会话审核历史与独立客户端视图。
-- [dsh-auth](https://github.com/JunWan666/dsh-plugins/tree/HEAD/dsh-auth) — 为 DeepSeek Harness 插件提供认证相关工具。
-- [dsh-auth](https://github.com/LoserFox/marisa-distro/tree/HEAD/dsh-auth) — 管理插件环境中的认证机制，支持用户验证与访问控制。
-- [dsh-auth-gate](https://github.com/zephaniahwang94-cmyk/dsh-auth-gate) — 为 DeepSeek Harness 提供认证和安全加固。
-- [dsh-auth-proxy](https://github.com/wxyzh/dsh-auth-proxy) — 面向开发者的认证代理设施。
-- [dsh-auth-tailscale](https://github.com/sperictao/dsh-auth-tailscale) — 将 Tailscale 身份与能力授权适配集成到 DeepSeek Harness 中。
-- [dsh-authorize-app](https://github.com/extension-hunter/dsh-authorize-app) — 创建“已连接应用”设置区，供其他DSH插件注册展示。
-- [dsh-auto-archive](https://github.com/TZHR-invest/dsh-plugins/tree/HEAD/packages/dsh-auto-archive) — 为插件提供网关服务，可能处理路由或访问控制。
-- [dsh-auto-model](https://github.com/AL-spiritphoenix/dsh-auto-model) — 自动化模型配置，简化开发者设置流程。
-- [dsh-auto-review](https://github.com/AtropinolTT/dsh-auto-review) — 在执行前进行安全审查，使用子代理拦截并审计高风险操作。
-- [dsh-auto-review](https://github.com/PerryLink/dsh-auto-review) — 审批链上的第二模型自动审查：只读审查子代理返回带理由的 allow/deny 结构化裁决，默认 fail-closed。
-- [dsh-auto-update](https://github.com/a1113622001/dsh-auto-update) — 自动更新插件，检查新版本、暂存并在退出或通过面板触发时应用更新。
-- [dsh-auto-update](https://github.com/frostming/dsh-auto-update) — 启动时自动检查并安装较新的插件版本。
-- [dsh-auto-update](https://github.com/louchi1984-coder/dsh-auto-update) — 自动更新插件，保持安装版本最新。
-- [dsh-aux-state](https://github.com/dsh-plugins/dsh-loader/tree/HEAD/examples/dsh-aux-state) — 示例子包，演示通过适配器注册表加载辅助状态，供插件开发者参考。
-- [dsh-backup-migrator](https://github.com/zhengjy01/dsh-backup-migrator) — DeepSeek Harness 插件环境备份与迁移：把各 profile 的插件清单、插件配置与本地源插件打包进 git 仓库，换机一键恢复。
-- [dsh-balance](https://github.com/GeekRicardo/dsh-balance) — DeepSeek Harness web 插件：输入框下方状态栏展示当前供应商的余额/用量 —— DeepSeek 官方余额 + 本会话花费，Kimi Coding、OpenCode Go、GLM Coding Plan 等订阅用量（支持的供应商见 README）。按 provider 判断、2 秒轮询实时切换、5 分钟缓存。
-- [dsh-base](https://github.com/ptonlix/dsh-forge/tree/HEAD/tests/fixtures/bundles/dsh-base) — DSH桌面发行版的基础运行时与开发测试组件，为构建和验证集成提供底层设施。
-- [dsh-bash-testing](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-bash-testing) — 支持测试 Bash 脚本以确保可靠性。
-- [dsh-bash-testing](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-bash-testing) — 全面测试Bash脚本的技能。
-- [dsh-bazel-build-optimization](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-bazel-build-optimization) — 优化 Bazel 构建性能，加速开发流程。
-- [dsh-bazel-build-optimization](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-bazel-build-optimization) — 优化Bazel构建速度的技能。
-- [dsh-bench](https://github.com/kouyichi/dsh-plugins/tree/HEAD/dsh-bench) — 用于测量和比较插件或模型性能的基准测试工具。
-- [dsh-bench-runner](https://github.com/JunNanLYS/dsh-layered-memory/tree/HEAD/bench/harness/dsh-bench-runner) — 分层记忆插件的基准测试运行器，测试其长期记忆召回与性能表现。
-- [dsh-benchmark](https://github.com/dongsheng123132/dsh-benchmark) — 运行确定性版本固定基准和回归检查，确保测试可复现。
-- [dsh-better-codex-subagent](https://github.com/ivwumupy/dsh-better-codex-subagent) — 优化 codex 子代理体验，可能提供增强配置或调试功能。
-- [dsh-better-retry](https://github.com/Yaing-Yan/dsh-better-retry) — 以持久退避重试模型请求，可通过滑块调整重试预算。
-- [dsh-bioinf-verify](https://github.com/gsh150801/dsh-bioinf-verify) — 验证生物信息学插件输出，确保数据正确性和流程完整性。
-- [dsh-bisect-debug](https://github.com/PangYiMing/dsh-bisect-debug) — 用二分法定位代码、边界或提交中的 bug 根因。
-- [dsh-biz-bridge](https://github.com/NewSpringWei/dsh-biz-bridge) — DeepSeek Harness（DSH）业务桥接插件 —— 通过标准 HTTP 协议把 DSH 的 agent 能力开放给业务系统。
-- [dsh-blast-radius](https://github.com/haoku123/dsh-blast-radius) — 分析代码编辑的影响范围，找出受影响的调用方和未测试路径。
-- [dsh-boot-failsafe](https://github.com/fengs2021/dsh-boot-failsafe) — 提供启动失败保护机制，帮助从启动问题中恢复。
-- [dsh-boot-guard](https://github.com/SaiSenBox/dsh-boot-guard) — 提供救援控制台，在插件故障导致 Web 界面无法启动时进行恢复。
-- [dsh-box-context](https://github.com/Nexus-Aethra/DSHBox/tree/HEAD/src-tauri/crates/box-dsh-context/dsh-box-context) — 管理多个 DSH 版本，提供嵌入式界面，并通过队列任务系统安装插件。
-- [dsh-branch-review](https://github.com/chouyong/dsh-branch-review) — 自动化分支审查流程，集成 DSH 以简化代码审查。
-- [dsh-bridge](https://github.com/beartackler/dsh-bridge) — 为开发者在 Harness 中安装常用命令、连接器流程及可信插件目录。
-- [dsh-browser-testing](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-browser-testing) — 自动化浏览器测试，确保网页应用质量。
-- [dsh-browser-testing](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-browser-testing) — 在浏览器中测试网站的技能。
-- [dsh-bsl-editor](https://github.com/Mempemp/DSH-CodeEditor_BSL/tree/HEAD/dsh-bsl-editor) — 为 BSL 语言提供交互式代码编辑器。
-- [dsh-build-hermeticity-proof](https://github.com/dongsheng123132/dsh-build-hermeticity-proof) — 提供离线哈希证明，验证构建访问未超出声明范围。
-- [dsh-bundle-dedup-guard](https://github.com/Lstalu/dsh-bundle-dedup-guard) — 防止插件加载时因重复条目 ID 导致启动崩溃。
-- [dsh-ca-ref](https://github.com/Ansonfishing/dsh-ca-ref) — 提供固定仓库引用、全文搜索与审查记录的整洁架构参考库。
-- [dsh-cache-cost-monitor](https://github.com/eurt-nano/dsh-cache-cost-monitor) — 监控DeepSeek API前缀缓存命中率、Token消耗，并估算运行成本。
-- [dsh-cache-stabilizer](https://github.com/dongsheng123132/dsh-cache-stabilizer) — 稳定缓存前缀，并提供基于实证的缓存性能指标。
-- [dsh-cachescope](https://github.com/kober-basket/dsh-cachescope) — 提供提示缓存与逻辑输入的观测诊断功能。
-- [dsh-cad-review](https://github.com/dongsheng123132/dsh-cad-review) — 检查 ASCII DXF 文件并应用规则审查，验证 CAD 设计。
-- [dsh-call-shrink](https://github.com/zhuzichen362/dsh-call-shrink) — 用于减小调用体积的DeepSeek Harness插件，可能优化上下文使用。
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 1381 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-<a id="fun"></a>
-
-<details>
-<summary><strong>娱乐</strong> · 显示 294 / 共 562 个</summary>
-
-- [7d7d](https://github.com/omdsh-dev/7d7d) — 无描述的插件，可能是娱乐或装饰性功能。
-- [Acidmoon-DIzzy-DSH](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/Acidmoon-DIzzy-DSH) — 为界面添加眩晕视觉效果和趣味动画，以娱乐为主。
-- [adapter](https://github.com/qimidandapigu/dsh-xiaotangyuan-game/tree/HEAD/games/oxygen-not-included/adapter) — 连接 AI 同伴到缺氧游戏，实现游戏内聊天和协助。
-- [agentduel-dsh](https://github.com/linconz/agentduel-dsh) — AgentDuel 是一个通过代码进行对战的游戏。允许你通过 AI 提交代码，并通过可回看的对战画面复盘整个战斗，然后再次优化。 | Code your agent, watch it fight, tweak and rematch — all inside DeepSeek Harness.
-- [ai_skills](https://github.com/Stone623/ai_skills) — 一个娱乐技能，让代理短暂走神、回顾状态后继续工作。
-- [allen546-dsh-plugin-genshin-startup](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/allen546-dsh-plugin-genshin-startup) — 添加原神主题启动画面或小游戏，提供娱乐效果。
-- [amadeus-for-dsh](https://github.com/yyxcnasd/amadeus-for-dsh) — 以《命运石之门0》中Amadeus为原型的人工智能助手，增添趣味人设。
-- [anan-thermal-monitor](https://github.com/AmeKrance/anan-thermal-monitor) — 紫白桌宠温度监控：CPU/内存/GPU/NVMe 实时温度 + 硬件信息 · DeepSeek Harness (DSH) 插件，支持 dsh plugin add 一键安装
-- [Angelina-dsh-plugin](https://github.com/FlowerWater1019/Angelina-dsh-plugin) — 为界面添加趣味交互元素，使用过程中带来轻松娱乐体验。
-- [anneheartrecord-dsh-desk-pet](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/anneheartrecord-dsh-desk-pet) — 在屏幕上添加桌面宠物，提供趣味互动。
-- [assistant-growth-experiments](https://github.com/22-ai-00/dsh-enhanced/tree/HEAD/plugins/assistant-growth-experiments) — 探索助手成长机制的趣味实验，可能包含游戏化或彩蛋元素以提升用户参与度。
-- [Awesome-DSH-Pet](https://github.com/Awesome-AI-Pedia/Awesome-DSH-Pet) — deepseek harness Pet 包含噜噜 总裁等宠物，并可快速添加自定义宠物
-- [backpack](https://github.com/gxx950224/ggame/tree/HEAD/packages/backpack) — 给工作增加趣味，比喻为玩魔兽世界。
-- [base](https://github.com/jiuge2467/DSH-WhaleDeck/tree/HEAD/packages/bundle/base) — 桌面客户端基础包，包含鲸鱼姬桌宠、MCP调试沙箱和终端。
-- [base](https://github.com/lmong11/dsh-game-center/tree/HEAD/packages/bundle/base) — 提供游戏中心基础包，支持 1 至 7 个 AI 玩家的德州扑克。
-- [Big8](https://github.com/kobenfang/Big8) — ☯ Big8 AI玄学助手 - 看风水·看面相·算八字·查星座·每日一卦·老黄历 | AI fortune-telling: feng shui, face reading, BaZi, zodiac
-- [brand-mascot](https://github.com/Proton1917/dsh-harness-plugin/tree/HEAD/packages/brand-mascot) — 在界面中加入品牌吉祥物角色，带来趣味互动的用户体验。
-- [chiral-pulse](https://github.com/MoonShadow1976/chiral-pulse) — 添加死亡搁浅主题皮肤与心跳反馈，纯粹追求视觉趣味。
-- [clean-skill](https://github.com/BotonJ/dsh-plugin-sentinel/tree/HEAD/test/fixtures/clean-skill) — 名为 clean-skill demo 的测试夹具包，可能用于测试。
-- [clickvibe](https://github.com/ai-daming/clickvibe) — 添加趣味点击交互功能，将普通点击转化为愉悦的视觉反馈。
-- [core](https://github.com/SaekiRaku/deepseek-rainbow-fart/tree/HEAD/packages/core) — 根据你的消息生成趣味夸奖，并通过语音合成播放，增添互动乐趣。
-- [cute-fat-fish-pet](https://github.com/12we21/cute-fat-fish-pet) — DSH Web UI 的桌面宠物：Q 版蓝发小女仆，包含 106 个手绘透明动画，可在桌面漫步、响应点击，并通过本地 Ollama 或 DSH 在线模型聊天。
-- [daily-bundle](https://github.com/Zenith-Lxz/dsh-foundry/tree/HEAD/packages/daily-bundle) — 为DSH Foundry桌面发行版提供每日内容或功能包。
-- [DEEP-IOS-dsh-humanizer](https://github.com/hezi2020/dsh-plugin-wiki/tree/HEAD/plugins/DEEP-IOS-dsh-humanizer) — 使AI输出更人性化，可能为回复增添个性或自然语言风格。
-- [DeepSeek-Balance-Whale-Widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget) — DeepSeek Harness（DSH）一只住在 DSH 界面右下角的小鲸鱼娘，帮你盯着DeepSeek账户余额。QQ弹弹，支持拖拽吸附、左吸附翻转、数字滚动动画，随界面自动启用，建议直接喊来你的dsh安装
-- [deepseek-harness-balance-pet](https://github.com/Ho11ow8/deepseek-harness-balance-pet) — 添加一个趣味宠物伙伴，用于跟踪并显示您的 DeepSeek 余额。
-- [DeepSeek-Harness-biaoqingbao](https://github.com/moononnn/DeepSeek-Harness-biaoqingbao) — 一个在DSH上使用的表情包插件，在和agent聊天时让ta自然的插入表情包
-- [deepseek-harness-novel-studio](https://github.com/qinpeizhan77/deepseek-harness-novel-studio) — 根据包名推断为 DeepSeek Harness 提供小说创作工作室环境与创意工具。
-- [DeepSeek-Harness-Pet](https://github.com/minybear/DeepSeek-Harness-Pet) — Codex 风格桌面宠物：右下角悬浮动画精灵，随 agent 运行状态实时变化（工作、等待、报错、完成）。
-- [deepseek-manners](https://github.com/Moeblack/deepseek-manners) — 给每次消息后注入感谢语，做个有礼貌的人。
-- [deepseek-pet](https://github.com/keleus/deepseek-pet) — 在你的deepseek-harness上养一只吃白饭的大蓝鲸
-- [DeskWhale (dsh-base)](https://github.com/Rewmington/deskwhale-harness/tree/HEAD/packages/bundle/base) — DeskWhale 的 dsh-base 插件包：基于 DeepSeek Harness 的社区版桌宠改造，为 Agent 界面加入透明桌宠鲸鱼、磨砂玻璃窗口与启动闪屏。
-- [DIzzy-DSH](https://github.com/Acidmoon/DIzzy-DSH) — 提供趣味效果的 DSH 插件集合，为终端用户带来娱乐体验。
-- [dolphin-pet-plugin](https://github.com/bo961386926/dolphin-pet-plugin) — 在桌面上显示可定制的宠物，支持用户上传或 AI 生成形象。
-- [douyin-plugin-dsh-plugin](https://github.com/chu557/douyin-plugin-dsh-plugin) — 在使用dsh等待的过程中刷抖音
-- [ds-whale-ui](https://github.com/JunguangJiang/ds-whale-ui) — 在代理工作时显示鲸鱼进度指示，含喷水动画与待办追踪。
-- [dsh](https://github.com/alvinunreal/openpets/tree/HEAD/packages/dsh) — 桌面伴侣平台，带动画宠物与编程代理集成，为工作区增添趣味互动角色。
-- [dsh](https://github.com/crafter-station/petdex/tree/HEAD/packages/petdex-desktop-native/integrations/dsh) — 为 Codex、Claude Code 等 AI 工具提供可选的动画宠物图库，增添趣味互动。
-- [dsh_theme_terraria](https://github.com/10086ggqq/dsh_theme_terraria) — 把 DeepSeek Harness 的 AI 编码控制台变成泰拉瑞亚像素世界——向导陪你写代码，真实对话、工具审批、难度切换，单文件零依赖。
-- [dsh-2048](https://github.com/yasin0324/dsh-2048) — 在应用内玩 2048 游戏。
-- [dsh-404-panic-lock](https://github.com/chuxumilk/dsh-404-panic-lock) — 用DSH 开发的轻量化插件:按 Ctrl+Shift+L 一键把页面伪装成静态 404 截图,暂时锁死鼠标键盘,防止别人乱动电脑
-- [dsh-achievements](https://github.com/Blaczz/dsh-achievements) — 添加跨会话成就、徽章、通知和进度面板，将使用过程游戏化以激励用户。
-- [dsh-achievements](https://github.com/WJNCT55555/dsh-achievements) — 可能为 DSH 增加成就系统，增添趣味性。
-- [dsh-actinium](https://github.com/uckkk/dsh-actinium) — 锕元素
-- [dsh-acupoint](https://github.com/uckkk/dsh-acupoint) — 穴位保健
-- [dsh-ads](https://github.com/Nagi-ovo/dsh-ads) — 2005 年中文站点风格的整活广告插件：侧栏广告/信息流/角落弹窗 + 假关闭叉，素材全虚构。
-- [dsh-aemeath-pet](https://github.com/culture-flask/dsh-aemeath-pet) — 爱弥斯 · DeepSeek Harness 桌宠 — DeepSeek Harness Web GUI 的像素风宠物插件。
-- [dsh-afghanistan](https://github.com/uckkk/dsh-afghanistan) — 阿富汗国家
-- [dsh-agentnoodle](https://github.com/bigharm/dsh-agentnoodle) — DeepSeek Harness 插件：AI 驱动的群像聊天游戏框架。轻量化酒馆。兼容 SillyTavern V1/V2/V3 JSON 和 PNG 内嵌卡片。添加npc和场景之类的，给harness提要求，让它做就行。玩家输入一个行动，场景中多个 NPC 各自做出反应，每条反应独立成一条带头像插图的聊天室消息；支持场景切换、NPC 关系变化与本地 JSON 存档。
-- [dsh-albania](https://github.com/uckkk/dsh-albania) — 阿尔巴尼亚国家
-- [dsh-algeria](https://github.com/uckkk/dsh-algeria) — 阿尔及利亚国家
-- [dsh-algorithmic-art](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-algorithmic-art) — 生成算法艺术，用于创意或娱乐。
-- [dsh-algorithmic-art](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-algorithmic-art) — 通过程序化生成和创意编码生成算法艺术。
-- [dsh-alive](https://github.com/AikenFra/dsh-alive) — 提供桌面宠物，让 DeepSeek Harness 窗口保持活跃。
-- [dsh-all-in](https://github.com/leeclouddragon/dsh-all-in) — 让用户在与代理协作时，用 Token 玩本地六人德州扑克游戏。
-- [dsh-aluminium](https://github.com/uckkk/dsh-aluminium) — 铝元素
-- [dsh-americium](https://github.com/uckkk/dsh-americium) — 镅元素
-- [dsh-andorra](https://github.com/uckkk/dsh-andorra) — 安道尔国
-- [dsh-angola](https://github.com/uckkk/dsh-angola) — 安哥拉国家
-- [dsh-anime25d-pets](https://github.com/coldfish486/dsh-anime25d-pets) — Anime2.5DRig × DSH 桌宠：只需准备一张分图层 PSD，即可获得带自动装配、发丝物理、表情动画和状态镜像的桌宠
-- [dsh-antigua](https://github.com/uckkk/dsh-antigua) — 安提瓜和巴布达国
-- [dsh-antimony](https://github.com/uckkk/dsh-antimony) — 锑元素
-- [dsh-asuka-pet](https://github.com/sHen9Qi/asuka-pet) — 在界面中添加明日香宠物，增加趣味性。
-- [dsh-aurora-glass](https://github.com/ymr6666/deepseekHarnessUI/tree/HEAD/dsh-aurora-glass) — 更换背景，加入粒子构成的鲸鱼，营造趣味视觉效果。
-- [dsh-auto-chess](https://github.com/omdsh-dev/dsh-auto-chess) — 自走棋：人机对战或双 AI 对弈。
-- [dsh-bafx](https://github.com/AzusaKe/dsh-bafx) — 为 DeepSeek Harness 添加点击特效与光标拖尾，效果经 ba-click-fx 库移植自《蔚蓝档案》的 FX_Touch：点击出现溶解圆环、中心光盘与碎片飞散，移动鼠标留下拖尾。特效绘制在全屏覆盖层画布上，不影响页面布局。左侧边栏竖排入口打开设置对话框，提供十项实时设置（启用、点击、拖尾、拖尾常显、点击大小、拖尾长度、缩放、不透明度、混合模式、主题色）以及恢复默认值。无需构建，无运行时依赖。
-- [dsh-bahamas](https://github.com/uckkk/dsh-bahamas) — 巴哈马国家
-- [dsh-bahrain](https://github.com/uckkk/dsh-bahrain) — 巴林国
-- [dsh-bangkok-city](https://github.com/uckkk/dsh-bangkok-city) — 曼谷市
-- [dsh-bangladesh](https://github.com/uckkk/dsh-bangladesh) — 孟加拉国国家
-- [dsh-barbados](https://github.com/uckkk/dsh-barbados) — 巴巴多斯国
-- [dsh-BFF-pet](https://github.com/anyuinlara-bit/dsh-BFF-pet) — DSH 桌面宠物插件 🐾 透明悬浮窗 + WebM 动画，由 Agent 真实状态驱动的 Windows 桌宠。纯 Windows / WSL 均支持，自动识别 Electron 环境。
-- [dsh-bgm](https://github.com/skymecode/dsh-bgm) — 将 AI 对话变成节奏游戏，为聊天体验增加互动音乐娱乐。
-- [dsh-bili-taskmaster](https://github.com/jokerwen666/dsh-bili-taskmaster) — 等你的小鲸鱼跑任务时随机播放b站视频，愉快做监工
-- [dsh-bili-widget](https://github.com/pyf2818/dsh-bili-widget) — 🎬 DSH (DeepSeek Harness) B站悬浮看片插件：边 coding 边刷视频。推荐/热门/排行/搜索/关注UP主、自动连播、迷你模式、历史持久化
-- [dsh-bismuth](https://github.com/uckkk/dsh-bismuth) — 铋元素
-- [dsh-blackhole](https://github.com/Asaiuta/dsh-blackhole) — 一个趣味插件，可吞掉或丢弃消息，提供幽默互动。
-- [dsh-blackjack](https://github.com/WhiseNT/dsh-blackjack) — 谁不想coding的时候急头白脸的和大肥鱼来一场紧张刺激的21点呢
-- [dsh-blame-avoid](https://github.com/uckkk/dsh-blame-avoid) — 防背锅
-- [dsh-bloub-mood](https://github.com/Yuuhann1999/dsh-bloub-mood) — 动态心情图标 · DeepSeek Harness 插件 — bloub 表情随会话状态切换 favicon 与 logo，形状/颜色/文字可配置（8 shapes × 12 colors, animated SVG, MIT）
-- [dsh-blue-archive-shiroko](https://github.com/mldhao/dsh-blue-archive-shiroko) — 碧蓝档案主题界面，带 Shiroko 桌宠和特效。
-- [dsh-blue-sea-player](https://github.com/Elave-66/dsh-blue-sea-player) — 蓝海之约鲸鱼娘 DSH 播放器插件：12 套皮肤 · 5 首默认音乐 · CD 旋转封面 · 收纳小球
-- [dsh-blue-whale-maid](https://github.com/yuxino/dsh-blue-whale-maid) — 运行在 deepseek harness 上的女仆酱
-- [dsh-bluebubbles](https://github.com/vINyLogY/dsh-bluebubbles) — 为界面添加趣味蓝色气泡风格，灵感来自休闲聊天泡泡设计。
-- [dsh-bohrium](https://github.com/uckkk/dsh-bohrium) — 𬭛元素
-- [dsh-boron](https://github.com/uckkk/dsh-boron) — 硼元素
-- [dsh-bouncing-squares-example](https://github.com/joao-paulo-santos/dsh-bouncing-squares-example) — 用三个弹跳方块演示不同设置作用域的效果。
-- [dsh-browser](https://github.com/anweat/dsh-browser) — 自包含浏览器运行时：Playwright（chromium）+ OpenCLI 作为插件本地依赖（全局复用回退），提供 `browser` 服务与 9 个交互式浏览器工具。
-- [dsh-btw](https://github.com/loster12520/dsh-btw) — 为 DeepSeek Harness 添加趣味性的'顺便一提'功能，可能在对话中注入轻松调侃或彩蛋内容。
-- [dsh-btw](https://github.com/LuckVd/dsh-btw) — 在每次交互后随机显示趣味评论或反应。
-- [dsh-bull-bear](https://github.com/potoior/dsh-bull-bear) — 实时展示牛熊宠物，随股价涨跌做出反应。
-- [dsh-caveman-speak](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-caveman-speak) — 为对话添加有趣的原始人说话风格。
-- [dsh-caveman-speak](https://github.com/satan9394/dsh-skills-bundle/tree/HEAD/plugins/dsh-caveman-speak) — 让AI像穴居人一样说话的有趣技能。
-- [dsh-chess-xq](https://github.com/feverZHONG/dsh-chess-xq) — 在 DSH 界面中提供中国象棋游戏，用于娱乐。
-- [dsh-cli-anything-aseprite](https://github.com/KongChengZhi/dsh-pixel-studio/tree/HEAD/dsh-cli-anything-aseprite) — Aseprite 风格像素画工作室：AI 逐笔绘制精灵图，支持选区、图层、动画帧、渐变、对称与参考图层，每一步以 ANSI 终端帧实时渲染。
-- [dsh-client-deep-sneak](https://github.com/Rain-Shuoyu/dsh-client-deep-sneak) — DeepSneak（深度摸鱼）是专门为 DeepSeek Harness 设计的插件，在 agent 工作时播放 B 站视频，并在 agent 需要操作时暂停并提醒用户，方便摸鱼的同时避免因为没有发现 agent 被阻塞而影响效率
-- [dsh-client-ui-pet](https://github.com/LucasleeCN/dsh-client-ui-pet) — 在客户端界面加入宠物伴侣，提供娱乐体验。
-- [dsh-client-ui-pet](https://github.com/qweqwe12382/dsh-client-ui-pet) — DSH Web 界面的 Q 桌宠：帧图集动画随会话活动切换（思考 / 查阅 / 编辑 / 工作 / 回复 / 完成 / 出错），轮换对话气泡，支持角色切换。
-- [dsh-client-ui-pet](https://github.com/tangyuewei/dsh-client-ui-pet) — 在网页界面添加可拖拽投喂的咸鱼宠物与全屏壁纸。
-- [dsh-clippy](https://github.com/sjh9714/clippy-harness/tree/HEAD/plugin) — Clippy 回来了，这次真能帮上忙：办公助手桌宠响应真实 Agent 状态，回合完成时跳跃，回合失败时弹出经典“非法操作”对话框。
-- [dsh-codekin](https://github.com/Nath-Vikky/dsh-codekin) — 提供集换式与消除类角色扮演游戏。
-- [dsh-codex-compatible-pet](https://github.com/youzhoujiMrLiu/dsh-codex-compatible-pet) — Codex-compatible desktop pet for the DeepSeek Harness web GUI: animated pets that follow the agent state｜兼容 Codex 格式的 DSH 桌面宠物：随智能体状态变化的动画宠物
-- [dsh-codex-pet](https://github.com/MichengAI/dsh-codex-pet) — 在 DSH Web 中显示可交互宠物，汇总多任务状态与提醒，并支持通过 Skill 创建自定义宠物。
-- [dsh-codex-pet](https://github.com/Signalight/codex-to-dsh-pet/tree/HEAD/packages/dsh-codex-pet) — 将Codex桌宠移植为可交互网页桌宠的通用框架。
-- [dsh-codex-pet](https://github.com/skr311/dsh-codex-pet/tree/HEAD/packages/dsh-codex-pet) — 导入 Codex 风格精灵图桌宠并渲染为浮动 shell.overlay：内置桌宠库、互动与 Agent 状态联动。
-- [dsh-coding-companion](https://github.com/FxRayHughes/dsh-coding-companion) — 编程陪伴 · deepseek-harness Node-host 插件：AI 工作时弹独立窗口播放，等待时挂起进程冻结播放，多站点持久化，仅 Windows
-- [dsh-collatz](https://github.com/uckkk/dsh-collatz) — 考拉兹序列
-- [dsh-company](https://github.com/TiferKing/dsh-company) — 不想当牛马了？来当老板！开插件公司，雇AI牛马，过赛博人生！
-- [dsh-cosplay](https://github.com/ZelinW1/dsh-cosplay) — 允许用户在聊天中扮演角色进行互动。
-- [dsh-cpa](https://github.com/Moraxyc/dsh-cpa) — 以玄学方式让思维链模仿神秘模型，纯娱乐插件。
-- [dsh-cuba](https://github.com/uckkk/dsh-cuba) — 古巴国家
-- [dsh-culture-boardgames](https://github.com/uckkk/dsh-culture-boardgames) — 桌游
-- [dsh-culture-festivals](https://github.com/uckkk/dsh-culture-festivals) — 世界节日
-- [dsh-culture-movies](https://github.com/uckkk/dsh-culture-movies) — 电影类型
-- [dsh-culture-sports-events](https://github.com/uckkk/dsh-culture-sports-events) — 体育赛事
-- [dsh-culture-videogames](https://github.com/uckkk/dsh-culture-videogames) — 电子游戏类型
-- [dsh-cupping](https://github.com/uckkk/dsh-cupping) — 杯测品鉴
-- [dsh-curium](https://github.com/uckkk/dsh-curium) — 锔元素
-- [dsh-curling](https://github.com/uckkk/dsh-curling) — 卷发造型
-- [dsh-cyber-pet-bundle](https://github.com/BorisShaw6/dsh-cyber-pet/tree/HEAD/dsh-cyber-pet-bundle) — 页面悬浮的赛博鲸鱼宠物，追踪token用量并庆祝里程碑。
-- [dsh-cycle-water](https://github.com/uckkk/dsh-cycle-water) — 养水流程
-- [dsh-cyprus](https://github.com/uckkk/dsh-cyprus) — 塞浦路斯国家
-- [dsh-czechia](https://github.com/uckkk/dsh-czechia) — 捷克国家
-- [dsh-daily-fortune](https://github.com/omdsh-dev/dsh-daily-fortune) — 提供每日运势，含观音签、塔罗牌和每日箴言。
-- [dsh-danmaku](https://github.com/BiggerMax/dsh-danmaku) — 在对话页面将代理轨迹输出显示为滚动弹幕评论。
-- [dsh-darmstadtium](https://github.com/uckkk/dsh-darmstadtium) — 𫟼元素
-- [dsh-daruma](https://github.com/SISCHOI/daruma/tree/HEAD/packages/dsh-daruma) — 在界面中加入达摩玩偶元素，带来趣味和好运祝福。
-- [dsh-data-structures](https://github.com/uckkk/dsh-data-structures) — 数据结构
-- [dsh-debate-plugin](https://github.com/lcc815/dsh-debate-plugin) — 组织多个代理角色进行结构化辩论，以碰撞和展现不同观点。
-- [dsh-deep-diving](https://github.com/skymecode/dsh-deep-diving) — 为 DSH 深度潜水会话提供一组视觉皮肤或主题，增添趣味外观。
-- [dsh-deep-verbs](https://github.com/Winter-And-You-Gone/dsh-deep-verbs) — DeepSeek Harness 纯插件：思考状态行 'Deep diving...' 扩展为 13 条 deep 系短语随机轮换（每 3 秒换一条），不改 DSH 源码。
-- [dsh-deepsea](https://github.com/imkingjh999/dsh-deepsea) — DSH plugin: 深海垂钓 —— context 越深钩越沉，答完钓起镭射生物卡 | Deep-sea fishing holo cards
-- [dsh-deepseek-girl-pet](https://github.com/f0909172434/dsh-deepseek-girl-pet) — 在 DeepSeek Harness 中添加动画风格的 DeepSeek 女孩桌宠。
-- [dsh-deepseek-pet](https://github.com/txlznbzsdj-collab/dsh-deepseek-pet) — DeepSeek 小蓝鲸桌宠 DSH 插件：模型可调用 pet_say 命令桌宠说话，桌宠同步对话开始/结束（思考/庆祝）
-- [dsh-deepshub](https://github.com/01Virex/dsh-deepshub) — 恶搞Pornhub风格的外观重置，橙色黑色药丸按钮、标志和18+入口，纯属玩笑。
-- [dsh-desk-pet](https://github.com/anneheartrecord/dsh-desk-pet) — 显示一个置顶的桌面宠物，提供多种皮肤和静默状态，增添使用趣味。
-- [dsh-desk-pet-yami](https://github.com/Retr67/dsh-desk-pet-yami) — DSH 桌面宠物插件 — 金色暗影 Yami（To Love-Ru）皮肤版。非营利，仅供学习交流，侵权请联系下架。
-- [dsh-desktop-pet](https://github.com/Ares-song-RD/dsh-desktop-pet) — 桌宠插件：在 DeepSeek Harness Web 界面右下角悬浮一只可拖拽、会眨眼摇尾的小猫。A cute desktop pet plugin for the DeepSeek Harness Web GUI.
-- [dsh-desktop-pet](https://github.com/FenyxHuang/dsh-desktop-pet) — 显示鲸鱼桌面宠物，以海平面形式展示代理状态和 API 余额，支持互动。
-- [dsh-desktop-pet](https://github.com/JiayiXie-jpg/dsh-desktop-pet) — 一只住在 DSH 网页里的养成系桌宠：随编码活动升级进化、语音打气，还能用 AI 生成专属的透明动画形象。
-- [dsh-desktop-pet](https://github.com/sereinmono/dsh-desktop-pet) — 为 DeepSeek Harness 添加桌面宠物，支持 Codex 宠物格式，增添趣味互动。
-- [dsh-desktop-pet](https://github.com/xiaoshihou514/dsh-desktop-pet) — DeepSeek Harness：鲸鱼娘桌宠！
-- [dsh-devquest](https://github.com/lucky8197/dsh-devquest) — 把开发变成 RPG 的 DSH 插件：回合/工具/待办积累 XP、47 枚成就+稀有度、每日/每周挑战、每日抽奖、赛季商店、7 款主题皮肤、多称号、活跃日历+荣誉墙。事件流驱动，装好自动计分。
-- [dsh-diagon-alley](https://github.com/bo839643533/dsh-dev) — dsh插件
-- [dsh-dice-game](https://github.com/zmm863-commits/dsh-dice-game) — 提供经典骰子游戏合集，支持单机AI与在线对战，并包含双语界面。
-- [dsh-diceframe](https://github.com/diceframe/dsh-diceframe) — DSH 跑团/GM 插件：真骰子、检定判定、世界书/角色卡、DiceFrame 内容与存档互通。单人在 DSH 试跑，多人去 DiceFrame。| DSH TRPG/GM plugin: real dice, checks, world books & DiceFrame save interop.
-- [dsh-digipet](https://github.com/swaylq/dsh-digipet) — 在 DeepSeek Harness 里孵一只数码兽：吃你的真实工作长大，数码宝贝式分支进化，零 token、模型不知道它存在 | Digimon-style raising game for DSH — feeds on your real work, zero tokens.
-- [dsh-digital-life](https://github.com/elonnzhang/dsh-digital-life) — 为Harness带来数字生活模拟功能，可能用于娱乐或玩具用途。
-- [dsh-done](https://github.com/mba1398/dsh-done) — 不消耗 token 的趣味插件，提供轻量功能。
-- [dsh-doom](https://github.com/Banboosu/dsh-doom) — 在 DeepSeek Harness 网页界面中运行经典游戏 DOOM，提供娱乐。
-- [dsh-doudizhu](https://github.com/AwesomeHou/dsh-doudizhu) — DSH 斗地主插件：在 DeepSeek Harness 里等回复时来一把（PVP → DSH Agent）
-- [dsh-doudizhu](https://github.com/tongji-1/dsh-doudizhu) — 在 Harness 中集成斗地主纸牌游戏，提供经典娱乐玩法。
-- [dsh-doudizhu](https://github.com/Y1fe1Zh0u/dsh-doudizhu) — 在可信局域网内实现斗地主纸牌游戏，供娱乐使用。
-- [dsh-douyin](https://github.com/AnacondaKC/dsh-douyin) — 侧栏短视频：原生播放器、系列导航、精确历史回放。
-- [dsh-draw-gacha](https://github.com/Aik358/dsh-draw-gacha) — DeepSeek绘画抽卡 · 给 DeepSeek Harness 的发送按钮旁加一根 3D 拉杆，用模型思维链文本信号开一局像素风「滑动变祖器」抽卡。Just for fun.
-- [dsh-dream](https://github.com/kouyichi/dsh-plugins/tree/HEAD/dsh-dream) — 提供如梦似幻的体验，可能生成超现实或创意内容。
-- [dsh-dream-incubator](https://github.com/Lisk809/dsh-dream-incubator) — 让 DeepSeek Harness 拥有潜意识：后台异步做梦，把日常对话与工具日志酿成梦境报告，呈现在沉浸式 WebUI 中
-- [dsh-dream-reflection](https://github.com/acosmi/dsh-plugin/tree/HEAD/plugins/dsh-dream-reflection) — 添加梦境反思功能，处理和可视化代理的模拟梦境，提供娱乐效果。
-- [dsh-ds-ponytail](https://github.com/Stijnus/dsh-ds-ponytail) — 为界面添加马尾辫主题的视觉元素，带来娱乐效果。
-- [DSH-dseyes](https://github.com/Okkay712/DSH-dseyes) — 在界面中添加一对动画眼睛，提供趣味性的视觉反馈。
-- [dsh-elden](https://github.com/steven-ngle/dsh-elden) — 在 DeepSeek Harness 网页界面添加艾尔登法环风格的事件覆盖层，增添趣味。
-- [dsh-elf](https://github.com/winditer/dsh-elf) — 添加一个临时对话精灵，为用户提供娱乐互动。
-- [dsh-emoji](https://github.com/hellodigua/dsh-emoji) — 为 AI 回复自动添加表情。
-- [dsh-engram-recap](https://github.com/elmaxid/dsh-manage/tree/HEAD/plugins/dsh-engram-recap) — 为DeepSeek Harness会话提供趣味回顾，以娱乐方式回看交互记录。
-- [dsh-erii-boot-splash](https://github.com/yanglingrise/dsh-erii-boot-splash) — 显示樱花主题的开机动画，带有飘落花瓣和吉祥物，纯为视觉乐趣。
-- [dsh-event-sounds](https://github.com/linyuan-ai1/dsh-plugins/tree/HEAD/packages/dsh-event-sounds) — 在 DeepSeek Harness 中根据各种事件播放音效。
-- [dsh-fear-pet](https://github.com/uckkk/dsh-fear-pet) — 恐惧缓解
-- [dsh-feed-rule](https://github.com/uckkk/dsh-feed-rule) — 喂食规则
-- [dsh-feng-gu](https://github.com/KeqingMoe/dsh-feng-gu) — 为界面添加风骨主题的趣味交互元素。
-- [dsh-ferment-check](https://github.com/uckkk/dsh-ferment-check) — 发酵判断
-- [dsh-fert-plan](https://github.com/uckkk/dsh-fert-plan) — 施肥方案
-- [dsh-fertilizer-npk](https://github.com/uckkk/dsh-fertilizer-npk) — 施肥NPK配比
-- [dsh-fff](https://github.com/Slothtron/dsh-fff) — 为 DSH 界面添加趣味或创意效果，可能用于娱乐或新奇体验。
-- [dsh-fibonacci](https://github.com/uckkk/dsh-fibonacci) — 斐波那契
-- [dsh-finger-train](https://github.com/uckkk/dsh-finger-train) — 手指训练
-- [dsh-fire-escape](https://github.com/uckkk/dsh-fire-escape) — 火灾逃生
-- [dsh-fire-safety](https://github.com/uckkk/dsh-fire-safety) — 露营用火安全
-- [dsh-first-maintenance](https://github.com/uckkk/dsh-first-maintenance) — 首保提醒
-- [dsh-first-week](https://github.com/uckkk/dsh-first-week) — 入职第一周
-- [dsh-fish-pick](https://github.com/uckkk/dsh-fish-pick) — 观赏鱼选择
-- [dsh-fish-weather](https://github.com/uckkk/dsh-fish-weather) — 出钓天气判断
-- [dsh-flash-gn](https://github.com/uckkk/dsh-flash-gn) — 闪光灯GN计算
-- [dsh-flatten](https://github.com/uckkk/dsh-flatten) — 数组扁平化
-- [dsh-foxy-jumpscare](https://github.com/01Virex/dsh-foxy-jumpscare) — 加入FNAF狐狸的惊吓彩蛋，小概率全屏吓人并播放尖叫，带来娱乐效果。
-- [dsh-free-games](https://github.com/Entaum/dsh-free-games) — 在编程环境中提供免费游戏，让开发者在工作间隙享受娱乐。
-- [dsh-fun-turn-status](https://github.com/Ycet/dsh-fun-turn-status) — 替换 DSH 任务运行中的 Deep diving... 状态文案：30 秒随机轮换幽默文案，设置-插件-插件配置页可增删改（最多 50 条），与其他同类插件共存时优先级最高。
-- [dsh-fun-typewriter](https://github.com/omdsh-dev/dsh-fun-typewriter) — 为输入添加打字音效，通过独立设置接口控制，无需音频文件。
-- [dsh-funpack](https://github.com/lvyuchuiyi/dsh-funpack) — DeepSeek Harness的一些有趣插件
-- [dsh-galgame](https://github.com/Lanxing6480/dsh-galgame) — 我要成为Galgame高手！！将你的Vibe coding界面修改成为Galgame的样子，在不影响工作的情况下和赏心悦目的DeepSeek娘进行友好互动
-- [dsh-galgame-generator](https://github.com/baisama-cloud/dsh-galgame-generator) — 生成 galgame 风格的互动故事或对话，供娱乐使用。
-- [dsh-game-development](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-game-development) — 提供游戏开发相关的工具和资源，用于娱乐或学习。
-- [dsh-game-hud](https://github.com/guoliyuan97-png/dsh-game-hud) — 游戏风格浮动HUD，含血条蓝条、价格倒计时和记忆携带。
-- [dsh-gamemode](https://github.com/Fafaisa6305/dsh-gamemode) — 为 DeepSeek Harness 添加游戏模式，用于娱乐用途。
-- [dsh-gate-game-plugin](https://github.com/CochraneK/dsh-gate-game-plugin) — 为网页界面添加吃Logo小游戏和一键锁定按钮。
-- [dsh-genshin-redirect](https://github.com/tianhanly/dsh-genshin-redirect) — 完成任务后自动跳转到原神，为工作流程增添趣味彩蛋。
-- [dsh-godot-play](https://github.com/Pidan-Workshop/dsh-godot-play) — 在DSH界面一键构建并试玩Godot Web导出的游戏。
-- [dsh-gomoku](https://github.com/omdsh-dev/dsh-gomoku) — 与 AI 下五子棋，也可让 AI 对局比棋力。
-- [dsh-greet](https://github.com/HDylanYueH/dsh-greet) — 可能为界面添加友好问候或互动效果的插件。
-- [dsh-greet-plugin](https://github.com/luxiu666/dsh-greet-plugin) — 演示 DeepSeek Harness 插件开发的基础功能，提供问候消息。
-- [dsh-grill-me](https://github.com/satan9394/dsh-public/tree/HEAD/plugins/dsh-grill-me) — 提供互动挑战或测验，用于娱乐和测试用户。
-- [dsh-guandan](https://github.com/wenbobodley/dsh-guandan) — 掼蛋 Guandan card game plugin for DeepSeek Harness (DSH) - 掼蛋-中联储卫 / GUANDAN-中联储卫
-- [dsh-guandan-panel](https://github.com/jansen-66/dsh-guandan-panel) — DSH Web Plugin: 工作区底部开辟一个迷你面板，当AI帮你工作时，不要荒废大脑，来一把掼蛋游戏。
-- [dsh-gui-trash](https://github.com/Kimoiran/dsh-gui-trash) — 一个笨蛋写的gui？本质是套壳，而且有点麻烦，只算是提供一种像人的思路
-- [dsh-hardware-buddy](https://github.com/baidang201/dsh-hardware-buddy) — 将代理状态镜像到 USB 实体设备，带批准按钮与语音反馈，增添趣味交互。
-- [dsh-hello](https://github.com/whoscrizzz/dsh-hello) — 用于演示和测试的简单示例插件。
-- [dsh-hero-custom](https://github.com/Lumera114514/dsh-hero-custom) — 为 DeepSeek Harness 主区域添加趣味视觉自定义元素。
-- [dsh-hmm-wait](https://github.com/liceses/dsh-hmm-wait) — 化口水为乐趣，把大肥鱼流的口水变成游戏连击！
-- [dsh-holdem](https://github.com/BubblePtr/dsh-holdem) — 为 DeepSeek Harness 提供的六人无限注德州扑克游戏，一真人对抗五个 LLM 代理。
-- [dsh-holdem](https://github.com/tycket033-tech/dsh-holdem) — 为 DeepSeek Harness 带来德州扑克游戏，供娱乐使用。
-- [dsh-huadongbianzuqi](https://github.com/zjl88858/dsh-huadongbianzuqi) — DeepSeek Harness的滑动变祖器插件
-- [dsh-hud](https://github.com/yuanliangxiannan/dsh-hud) — 添加游戏风格 HUD，显示生命值、魔法值和时间，增添趣味。
-- [dsh-human-coding](https://github.com/gameswu/dsh-human-coding) — DeepSeek Harness 增加古法编程模式，让模型监督你写代码！
-- [dsh-humanizer](https://github.com/lynote-ai/dsh-humanizer) — 使 AI 回复更自然，拟人化。
-- [dsh-idle-deepcompute](https://github.com/cipher2026/dsh-idle-deepcompute) — 深算 DeepCompute —— 终端风 AI 时代挂机游戏（DSH Web GUI 插件）
-- [dsh-ikun-pet](https://github.com/eric-song-dev/dsh-ikun-pet) — 🐤 DeepSeek Harness（DSH）永久插件：Deep diving 回答期间用坤宠动图填满深潜状态行下方区块——进度条 0%→100%，每 20% 切换动作与文案，完成时系统级播放「你干嘛~哎哟」
-- [dsh-incognito](https://github.com/HuiHuitie-zhu/dsh-incognito) — 为 DeepSeek Harness 增加隐身模式，注重隐私的趣味功能。
-- [dsh-infinite](https://github.com/vdnight89/InfiniteDSH/tree/HEAD/packages/dsh-infinite) — 文字修罗场，十九扇门开启沉浸式写作体验。
-- [dsh-jingling](https://github.com/Yi-111-a/dsh-jingling) — 为 DeepSeek Harness 提供桌面宠物伙伴和角色卡，注重本地优先和隐私。
-- [dsh-juice-mix](https://github.com/uckkk/dsh-juice-mix) — 果汁搭配
-- [dsh-jumping-fix](https://github.com/uckkk/dsh-jumping-fix) — 扑人纠正
-- [dsh-jupiter](https://github.com/uckkk/dsh-jupiter) — 木星
-- [dsh-kazakhstan](https://github.com/uckkk/dsh-kazakhstan) — 哈萨克斯坦国家
-- [dsh-kiribati](https://github.com/uckkk/dsh-kiribati) — 基里巴斯国
-- [dsh-krypton](https://github.com/uckkk/dsh-krypton) — 氪元素
-- [dsh-kun-like-pet](https://github.com/GangLongYu/dsh-kun-like-pet) — 在桌面上添加一个宠物，供娱乐消遣。
-- [dsh-kun-pet](https://github.com/Practice019/dsh-kun-pet) — Kun Like 桌宠 - DSH 桌面宠物插件
-- [dsh-kuwait](https://github.com/uckkk/dsh-kuwait) — 科威特国家
-- [dsh-lesotho](https://github.com/uckkk/dsh-lesotho) — 莱索托国
-- [dsh-liangshen](https://github.com/jiuge2467/DSH-WhaleDeck/tree/HEAD/plugins/dsh-liangshen) — 在界面中添加趣味性的“凉神”伙伴元素，提供娱乐和视觉享受。
-- [dsh-liangshen](https://github.com/ningbainb/deepseek-harness-desktop/tree/HEAD/packages/dsh-liangshen) — 为桌面客户端添加趣味伙伴元素，提供娱乐和互动体验。
-- [dsh-liangshen](https://github.com/zhu1090093659/dsh-web-ui/tree/HEAD/packages/dsh-liangshen) — 为 DSH 网页界面添加装饰性陪伴元素，提供趣味互动与视觉点缀。
-- [dsh-liangxiang](https://github.com/liang-today/dsh-liangxiang) — 用 DSH 烧掉的 Token 凝成香火，花一炷给今日梁案投夯或拉；梁案每日更新，梁位决定今日梁子，日终收入梁祠。
-- [dsh-liberia](https://github.com/uckkk/dsh-liberia) — 利比里亚国
-- [dsh-libya](https://github.com/uckkk/dsh-libya) — 利比亚国家
-- [dsh-liechtenstein](https://github.com/uckkk/dsh-liechtenstein) — 列支敦士登国
-- [dsh-lithuania](https://github.com/uckkk/dsh-lithuania) — 立陶宛国家
-- [dsh-live-wallpaper](https://github.com/hinayoung23/dsh-live-wallpaper) — 为 DeepSeek Harness 网页界面添加动态壁纸。
-- [dsh-live2d](https://github.com/hacxy/dsh-live2d) — 一个用于DeepSeek Harness网页界面的Live2D宠物伴侣插件。
-- [dsh-live2d](https://github.com/lrplrplrp/dsh-live2d) — deepseek-harness对live2d的支持
-- [dsh-live2d-avatar](https://github.com/clown139880/dsh-live2d-avatar) — 在界面中加入 Live2D 角色，提供互动和趣味性的视觉反馈。
-- [dsh-live2d-mygo](https://github.com/U1s1-king/dsh-live2d-mygo) — MyGO!!!!! Live2D 桌宠插件 for DeepSeek Harness（本地模型同源加载，零外部依赖）
-- [dsh-live2d-pet](https://github.com/ankesu/dsh-live2d-pet) — 渲染一个带动画、表情和鼠标追踪的 Live2D 桌宠。
-- [dsh-live2d-pets](https://github.com/cyanfish-x/dsh-live2d-pets) — 显示 Live2D 桌宠，镜像代理状态并提供互动陪伴与预设模型。
-- [dsh-live2d-poppinparty](https://github.com/U1s1-king/dsh-live2d-poppinparty) — 添加Poppin'Party Live2D桌宠，本地运行且无外部依赖。
-- [dsh-live2d-ras](https://github.com/U1s1-king/dsh-live2d-ras) — 集成Live2D动画角色，可能作为交互式桌面宠物或界面装饰。
-- [dsh-loading-phrases](https://github.com/vincent-guo/dsh-loading-phrases) — 用轮换的趣味短语和实用提示替换运行状态。
-- [dsh-london-city](https://github.com/uckkk/dsh-london-city) — 伦敦市
-- [dsh-lookseek](https://github.com/lhwu1/dsh-lookseek) — 可以看见ai的执行步骤，将ai的步骤抽出来为对应动画，增加编码时等待的娱乐性。
-- [dsh-luxun-desktop-pet](https://github.com/WangRunWei/dsh-luxun-desktop-pet) — DSH (DeepSeek Harness) 桌宠插件：鲁迅先生桌宠，按 Agent 工作状态切换动作，任务完成播放语音，支持全屏拖拽/点击互动/静音开关
-- [dsh-macos-pet](https://github.com/Dkrillex/dsh-macos-pet) — 在界面中添加macOS风格的宠物角色，提供娱乐和视觉趣味。
-- [dsh-maid-emoji](https://github.com/plolpl789/dsh-maid-emoji) — 添加女仆主题表情增强，增添趣味互动。
-- [dsh-maid-whale-pet](https://github.com/Jisakuna/Whale-QwQ/tree/HEAD/dsh-maid-whale-pet) — 添加女仆鲸鱼宠物作为视觉陪伴，娱乐向。
-- [dsh-manutd-fixtures](https://github.com/Lzz2133/dsh-manutd-fixtures) — 获取并展示曼联赛程，供球迷娱乐参考。
-- [dsh-mascot](https://github.com/falser101/dsh-mascot) — 在Web界面添加可拖拽的动画伙伴，增加趣味性。
-- [dsh-mascot-pet](https://github.com/jiuge2467/dsh-studio/tree/HEAD/plugins/dsh-mascot-pet) — 为 DSH 界面添加趣味吉祥物宠物，增加娱乐性和用户互动。
-- [dsh-mascot-pet](https://github.com/jiuge2467/DSH-WhaleDeck/tree/HEAD/plugins/dsh-mascot-pet) — 在桌面上引入可爱的鲸鱼姬桌宠，提供温馨有趣的用户体验。
-- [dsh-matrix-rain](https://github.com/awa-123-cw/dsh-matrix-rain) — DeepSeek Harness WebUI 动效美化插件：聊天背景黑客帝国代码雨，雨字内容 = 当前会话 AI 思考链（流式实时），设置页调色盘 + 全套 DIY
-- [dsh-mbti-jury](https://github.com/SleepEggTart/dsh-mbti-jury) — DSH 插件：16 型 MBTI 人格评审团，并排评审你最近一次 commit——同一个 diff，16 种看见世界的方式。
-- [dsh-mc-companion](https://github.com/hellosky983/dsh-mc-companion) — AI Minecraft伙伴，跟随玩家、聊天并记住冒险。
-- [dsh-md-quiz](https://github.com/MrElysium/dsh-md-quiz) — 将Markdown阅读变成答题游戏，含五阶段循环、侧边栏和阅读区标签。
-- [dsh-means-digital-sweet-heart](https://github.com/dalintian/Digital-Sweet-Heart) — 将DSH改造成AI恋人，提供浪漫人设与互动体验。
-- [dsh-meme](https://github.com/yyh-001/dsh-meme) — DeepSeek Harness 表情包插件：浏览、学习并发送分类表情包。
-- [dsh-memes](https://github.com/kagura-agent/dsh-memes) — Meme plugin for DeepSeek Harness — 没有表情包的 agent 是没有灵魂的
-- [dsh-meow-cat](https://github.com/dsh-pub/dsh-meow-cat) — 每轮对话结束时，一只猫跑过界面底部并喵叫，增添趣味。
-- [dsh-minecraft-ui](https://github.com/TFboy1/dsh-minecraft-ui) — 为 DeepSeek Harness 应用 Minecraft 风格的界面主题。
-- [dsh-Minesweeper](https://github.com/jinzheng8115/dsh-Minesweeper) — DeepSeek Harness 扫雷插件：agent 工具集与人类网页面板共享同一棋盘，支持挖开、插旗、快翻、确定性自动求解与批量落子；三种预设难度加自定义尺寸。
-- [DSH-minesweeper](https://github.com/snanjib/DSH-minesweeper) — 在 Harness 界面中嵌入扫雷小游戏，附带鲸鱼娘助手，增添趣味。
-- [dsh-mini-games](https://github.com/aga-j/dsh-mini-games) — DeepSeek Harness details 面板的纯前端小游戏合集：猜数字 / 2048 / 扫雷。一键安装，无后端，最高分存 localStorage。
-- [dsh-minigame-plugin](https://github.com/sasajun2345/dsh-minigame-plugin) — DeepSeek Harness 小游戏制作插件 — 帮助 AI 快速创建 HTML5 小游戏，支持 Canvas、Phaser.js、Three.js 等引擎
-- [dsh-minigames](https://github.com/lhh010/dsh-minigames) — 右侧小游戏面板：18 款离线小游戏，等模型回复时的摸鱼神器。
-- [dsh-minigames](https://github.com/omdsh-dev/dsh-minigames) — DSH Web UI 右侧小游戏面板：18 款离线小游戏（恐龙跳一跳 / 俄罗斯方块 / 坦克大战 / 扫雷 / 2048 / 数独 / 吃豆人 / 跟枪练习等），可扩展游戏注册表，等待模型回复或修 bug 时的摸鱼神器
-- [dsh-mmx](https://github.com/crazyma99/dsh-mmx) — 提供桌面宠物动画，增添娱乐互动趣味。
-- [dsh-moodball](https://github.com/sundusk/dsh-moodball) — 在 DeepSeek Harness 界面中增加一个趣味宠物。
-- [dsh-moon-light](https://github.com/lihang-lh/dsh-moon-light) — dsh 的氛围灯，让你直观的看到 agent 是否完成或者是否在运行
-- [dsh-music](https://github.com/1608kiy/dsh-music) — 为 DSH 界面添加音乐播放或相关娱乐功能。
-- [dsh-music-player](https://github.com/kendu76/dsh-music-player) — 在界面中播放音乐，提供娱乐体验。
-- [dsh-MusicPlayer](https://github.com/xiekai886/dsh-MusicPlayer) — 这是一个可以让你边对话边听歌的 DeepSeek Harness 插件：折叠/展开两种可自由拖动的悬浮窗口形态，利用 Meting API 等解析源接入网易云音乐，支持歌单导入和按歌名或歌手搜索单曲导入。Chat and listen at the same time.
-- [dsh-muyu](https://github.com/liuwenji007/dsh-muyu) — DeepSeek Harness 电子木鱼：右下角的小肥鲸，敲头记功德，等 loop 时摸摸鱼头
-- [dsh-nailong-desktop-pet](https://github.com/2002yxy/dsh-nailong-desktop-pet) — 添加一个可爱的桌面宠物显示在界面上，增添趣味陪伴。
-- [dsh-nba-pets](https://github.com/lijian-888/dsh-nba-pets) — 🏀 为 DeepSeek Harness 打造的篮球桌面宠物插件：自由切换 Curry 30、King 23，支持投篮待机动画、AI 任务状态提醒、拖拽与位置记忆，让每一次 AI 编程都像置身比赛现场！
-- [dsh-netcatty](https://github.com/qq739844663/dsh-netcatty) — 名为netcatty的插件，可能是DeepSeek Harness的趣味或工具类扩展。
-- [dsh-night-greeting](https://github.com/HokkaidoCOLA/dsh-night-greeting) — 发送夜间问候消息，为界面增添趣味或主题性元素。
-- [dsh-niu-lai](https://github.com/jxwb125646/dsh-niu-lai) — 发送消息和完成任务时播放梗音效，增添娱乐趣味。
-- [dsh-niulai-pet](https://github.com/whitefirer/dsh-niulai-pet) — 牛来桌宠：agent 任务完成它就蹦出来喊「妈～～妈～～」——dsh 纯客户端桌宠插件（6 皮肤/签名动作/合成叫声）
-- [dsh-oil-account](https://github.com/Dongfang81/dsh-oil-account) — 以电影风格对比油车与电车拥有成本的演示，专为 Better Sidebar 设计。
-- [dsh-opencode-go-meter](https://github.com/willwhi/dsh-opencode-go-meter) — 一个趣味仪表盘，统计编码时长或活动，增添乐趣和动力。
-- [dsh-particle-whale](https://github.com/zepeng-jin/dsh-particle-whale) — 在界面中添加 3D 粒子鲸鱼动画。
-- [dsh-peak-badge](https://github.com/mj5809/dsh-peak-badge) — 展示峰值徽章，可能是用户资料或成就的趣味性元素。
-- [dsh-pelican](https://github.com/Little-Star888/dsh-pelican) — dsh-pelican插件
-- [dsh-perfume-layer](https://github.com/uckkk/dsh-perfume-layer) — 香水叠喷搭配
-- [dsh-pet](https://github.com/CAPTAIN1275/dsh-ui-web/tree/HEAD/packages/dsh-pet) — 添加虚拟桌面宠物伙伴，与用户互动，带来娱乐和趣味体验。
-- [dsh-pet](https://github.com/jiuge2467/DSH-WhaleDeck/tree/HEAD/plugins/dsh-pet) — 在客户端界面中添加虚拟宠物伙伴，提供娱乐和互动乐趣。
-- [dsh-pet](https://github.com/JochenYang/dsh-plugins/tree/HEAD/packages/dsh-pet) — 添加虚拟宠物，提供趣味互动。
-- [dsh-pet](https://github.com/levi52/dsh-pet) — 🐾 DeepSeek Harness 桌宠插件
-- *GitHub 单个文件能渲染的长度有上限，本分类还有 268 个插件没能列在这里；完整目录请在[在线网站](https://deepseek1024.com/)搜索浏览。*
-
-</details>
-
-## 免责声明
-
-本项目是社区维护的插件索引。插件由各自作者开发和维护，收录不构成安全、质量或维护状态背书。安装插件会在本机运行第三方代码，请在安装前自行审阅源码和依赖。
-
-## 许可证
-
-本仓库采用分区许可：
-
-- 目录自动化与脚本等源代码采用 [MIT License](LICENSE)（网站与 CLI 源码在 [dsh-1024store](https://github.com/imsai-sh/dsh-1024store)，同为 MIT）。
-- `catalog/` 下的插件目录元数据采用 [CC0-1.0](catalog/LICENSE)。
-- 初始目录数据导入自 `awesome-dsh-plugin`，来源和导入提交见 [catalog/ATTRIBUTION.md](catalog/ATTRIBUTION.md)。
-
-目录中列出的第三方插件不属于本仓库，其源代码分别遵循各自仓库的许可证。
+[English](README.md) | [简体中文](README.zh-CN.md)
+
+A concise, daily-curated directory of public plugins and extensions for [DeepSeek Harness](https://www.deepseek.com/en/harness/) (DSH), the open-source DeepSeek agent harness. Explore tools, skills, model providers, memory, automation, runtimes, desktop clients, browser integrations, and developer utilities.
+
+Every entry links to its canonical GitHub repository, current star count, and independently verified references.
+
+> Inclusion: public, useful, inspectable, and clearly built for DSH. Archived entries are retained and labeled. Review a plugin's code and permissions before installing it.
+
+## Core
+
+| Project | Description | Stars | Referenced by |
+| --- | --- | --- | --- |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | A preview agent harness with desktop and Web interfaces built from swappable, composable Cordis plugins. | [![GitHub stars](https://img.shields.io/github/stars/deepseek-ai/deepseek-harness?style=flat&label=stars)](https://github.com/deepseek-ai/deepseek-harness/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://www.deepseek.com/en/harness/">DeepSeek Harness official overview</a> · <sub>Docs</sub></li></ul></details> |
+| [DeepSeek Harness Handbook](https://github.com/sandbaseai/deepseek-harness-handbook) | Provides source-backed operator guides for DeepSeek Harness architecture, plugins, MCP, sessions, sandboxing, evaluation, and troubleshooting. | [![GitHub stars](https://img.shields.io/github/stars/sandbaseai/deepseek-harness-handbook?style=flat&label=stars)](https://github.com/sandbaseai/deepseek-harness-handbook/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://sandbaseai.github.io/deepseek-harness-handbook/">DeepSeek Harness Handbook</a> · <sub>Docs</sub></li></ul></details> |
+
+**Taxonomy:** Models & Providers · Tools & Skills · Sessions & Storage · Loops & Scheduling · Runtime & Sandboxes · UI & Clients · Integrations · Developer & Operations
+
+**Browse:** [Models & Providers](#models--providers) · [Tools & Skills](#tools--skills) · [Sessions & Storage](#sessions--storage) · [Loops & Scheduling](#loops--scheduling) · [Runtime & Sandboxes](#runtime--sandboxes) · [UI & Clients](#ui--clients) · [Integrations](#integrations) · [Developer & Operations](#developer--operations)
+
+The taxonomy follows the capability seams defined by the [official Harness overview](https://www.deepseek.com/en/harness/).
+
+Projects in each section are ranked by GitHub stars, then by verified reference count.
+
+## Models & Providers
+
+| Project | Description | Stars | Referenced by |
+| --- | --- | --- | --- |
+| [dsh-our-free-model](https://github.com/Ebony-Vinyl/dsh-our-free-model) | Adds model-provider routing to DSH with catalog discovery, availability probes, usage views, and a local OpenAI-compatible gateway. | [![GitHub stars](https://img.shields.io/github/stars/Ebony-Vinyl/dsh-our-free-model?style=flat&label=stars)](https://github.com/Ebony-Vinyl/dsh-our-free-model/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-routing-suite](https://github.com/yjh051108/dsh-routing-suite) | Bundles a DSH runtime injector, thinking-mode router, and graded task workflow with staged alignment, specifications, and review gates. | [![GitHub stars](https://img.shields.io/github/stars/yjh051108/dsh-routing-suite?style=flat&label=stars)](https://github.com/yjh051108/dsh-routing-suite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-workbuddy-connect](https://github.com/corrinehu/dsh-workbuddy-connect) | Connects models from a locally installed and signed-in WorkBuddy desktop app to DSH Web, Desktop, or TUI with account status and remaining-credit views. | [![GitHub stars](https://img.shields.io/github/stars/corrinehu/dsh-workbuddy-connect?style=flat&label=stars)](https://github.com/corrinehu/dsh-workbuddy-connect/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-subscriptions](https://github.com/V1ki/dsh-plugin-subscriptions) | Adds DSH providers for eligible ChatGPT, Claude, Grok, Copilot, and Google Antigravity subscriptions through OAuth or existing credentials. | [![GitHub stars](https://img.shields.io/github/stars/V1ki/dsh-plugin-subscriptions?style=flat&label=stars)](https://github.com/V1ki/dsh-plugin-subscriptions/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-commandcode-provider](https://github.com/Mars-Sea/dsh-commandcode-provider) | Adds an unofficial Command Code provider with browser sign-in, live model discovery, plan filtering, account rotation, image input, and Web search. | [![GitHub stars](https://img.shields.io/github/stars/Mars-Sea/dsh-commandcode-provider?style=flat&label=stars)](https://github.com/Mars-Sea/dsh-commandcode-provider/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [opencode2dsh](https://github.com/FishBottle7/opencode2dsh) | Adds OpenCode Zen models to DSH through a native provider with live catalog discovery, offline fallback, and classified upstream errors. | [![GitHub stars](https://img.shields.io/github/stars/FishBottle7/opencode2dsh?style=flat&label=stars)](https://github.com/FishBottle7/opencode2dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-reasoning-effort](https://github.com/HanaAyane/dsh-reasoning-effort) | Adds model and reasoning-effort controls to DSH Web, including configurable effort levels for custom providers. | [![GitHub stars](https://img.shields.io/github/stars/HanaAyane/dsh-reasoning-effort?style=flat&label=stars)](https://github.com/HanaAyane/dsh-reasoning-effort/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-codex-subscription](https://github.com/WSL043/dsh-codex-subscription) | Adds ChatGPT subscription models, quota monitoring, search, image tools, and optional Codex mobile remote control to DSH. | [![GitHub stars](https://img.shields.io/github/stars/WSL043/dsh-codex-subscription?style=flat&label=stars)](https://github.com/WSL043/dsh-codex-subscription/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-codex-connect](https://github.com/franksong2702/dsh-codex-connect) | Adds ChatGPT OAuth model access and optional GPT Image generation to DSH, with diagnostics and session recovery through native Harness services. | [![GitHub stars](https://img.shields.io/github/stars/franksong2702/dsh-codex-connect?style=flat&label=stars)](https://github.com/franksong2702/dsh-codex-connect/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-opencode-go](https://github.com/Duskriver/dsh-opencode-go) | Adds an OpenCode Go provider with subscription-usage displays, multiple-account management, model settings, and account fallback. | [![GitHub stars](https://img.shields.io/github/stars/Duskriver/dsh-opencode-go?style=flat&label=stars)](https://github.com/Duskriver/dsh-opencode-go/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-agy-link](https://github.com/amlyczz/dsh-agy-link) | Bridges Antigravity CLI models into DSH with account pooling, quota-aware failover, streaming tool activity, and browser OAuth sign-in. | [![GitHub stars](https://img.shields.io/github/stars/amlyczz/dsh-agy-link?style=flat&label=stars)](https://github.com/amlyczz/dsh-agy-link/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dockyard-dsh](https://github.com/AITabby/dockyard-dsh) | Connects macOS DSH profiles to official provider CLI and OAuth sessions for account pooling, model discovery, quota views, and provider-native requests. | [![GitHub stars](https://img.shields.io/github/stars/AITabby/dockyard-dsh?style=flat&label=stars)](https://github.com/AITabby/dockyard-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [rapid-mlx-dsh-provider](https://github.com/raullenchai/rapid-mlx-dsh-provider) | Adds a configurable OpenAI-compatible Rapid-MLX provider with model discovery, advertised context limits, and local-server routing. | [![GitHub stars](https://img.shields.io/github/stars/raullenchai/rapid-mlx-dsh-provider?style=flat&label=stars)](https://github.com/raullenchai/rapid-mlx-dsh-provider/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-model-config](https://github.com/MarvekG/deepseek-harness-model-config) | Adds a Web editor for custom model endpoints, protocols, headers, credentials, capability metadata, retries, and models.dev enrichment. | [![GitHub stars](https://img.shields.io/github/stars/MarvekG/deepseek-harness-model-config?style=flat&label=stars)](https://github.com/MarvekG/deepseek-harness-model-config/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-antigravity](https://github.com/LiZhenNet/dsh-antigravity) | Adds a Google Antigravity and Cloud Code Assist provider for DSH Web with OAuth login, model routing, and quota display. | [![GitHub stars](https://img.shields.io/github/stars/LiZhenNet/dsh-antigravity?style=flat&label=stars)](https://github.com/LiZhenNet/dsh-antigravity/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-advisor](https://github.com/omdsh-dev/dsh-advisor) | Uses a separate configured model to review DSH turns and inject severity-ranked advisory notes without approving or rejecting the primary agent's actions. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-advisor?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-advisor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-llm-fallbacks](https://github.com/omdsh-dev/dsh-llm-fallbacks) | Adds role-based model retries, ordered provider fallbacks, and time-based routing for DSH Web and terminal profiles. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-llm-fallbacks?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-llm-fallbacks/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-local-ai](https://github.com/PerryLink/dsh-local-ai) | Adds an Ollama provider with model management, health checks, rule-based local routing, and cloud fallback. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-local-ai?style=flat&label=stars)](https://github.com/PerryLink/dsh-local-ai/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-subagent-director](https://github.com/SeverusZh/dsh-plugin-subagent-director) | Assigns provider and model choices plus reusable role templates to individual DSH subagents. | [![GitHub stars](https://img.shields.io/github/stars/SeverusZh/dsh-plugin-subagent-director?style=flat&label=stars)](https://github.com/SeverusZh/dsh-plugin-subagent-director/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-codex-auth](https://github.com/suntianc/dsh-codex-auth) | Adds a DSH Codex capability bundle that reuses the official Codex login for models, search, usage, and image tools. | [![GitHub stars](https://img.shields.io/github/stars/suntianc/dsh-codex-auth?style=flat&label=stars)](https://github.com/suntianc/dsh-codex-auth/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-translate](https://github.com/PerryLink/dsh-translate) | Maps sampling parameters across 11 model vendors and deterministically repairs malformed JSON tool results. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-translate?style=flat&label=stars)](https://github.com/PerryLink/dsh-translate/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-router-flash](https://github.com/xiaoxianyu-office/dsh-router-flash) | Installs a versioned OpenCode Go agent preset with a Flash-oriented persona, routing settings, and update checks. | [![GitHub stars](https://img.shields.io/github/stars/xiaoxianyu-office/dsh-router-flash?style=flat&label=stars)](https://github.com/xiaoxianyu-office/dsh-router-flash/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-openai-codex-auth](https://github.com/yoke233/dsh-openai-codex-auth) | Adds OpenAI Codex OAuth sign-in and usage status to DeepSeek Harness. | [![GitHub stars](https://img.shields.io/github/stars/yoke233/dsh-openai-codex-auth?style=flat&label=stars)](https://github.com/yoke233/dsh-openai-codex-auth/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ocgo-lite](https://github.com/OK-wx/dsh-ocgo-lite) | Shows OpenCode Go account quota plus DSH-only token and cost usage in a persistent Web bar and model tool. | [![GitHub stars](https://img.shields.io/github/stars/OK-wx/dsh-ocgo-lite?style=flat&label=stars)](https://github.com/OK-wx/dsh-ocgo-lite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-llm-ollama](https://github.com/NOirBRight/dsh-llm-ollama) | Adds Ollama Cloud model discovery and chat through a native DSH provider, plus Ollama-native web search and page fetching. | [![GitHub stars](https://img.shields.io/github/stars/NOirBRight/dsh-llm-ollama?style=flat&label=stars)](https://github.com/NOirBRight/dsh-llm-ollama/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-deliberation-presets](https://github.com/Greenhand-monster/dsh-deliberation-presets) | Provides three experimental DeepSeek Harness presets for separating deliberation from tool execution while preserving tool continuity. | [![GitHub stars](https://img.shields.io/github/stars/Greenhand-monster/dsh-deliberation-presets?style=flat&label=stars)](https://github.com/Greenhand-monster/dsh-deliberation-presets/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-model-capability](https://github.com/yuioi666/dsh-plugin-model-capability) | Adds bilingual DSH controls for model reasoning levels, context and output limits, input modalities, and gateway compatibility presets. | [![GitHub stars](https://img.shields.io/github/stars/yuioi666/dsh-plugin-model-capability?style=flat&label=stars)](https://github.com/yuioi666/dsh-plugin-model-capability/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-Brain-Bridge](https://github.com/2025ashore/DSH-Brain-Bridge) | Connects DSH agents to ChatGPT Web as an external reasoning provider through a journaled MCP gateway with worker failover. | [![GitHub stars](https://img.shields.io/github/stars/2025ashore/DSH-Brain-Bridge?style=flat&label=stars)](https://github.com/2025ashore/DSH-Brain-Bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-model-meta-autofill](https://github.com/QJAG1024/dsh-model-meta-autofill) | Fills missing custom-model context, output, display-name, and modality metadata from a bundled and refreshable models.dev index. | [![GitHub stars](https://img.shields.io/github/stars/QJAG1024/dsh-model-meta-autofill?style=flat&label=stars)](https://github.com/QJAG1024/dsh-model-meta-autofill/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-role-router](https://github.com/SnowAmberX/dsh-role-router) | Routes planner and subagent roles to configured models and exposes the active routing summary in DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/SnowAmberX/dsh-role-router?style=flat&label=stars)](https://github.com/SnowAmberX/dsh-role-router/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-custom-provider-settings](https://github.com/supersealwqas/dsh-custom-provider-settings) | Adds headers, image-capability declarations, and reasoning-level controls for user-defined model providers without modifying Harness source. | [![GitHub stars](https://img.shields.io/github/stars/supersealwqas/dsh-custom-provider-settings?style=flat&label=stars)](https://github.com/supersealwqas/dsh-custom-provider-settings/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-cot-summerization](https://github.com/MeowLynxSea/dsh-cot-summerization) | Intercepts raw reasoning streams and replaces them with incremental summaries from a configured auxiliary model. | [![GitHub stars](https://img.shields.io/github/stars/MeowLynxSea/dsh-cot-summerization?style=flat&label=stars)](https://github.com/MeowLynxSea/dsh-cot-summerization/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-custom-provider-reasoning](https://github.com/534119219/dsh-custom-provider-reasoning) | Adds reasoning-level metadata and missing token limits to eligible custom providers while preserving explicit model settings and protocol-specific compatibility. | [![GitHub stars](https://img.shields.io/github/stars/534119219/dsh-custom-provider-reasoning?style=flat&label=stars)](https://github.com/534119219/dsh-custom-provider-reasoning/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-thinking-levels-settings](https://github.com/blackteaYES/dsh-thinking-levels-settings) | Adds DSH settings for per-model reasoning levels and text/image input declarations on custom pi-ai providers through the native settings wire. | [![GitHub stars](https://img.shields.io/github/stars/blackteaYES/dsh-thinking-levels-settings?style=flat&label=stars)](https://github.com/blackteaYES/dsh-thinking-levels-settings/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-vision-bridge](https://github.com/c-ling/dsh-plugin-vision-bridge) | Routes image attachments through a configured OpenAI-compatible vision model and passes durable textual descriptions to text-only DeepSeek routes. | [![GitHub stars](https://img.shields.io/github/stars/c-ling/dsh-plugin-vision-bridge?style=flat&label=stars)](https://github.com/c-ling/dsh-plugin-vision-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-models-radar](https://github.com/hi-fangj/dsh-models-radar) | Displays public benchmark snapshots, model comparisons, cost views, and the selected model's DeepSWE score in DSH, with per-result harness attribution. | [![GitHub stars](https://img.shields.io/github/stars/hi-fangj/dsh-models-radar?style=flat&label=stars)](https://github.com/hi-fangj/dsh-models-radar/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-everything-oauth](https://github.com/kam74515-boop/dsh-everything-oauth) | Imports existing local OAuth sessions for Codex, Grok, Claude, OpenCode, and related tools. | [![GitHub stars](https://img.shields.io/github/stars/kam74515-boop/dsh-everything-oauth?style=flat&label=stars)](https://github.com/kam74515-boop/dsh-everything-oauth/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-qwen38-compaction-fix](https://github.com/zhubaohi/dsh-qwen38-compaction-fix) | Adjusts matched Qwen3.8 requests during DSH context compaction so reasoning does not consume the summary output budget, while leaving normal turns unchanged. | [![GitHub stars](https://img.shields.io/github/stars/zhubaohi/dsh-qwen38-compaction-fix?style=flat&label=stars)](https://github.com/zhubaohi/dsh-qwen38-compaction-fix/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-model-memory](https://github.com/Mutx163/dsh-model-memory) | Adds custom-provider reasoning-level controls, retry policies, and persistent per-model preferences to DSH Web settings. | [![GitHub stars](https://img.shields.io/github/stars/Mutx163/dsh-model-memory?style=flat&label=stars)](https://github.com/Mutx163/dsh-model-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-vision](https://github.com/yepyeel/dsh-vision) | Gives text-only routes image understanding by substituting cached descriptions from an available vision model or system OCR for provider calls. | [![GitHub stars](https://img.shields.io/github/stars/yepyeel/dsh-vision?style=flat&label=stars)](https://github.com/yepyeel/dsh-vision/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-poor-router](https://github.com/yishengdaxiaonengjihui/dsh-poor-router) | Routes DSH requests across budget or free-tier model pools with health tracking, a usage ledger, Thompson-sampling selection, and automatic failover. | [![GitHub stars](https://img.shields.io/github/stars/yishengdaxiaonengjihui/dsh-poor-router?style=flat&label=stars)](https://github.com/yishengdaxiaonengjihui/dsh-poor-router/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-autotier](https://github.com/PerryLink/dsh-autotier) | Routes DSH requests between strong and economical model tiers with plan handoffs, deterministic risk guards, and failure escalation. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-autotier?style=flat&label=stars)](https://github.com/PerryLink/dsh-autotier/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-relay-fast](https://github.com/Rock-ql/dsh-relay-fast) | Adds reasoning-effort metadata, /models synchronization, and an explicit capability-gated Fast toggle for compatible OpenAI or Anthropic relay endpoints. | [![GitHub stars](https://img.shields.io/github/stars/Rock-ql/dsh-relay-fast?style=flat&label=stars)](https://github.com/Rock-ql/dsh-relay-fast/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-LLM-quotes](https://github.com/v587d/dsh-LLM-quotes) | Shows current per-model API pricing and detailed capability metadata inside DSH model settings, with automatic route matching and manual fallback. | [![GitHub stars](https://img.shields.io/github/stars/v587d/dsh-LLM-quotes?style=flat&label=stars)](https://github.com/v587d/dsh-LLM-quotes/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-model-hub](https://github.com/yhyfhgs/dsh-model-hub) · <sub>Archived</sub> | Unifies provider sign-in, model metadata, default selection, composer routing, and the /model command behind a loopback-only DSH service. | [![GitHub stars](https://img.shields.io/github/stars/yhyfhgs/dsh-model-hub?style=flat&label=stars)](https://github.com/yhyfhgs/dsh-model-hub/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-llm-codex](https://github.com/zzjxmy/dsh-llm-codex) | Adds a ChatGPT subscription adapter to the DSH model seam with PKCE or device OAuth, token refresh, and Codex Responses forwarding. | [![GitHub stars](https://img.shields.io/github/stars/zzjxmy/dsh-llm-codex?style=flat&label=stars)](https://github.com/zzjxmy/dsh-llm-codex/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+
+## Tools & Skills
+
+| Project | Description | Stars | Referenced by |
+| --- | --- | --- | --- |
+| [rea](https://github.com/morluto/rea) | Connects DSH to REA's reverse-engineering MCP server for binaries, applications, and runtime behavior through a dedicated Cordis setup. | [![GitHub stars](https://img.shields.io/github/stars/morluto/rea?style=flat&label=stars)](https://github.com/morluto/rea/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [archify](https://github.com/tt-a1i/archify) | Generates self-contained architecture, workflow, sequence, and data-flow diagrams through an installable DSH skill. | [![GitHub stars](https://img.shields.io/github/stars/tt-a1i/archify?style=flat&label=stars)](https://github.com/tt-a1i/archify/stargazers) | <details><summary>3 pages</summary><ul><li><a href="https://archify.si/start">Archify installation and first-diagram guide</a> · <sub>Docs</sub></li><li><a href="https://www.qbitai.com/2026/09/482469.html">QbitAI: Archify&#x27;s diagram workflow</a> · <sub>News</sub></li><li><a href="https://www.qbitai.com/2026/09/488519.html">QbitAI: interview with Archify&#x27;s developer</a> · <sub>News</sub></li></ul></details> |
+| [WeKnora](https://github.com/Tencent/WeKnora) | Adds WeKnora's official DSH plugin with four read-only tools for knowledge-base listing, hybrid passage search, document reading, and cited answers. | [![GitHub stars](https://img.shields.io/github/stars/Tencent/WeKnora?style=flat&label=stars)](https://github.com/Tencent/WeKnora/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [BrowserSkill](https://github.com/Tencent/BrowserSkill) | Connects DSH agents to a real logged-in browser through a companion extension and CLI for background browser automation. | [![GitHub stars](https://img.shields.io/github/stars/Tencent/BrowserSkill?style=flat&label=stars)](https://github.com/Tencent/BrowserSkill/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [modlens](https://github.com/liustack/modlens) | Adds image reading and structured visual evidence to eligible text-only DeepSeek, GLM, and MiMo models in DSH. | [![GitHub stars](https://img.shields.io/github/stars/liustack/modlens?style=flat&label=stars)](https://github.com/liustack/modlens/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-anchored-standard](https://github.com/xiaobright/dsh-anchored-standard) | Adds an experimental two-phase preset that starts with Minimal-aligned tools and promotes sessions to the Standard catalog. | [![GitHub stars](https://img.shields.io/github/stars/xiaobright/dsh-anchored-standard?style=flat&label=stars)](https://github.com/xiaobright/dsh-anchored-standard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ops](https://github.com/T-Auto/dsh-ops) | Adds bundled Bash and PowerShell plus Rust file inspection, search, replacement, and optional batch tools to DSH on Windows x64. | [![GitHub stars](https://img.shields.io/github/stars/T-Auto/dsh-ops?style=flat&label=stars)](https://github.com/T-Auto/dsh-ops/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [brooks-lint](https://github.com/hyhmrright/brooks-lint) | Adds DSH-compatible code-review skills grounded in twelve software-engineering books with cited, structured findings. | [![GitHub stars](https://img.shields.io/github/stars/hyhmrright/brooks-lint?style=flat&label=stars)](https://github.com/hyhmrright/brooks-lint/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://hyhmrright.github.io/brooks-lint/">brooks-lint</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-vision-router](https://github.com/ysr666/dsh-vision-router) | Adds keyless image Q&A and pixel-level vision tools to text-only DSH agents. | [![GitHub stars](https://img.shields.io/github/stars/ysr666/dsh-vision-router?style=flat&label=stars)](https://github.com/ysr666/dsh-vision-router/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tavern](https://github.com/flizzywine/dsh-tavern) | Builds a DSH text-roleplay workspace with character cards, world books, script-guided stories, card editing, and configurable image generation. | [![GitHub stars](https://img.shields.io/github/stars/flizzywine/dsh-tavern?style=flat&label=stars)](https://github.com/flizzywine/dsh-tavern/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://flizzywine.github.io/dsh-tavern/">DSH Tavern product and installation guide</a> · <sub>Docs</sub></li></ul></details> |
+| [Study-Mate](https://github.com/Miaotofu01/Study-Mate) | Adds a DSH learning preset and reading workspace for study plans, course materials, exercises, projects, and learning memory. | [![GitHub stars](https://img.shields.io/github/stars/Miaotofu01/Study-Mate?style=flat&label=stars)](https://github.com/Miaotofu01/Study-Mate/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-vision-toolkit](https://github.com/Anionex/dsh-vision-toolkit) | Adds image Q&A, OCR, UI reconstruction, grounding, and visual diff tools. | [![GitHub stars](https://img.shields.io/github/stars/Anionex/dsh-vision-toolkit?style=flat&label=stars)](https://github.com/Anionex/dsh-vision-toolkit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Openwrite](https://github.com/LiPu-jpg/Openwrite) | Adds a DeepSeek Harness workbench for planning, writing, reviewing, and managing long-form novels. | [![GitHub stars](https://img.shields.io/github/stars/LiPu-jpg/Openwrite?style=flat&label=stars)](https://github.com/LiPu-jpg/Openwrite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [modsearch](https://github.com/liustack/modsearch) | Replaces DSH web search with a configurable engine chain and adds X search plus focused page reading. | [![GitHub stars](https://img.shields.io/github/stars/liustack/modsearch?style=flat&label=stars)](https://github.com/liustack/modsearch/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [easyeda-agent](https://github.com/zhoushoujianwork/easyeda-agent) | Connects EasyEDA Pro schematic and PCB actions to DSH through a CLI, Agent Skill, and stdio MCP bundle. | [![GitHub stars](https://img.shields.io/github/stars/zhoushoujianwork/easyeda-agent?style=flat&label=stars)](https://github.com/zhoushoujianwork/easyeda-agent/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [SkillCorpus](https://github.com/EverMind-AI/SkillCorpus) | Packages curated, retrieval-ready SKILL.md corpora with an official plugin for DeepSeek Harness and other agent hosts. | [![GitHub stars](https://img.shields.io/github/stars/EverMind-AI/SkillCorpus?style=flat&label=stars)](https://github.com/EverMind-AI/SkillCorpus/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-image-gen](https://github.com/shanliuling/dsh-image-gen) | Adds image generation and iterative editing to DSH with multiple API providers, local ComfyUI workflows, batch creation, and workspace-scoped galleries. | [![GitHub stars](https://img.shields.io/github/stars/shanliuling/dsh-image-gen?style=flat&label=stars)](https://github.com/shanliuling/dsh-image-gen/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pentest](https://github.com/howmp/dsh-pentest) · <sub>Archived</sub> | Adds an authorized penetration-testing preset with structured goals, evidence, findings, assets, reports, and a Web exploration graph. | [![GitHub stars](https://img.shields.io/github/stars/howmp/dsh-pentest?style=flat&label=stars)](https://github.com/howmp/dsh-pentest/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-univer-office](https://github.com/dream-num/dsh-univer-office) | Lets DSH create, review, version, import, and export spreadsheets, documents, slides, databases, and canvases in isolated draft worktrees. | [![GitHub stars](https://img.shields.io/github/stars/dream-num/dsh-univer-office?style=flat&label=stars)](https://github.com/dream-num/dsh-univer-office/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-Mimir-Academic-research](https://github.com/1692775560/dsh-Mimir-Academic-research) | Adds a DSH research workbench for literature, LaTeX manuscripts, experiments, figures, meeting slides, remote jobs, and a persistent research journal. | [![GitHub stars](https://img.shields.io/github/stars/1692775560/dsh-Mimir-Academic-research?style=flat&label=stars)](https://github.com/1692775560/dsh-Mimir-Academic-research/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [oh-story-dsh](https://github.com/zenstory-ai/oh-story-dsh) | Adds a DSH creative workbench for novels, short dramas, interactive games, and video narration with live file views and optional media adapters. | [![GitHub stars](https://img.shields.io/github/stars/zenstory-ai/oh-story-dsh?style=flat&label=stars)](https://github.com/zenstory-ai/oh-story-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-at-file](https://github.com/FSMargoo/dsh-at-file) | Adds file and session mentions to DSH Web as a legacy, best-effort extension; its maintainer recommends current DSH's built-in mentions for new installs. | [![GitHub stars](https://img.shields.io/github/stars/FSMargoo/dsh-at-file?style=flat&label=stars)](https://github.com/FSMargoo/dsh-at-file/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [anysearch-dsh](https://github.com/anysearch-team/anysearch-dsh) | Replaces DSH web search with AnySearch and adds capability discovery, vertical search, and bounded batch queries. | [![GitHub stars](https://img.shields.io/github/stars/anysearch-team/anysearch-dsh?style=flat&label=stars)](https://github.com/anysearch-team/anysearch-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [watch-skill](https://github.com/oxbshw/watch-skill) | Adds video, audio, and screen perception plus evidence contracts and receipts to DSH through the DeepWatch workspace. | [![GitHub stars](https://img.shields.io/github/stars/oxbshw/watch-skill?style=flat&label=stars)](https://github.com/oxbshw/watch-skill/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://www.opcchina.ai/?p=4329">Watch Skill tutorial: verifiable video and screen evidence</a> · <sub>Article</sub></li></ul></details> |
+| [dsh-free-search](https://github.com/DDDMUC/dsh-free-search) | Adds multi-engine Web and platform search, page fetching, and multi-source research briefs through a configurable DSH Web provider. | [![GitHub stars](https://img.shields.io/github/stars/DDDMUC/dsh-free-search?style=flat&label=stars)](https://github.com/DDDMUC/dsh-free-search/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [nature-academic-search](https://github.com/wp-a/nature-academic-search) | Adds an auditable academic-paper search Skill and MCP bundle for Chinese research workflows in DeepSeek Harness. | [![GitHub stars](https://img.shields.io/github/stars/wp-a/nature-academic-search?style=flat&label=stars)](https://github.com/wp-a/nature-academic-search/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-trading](https://github.com/zhu1090093659/dsh-trading) | Adds a DSH trading workbench with market data, charts, research skills, and simulated orders, plus explicitly enabled, approval-gated live order routing. | [![GitHub stars](https://img.shields.io/github/stars/zhu1090093659/dsh-trading?style=flat&label=stars)](https://github.com/zhu1090093659/dsh-trading/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-reverse-skill](https://github.com/dhicoc/dsh-reverse-skill) | Packages a library of skills for authorized reverse engineering, binary analysis, mobile security, and vulnerability research. | [![GitHub stars](https://img.shields.io/github/stars/dhicoc/dsh-reverse-skill?style=flat&label=stars)](https://github.com/dhicoc/dsh-reverse-skill/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ego-browser](https://github.com/Fisfzy/dsh-ego-browser) | Adds a browser workspace with semantic inspection, screenshots, CDP controls, isolated spaces, and explicit action limits. | [![GitHub stars](https://img.shields.io/github/stars/Fisfzy/dsh-ego-browser?style=flat&label=stars)](https://github.com/Fisfzy/dsh-ego-browser/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-industry-research](https://github.com/PerryLink/dsh-industry-research) | Builds source-linked industry maps, metric tables, policy and news timelines, company cards, and versioned research reports in DSH. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-industry-research?style=flat&label=stars)](https://github.com/PerryLink/dsh-industry-research/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-research-report](https://github.com/PerryLink/dsh-research-report) | Builds versioned research reports from immutable source snapshots with literal quote and number checks, evidence ledgers, and hash-based seals. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-research-report?style=flat&label=stars)](https://github.com/PerryLink/dsh-research-report/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-data-agent](https://github.com/omdsh-dev/dsh-data-agent) | Adds a dedicated Data Agent preset for querying, updating, and analyzing structured data. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-data-agent?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-data-agent/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skill-mcp-panel](https://github.com/Fishquito7/dsh-skill-mcp-panel) | Adds a DSH Web sidebar page and a CLI for browsing, importing, moving, enabling, and managing skills and MCP servers. | [![GitHub stars](https://img.shields.io/github/stars/Fishquito7/dsh-skill-mcp-panel?style=flat&label=stars)](https://github.com/Fishquito7/dsh-skill-mcp-panel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-evolve-modes](https://github.com/GraySilver/dsh-evolve-modes) | Adds composable task modes and an opt-in, human-reviewed rule-learning loop to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/GraySilver/dsh-evolve-modes?style=flat&label=stars)](https://github.com/GraySilver/dsh-evolve-modes/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [sandbase-skills](https://github.com/sandbaseai/sandbase-skills) | Packages a cross-agent collection of research, social-intelligence, marketing, and business skills for installation in DSH. | [![GitHub stars](https://img.shields.io/github/stars/sandbaseai/sandbase-skills?style=flat&label=stars)](https://github.com/sandbaseai/sandbase-skills/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-find-plugins](https://github.com/Nagi-ovo/dsh-find-plugins) | Adds a skill that searches the dsh-plugin topic, compares candidates, then installs and verifies a selected plugin. | [![GitHub stars](https://img.shields.io/github/stars/Nagi-ovo/dsh-find-plugins?style=flat&label=stars)](https://github.com/Nagi-ovo/dsh-find-plugins/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-preset-plus](https://github.com/Rain-kl/dsh-preset-plus) | Adds an editable, importable prompt-preset system to DSH with automatic or manual per-session prefill injection. | [![GitHub stars](https://img.shields.io/github/stars/Rain-kl/dsh-preset-plus?style=flat&label=stars)](https://github.com/Rain-kl/dsh-preset-plus/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [brewreel](https://github.com/Finderchangchang/brewreel) | Provides DSH tools and skills for storyboard validation, promotional-video rendering, output checks, and talk or lesson video workflows. | [![GitHub stars](https://img.shields.io/github/stars/Finderchangchang/brewreel?style=flat&label=stars)](https://github.com/Finderchangchang/brewreel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-run2skill](https://github.com/qkycir-123/dsh-run2skill) | Turns explicit user corrections and workflows from DSH sessions into traceable skill drafts, publishing them only after user review and confirmation. | [![GitHub stars](https://img.shields.io/github/stars/qkycir-123/dsh-run2skill?style=flat&label=stars)](https://github.com/qkycir-123/dsh-run2skill/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-prompt-market](https://github.com/yi-yezhiqiu/dsh-prompt-market) | Adds an in-chat prompt library with search, favorites, custom sources, local prompt editing, and insertion into the composer. | [![GitHub stars](https://img.shields.io/github/stars/yi-yezhiqiu/dsh-prompt-market?style=flat&label=stars)](https://github.com/yi-yezhiqiu/dsh-prompt-market/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-prompt-enhancer](https://github.com/Fishsb/dsh-prompt-enhancer) | Refines DSH composer drafts through configurable models and uses the host speech-to-text service for transcript insertion, cleanup, and prompt enhancement. | [![GitHub stars](https://img.shields.io/github/stars/Fishsb/dsh-prompt-enhancer?style=flat&label=stars)](https://github.com/Fishsb/dsh-prompt-enhancer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-novel-writer](https://github.com/akira399/dsh-novel-writer) | Provides a gated long-form fiction workflow with lorebooks, local book import, revision aids, snapshots, and consistency checks. | [![GitHub stars](https://img.shields.io/github/stars/akira399/dsh-novel-writer?style=flat&label=stars)](https://github.com/akira399/dsh-novel-writer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [recruiting-copilot](https://github.com/Viy1204/recruiting-copilot) | Packages a recruiting workflow as Harness skills with role clarification, sourcing, resume review, interview coordination, ledgers, and confirmation gates for external actions. | [![GitHub stars](https://img.shields.io/github/stars/Viy1204/recruiting-copilot?style=flat&label=stars)](https://github.com/Viy1204/recruiting-copilot/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-capability-menu](https://github.com/PKUfudawei/dsh-capability-menu) | Organizes DSH tools and skills into a searchable capability catalog with always-visible, on-demand, and disabled exposure policies. | [![GitHub stars](https://img.shields.io/github/stars/PKUfudawei/dsh-capability-menu?style=flat&label=stars)](https://github.com/PKUfudawei/dsh-capability-menu/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-search-pro](https://github.com/anweat/dsh-web-search-pro) | Adds persistent multi-engine and platform search, readable page fetching, Playwright snapshots, caching, history, and site-specific extraction rules. | [![GitHub stars](https://img.shields.io/github/stars/anweat/dsh-web-search-pro?style=flat&label=stars)](https://github.com/anweat/dsh-web-search-pro/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [SpecFusion](https://github.com/wxkingstar/SpecFusion) | Adds a Harness bundle and skill for searching a hosted corpus of Chinese enterprise and commerce API documentation through native tools. | [![GitHub stars](https://img.shields.io/github/stars/wxkingstar/SpecFusion?style=flat&label=stars)](https://github.com/wxkingstar/SpecFusion/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-fund-research](https://github.com/PerryLink/dsh-fund-research) | Adds Chinese mutual-fund research tools with public-data snapshots, calculated metrics, missing-data notes, and versioned reports without trade execution. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-fund-research?style=flat&label=stars)](https://github.com/PerryLink/dsh-fund-research/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-computer-use](https://github.com/Anionex/dsh-computer-use) | Adds Accessibility-first macOS computer control with fresh observations, stale-state rejection, scoped app access, and confirmation-bound sensitive actions. | [![GitHub stars](https://img.shields.io/github/stars/Anionex/dsh-computer-use?style=flat&label=stars)](https://github.com/Anionex/dsh-computer-use/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-deepread](https://github.com/xiehuan123/dsh-deepread) | Builds traceable reading notes that connect claims, supporting evidence, confidence, and knowledge maps across long documents. | [![GitHub stars](https://img.shields.io/github/stars/xiehuan123/dsh-deepread?style=flat&label=stars)](https://github.com/xiehuan123/dsh-deepread/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-data-quality](https://github.com/PerryLink/dsh-data-quality) | Profiles, checks, and non-destructively cleans CSV, TSV, JSON, and JSONL datasets, with reusable rules and stored quality reports. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-data-quality?style=flat&label=stars)](https://github.com/PerryLink/dsh-data-quality/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-knit](https://github.com/PolinniZhong/dsh-knit) | Retrieves task-relevant workspace documents, code, and media, then tracks whether the agent read them and whether they changed. | [![GitHub stars](https://img.shields.io/github/stars/PolinniZhong/dsh-knit?style=flat&label=stars)](https://github.com/PolinniZhong/dsh-knit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-quant](https://github.com/pengpengyi92/dsh-quant) | Adds DSH tools for market data, factors, backtests, risk analysis, paper execution, fund simulation, and research reports. | [![GitHub stars](https://img.shields.io/github/stars/pengpengyi92/dsh-quant?style=flat&label=stars)](https://github.com/pengpengyi92/dsh-quant/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://dsh-quant-site.pages.dev/">DSH Quant toolkit and research pipeline</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-plugin-guide](https://github.com/PerryLink/dsh-plugin-guide) | Packages a DSH plugin-development guide, release playbook, source-checked compatibility notes, and ecosystem analysis as an installable bundle. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-plugin-guide?style=flat&label=stars)](https://github.com/PerryLink/dsh-plugin-guide/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-browser-crossplatform](https://github.com/youbaiyun/dsh-browser-crossplatform) | Connects a browser extension to DSH for reading pages and operating tabs through browser tools, with optional image viewing. | [![GitHub stars](https://img.shields.io/github/stars/youbaiyun/dsh-browser-crossplatform?style=flat&label=stars)](https://github.com/youbaiyun/dsh-browser-crossplatform/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-scholar](https://github.com/lzszq/dsh-scholar) | Adds a computational-research workspace linking conversations, materials, code, data, controlled experiments, evidence, and TeX manuscripts. | [![GitHub stars](https://img.shields.io/github/stars/lzszq/dsh-scholar?style=flat&label=stars)](https://github.com/lzszq/dsh-scholar/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-writing-guard](https://github.com/xmutfyh/dsh-plugin-writing-guard) | Checks manuscript edits for deterministic integrity risks across claims, evidence, negation, scope, and citations without using another model. | [![GitHub stars](https://img.shields.io/github/stars/xmutfyh/dsh-plugin-writing-guard?style=flat&label=stars)](https://github.com/xmutfyh/dsh-plugin-writing-guard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-mineru](https://github.com/HuanLinOTO/dsh-plugin-mineru) | Exposes self-hosted MinerU parsing tools for converting documents and images into structured Markdown or JSON. | [![GitHub stars](https://img.shields.io/github/stars/HuanLinOTO/dsh-plugin-mineru?style=flat&label=stars)](https://github.com/HuanLinOTO/dsh-plugin-mineru/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-design-qa](https://github.com/sunxin-ai/dsh-design-qa) | Adds a vision tool for text-only DSH models through a configurable multimodal route, with evaluation fixtures and optional paste-path patches. | [![GitHub stars](https://img.shields.io/github/stars/sunxin-ai/dsh-design-qa?style=flat&label=stars)](https://github.com/sunxin-ai/dsh-design-qa/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-Think-zh](https://github.com/Len7183/DSH-Think-zh) | Adds optional Chinese reasoning instructions to DSH and prompts answers to follow the language of the user's question. | [![GitHub stars](https://img.shields.io/github/stars/Len7183/DSH-Think-zh?style=flat&label=stars)](https://github.com/Len7183/DSH-Think-zh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-trading](https://github.com/maddogfinance/dsh-trading) | Adds a research-only market-data and technical-analysis workbench with CSV inputs, indicator and chart tools, and a guard against order or fund-movement tool calls. | [![GitHub stars](https://img.shields.io/github/stars/maddogfinance/dsh-trading?style=flat&label=stars)](https://github.com/maddogfinance/dsh-trading/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-files](https://github.com/taxueseek/dsh-files) | Adds document parsing, attachment browsing, export and deletion, and a download dock on top of DSH's native upload pipeline. | [![GitHub stars](https://img.shields.io/github/stars/taxueseek/dsh-files?style=flat&label=stars)](https://github.com/taxueseek/dsh-files/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [picturereader](https://github.com/jing-hy/picturereader) | Adds image inspection, OCR, document-to-image conversion, local image editing, and optional external vision-model analysis to DSH. | [![GitHub stars](https://img.shields.io/github/stars/jing-hy/picturereader?style=flat&label=stars)](https://github.com/jing-hy/picturereader/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skill-picker](https://github.com/a735624258/dsh-skill-picker) | Adds a searchable DSH Web picker that inserts the native `/skill-name` gesture for installed skills into the draft. | [![GitHub stars](https://img.shields.io/github/stars/a735624258/dsh-skill-picker?style=flat&label=stars)](https://github.com/a735624258/dsh-skill-picker/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh_kline](https://github.com/FTShare-Lab/dsh_kline) | Adds interactive A-share, Hong Kong, and US stock charts with watchlists, indicators, annotations, market data, news, and DSH tools. | [![GitHub stars](https://img.shields.io/github/stars/FTShare-Lab/dsh_kline?style=flat&label=stars)](https://github.com/FTShare-Lab/dsh_kline/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-computer-use](https://github.com/ZRui-C/dsh-computer-use) | Adds text-first Chromium and macOS control to DSH with fresh observations, targeted background actions, and fail-closed boundaries. | [![GitHub stars](https://img.shields.io/github/stars/ZRui-C/dsh-computer-use?style=flat&label=stars)](https://github.com/ZRui-C/dsh-computer-use/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-gomoku](https://github.com/omdsh-dev/dsh-gomoku) | Adds interactive Gomoku games against configured DSH models or between two AI players. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-gomoku?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-gomoku/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-imagegen-video](https://github.com/q253595422/dsh-imagegen-video) | Extends DSH's image-generation workbench with video generation, canvas video nodes, clip stitching, and shared media history. | [![GitHub stars](https://img.shields.io/github/stars/q253595422/dsh-imagegen-video?style=flat&label=stars)](https://github.com/q253595422/dsh-imagegen-video/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-toolkit](https://github.com/omdsh-dev/dsh-toolkit) | Bundles ten zero-dependency utilities for data, text, time, and formats. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-toolkit?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-toolkit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-vision](https://github.com/william-jin-cmu/dsh-vision) | Adds a view-image tool backed by configurable OpenAI-compatible vision models. | [![GitHub stars](https://img.shields.io/github/stars/william-jin-cmu/dsh-vision?style=flat&label=stars)](https://github.com/william-jin-cmu/dsh-vision/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-lsp-actions](https://github.com/PerryLink/dsh-lsp-actions) | Exposes diagnostics, formatting, completion, code actions, symbols, signatures, inlay hints, and rename operations through language servers. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-lsp-actions?style=flat&label=stars)](https://github.com/PerryLink/dsh-lsp-actions/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [distill](https://github.com/LoserFox/distill) | Distills conversations into reusable skills through background sub-agent reflection. | [![GitHub stars](https://img.shields.io/github/stars/LoserFox/distill?style=flat&label=stars)](https://github.com/LoserFox/distill/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [minecraft-dev](https://github.com/sikadi233-hub/minecraft-dev) | Adds skills and tools for developing Paper or Spigot plugins and Fabric, Forge, or NeoForge mods. | [![GitHub stars](https://img.shields.io/github/stars/sikadi233-hub/minecraft-dev?style=flat&label=stars)](https://github.com/sikadi233-hub/minecraft-dev/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mcp-manager](https://github.com/hyqhyq3/dsh-mcp-manager) | Adds a DSH Settings page for managing HTTP or stdio MCP servers with OAuth, workspace scope, and on-demand tool routing. | [![GitHub stars](https://img.shields.io/github/stars/hyqhyq3/dsh-mcp-manager?style=flat&label=stars)](https://github.com/hyqhyq3/dsh-mcp-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [pptwise](https://github.com/liustack/pptwise) | Generates editable PPTX files from a semantic intermediate representation through a DSH bundle, CLI, or Claude Code plugin. | [![GitHub stars](https://img.shields.io/github/stars/liustack/pptwise?style=flat&label=stars)](https://github.com/liustack/pptwise/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-custom-tool](https://github.com/omdsh-dev/dsh-custom-tool) | Creates and manages sandboxed JavaScript tools from a Monaco-powered editor. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-custom-tool?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-custom-tool/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-read-url](https://github.com/2672243194/dsh-read-url) | Reads web pages, JSON APIs, and RSS or Atom feeds with encoding detection, paginated-article joining, caching, and compact text or Markdown output. | [![GitHub stars](https://img.shields.io/github/stars/2672243194/dsh-read-url?style=flat&label=stars)](https://github.com/2672243194/dsh-read-url/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-defend](https://github.com/PerryLink/dsh-defend) | Detects prompt injection, jailbreak, and secret patterns with allow, ask, or block interception in DSH; feature development is frozen. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-defend?style=flat&label=stars)](https://github.com/PerryLink/dsh-defend/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skill-pack-security](https://github.com/PerryLink/dsh-skill-pack-security) | Bundles eight security-audit skills with a plugin scanner for licenses, dependencies, commit pinning, suspicious patterns, and risk reporting. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-skill-pack-security?style=flat&label=stars)](https://github.com/PerryLink/dsh-skill-pack-security/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-media-skills](https://github.com/MJorgin/dsh-media-skills) | Adds image understanding and generation skills to DSH with configurable model routing and fallback providers. | [![GitHub stars](https://img.shields.io/github/stars/MJorgin/dsh-media-skills?style=flat&label=stars)](https://github.com/MJorgin/dsh-media-skills/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-library](https://github.com/PerryLink/dsh-library) | Indexes local Markdown and text files for hybrid search, citation checking, retrieval diagnostics, and optional context injection. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-library?style=flat&label=stars)](https://github.com/PerryLink/dsh-library/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [oss-prompt-optimizer](https://github.com/seven282/oss-prompt-optimizer) | Adds a prompt-optimization tool and composer control to DSH with iterative rewriting, cancellation and undo, reusable scenario templates, and optional prefix-triggered automation. | [![GitHub stars](https://img.shields.io/github/stars/seven282/oss-prompt-optimizer?style=flat&label=stars)](https://github.com/seven282/oss-prompt-optimizer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-click](https://github.com/PerryLink/dsh-click) | Adds Windows-first desktop observation and control with accessibility trees, stale-state checks, approval-gated actions, and audit events. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-click?style=flat&label=stars)](https://github.com/PerryLink/dsh-click/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-vision-any](https://github.com/tianmingwan/dsh-vision-any) | Adds image paste support and a configurable vision tool for OpenAI-compatible, Anthropic, or Gemini APIs. | [![GitHub stars](https://img.shields.io/github/stars/tianmingwan/dsh-vision-any?style=flat&label=stars)](https://github.com/tianmingwan/dsh-vision-any/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-vision-proxy](https://github.com/Flyvhidbwo/dsh-vision-proxy) | Transcribes image attachments through a configured OpenAI-compatible VLM for text-only DeepSeek routes, with ordered DeepSeek and local Ollama fallbacks. | [![GitHub stars](https://img.shields.io/github/stars/Flyvhidbwo/dsh-vision-proxy?style=flat&label=stars)](https://github.com/Flyvhidbwo/dsh-vision-proxy/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-agent-skills](https://github.com/minivv/dsh-agent-skills) | Discovers skill directories from several agent tools and manages their visibility in Harness without modifying the original skill files. | [![GitHub stars](https://img.shields.io/github/stars/minivv/dsh-agent-skills?style=flat&label=stars)](https://github.com/minivv/dsh-agent-skills/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-reference-anything](https://github.com/Chael-Chael/dsh-reference-anything) | Adds an enhanced DSH @ menu for referencing commands, skills, files, sessions, cloud drives, and web conversations. | [![GitHub stars](https://img.shields.io/github/stars/Chael-Chael/dsh-reference-anything?style=flat&label=stars)](https://github.com/Chael-Chael/dsh-reference-anything/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-bash-rtk](https://github.com/DeepTrial/dsh-bash-rtk) | Routes eligible DSH shell commands through RTK to reduce verbose command output before it enters the agent context. | [![GitHub stars](https://img.shields.io/github/stars/DeepTrial/dsh-bash-rtk?style=flat&label=stars)](https://github.com/DeepTrial/dsh-bash-rtk/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mask](https://github.com/PerryLink/dsh-mask) | Masks selected personal data before model requests, keeps restoration mappings outside the session log, and records count-only audit events. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-mask?style=flat&label=stars)](https://github.com/PerryLink/dsh-mask/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-codegraph](https://github.com/CC19990113/dsh-plugin-codegraph) | Builds an on-disk symbol graph and exposes indexed declaration, caller, callee, path, impact, and dependency queries to the agent. | [![GitHub stars](https://img.shields.io/github/stars/CC19990113/dsh-plugin-codegraph?style=flat&label=stars)](https://github.com/CC19990113/dsh-plugin-codegraph/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-deepresearch](https://github.com/havingautism/dsh-deepresearch) | Adds a persistent evidence-first research workspace to DSH with approval-gated plans, parallel scout and evaluator agents, source tracking, and report generation. | [![GitHub stars](https://img.shields.io/github/stars/havingautism/dsh-deepresearch?style=flat&label=stars)](https://github.com/havingautism/dsh-deepresearch/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-score](https://github.com/PerryLink/dsh-score) | Scores plugin installability, maintenance, documentation, security, and compliance with evidence-linked reports and batch leaderboards. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-score?style=flat&label=stars)](https://github.com/PerryLink/dsh-score/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-test-drive](https://github.com/PerryLink/dsh-test-drive) | Runs plugin installation, configuration, boot, capability, removal, and cleanup checks in isolated temporary profiles. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-test-drive?style=flat&label=stars)](https://github.com/PerryLink/dsh-test-drive/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-miraculous-standard](https://github.com/rinDBeans/dsh-miraculous-standard) | Provides an experimental anchored agent preset that combines Minimal-style bootstrap tools with a broader resident tool catalog. | [![GitHub stars](https://img.shields.io/github/stars/rinDBeans/dsh-miraculous-standard?style=flat&label=stars)](https://github.com/rinDBeans/dsh-miraculous-standard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skill-7d-code-reviewer](https://github.com/7dgroup-ai/dsh-skill-7d-code-reviewer) | Adds a five-step code-review skill with severity levels and both text and HTML reports. | [![GitHub stars](https://img.shields.io/github/stars/7dgroup-ai/dsh-skill-7d-code-reviewer?style=flat&label=stars)](https://github.com/7dgroup-ai/dsh-skill-7d-code-reviewer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Code2Skill](https://github.com/leechen298/Code2Skill) | Generates function, MCP, Agent Skill, and offline-test packages from user-authorized source code and installs its generators as a DSH bundle. | [![GitHub stars](https://img.shields.io/github/stars/leechen298/Code2Skill?style=flat&label=stars)](https://github.com/leechen298/Code2Skill/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-draw](https://github.com/PerryLink/dsh-draw) | Provides feature-frozen image-generation routing with OpenAI-compatible or CogView engines, fallback, quotas, and attachment-backed results. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-draw?style=flat&label=stars)](https://github.com/PerryLink/dsh-draw/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [toolshrink](https://github.com/unclecode/toolshrink) | Replaces size-only tool-output truncation with format-aware shrinking that preserves salient failures, summaries, and a locator for the full output. | [![GitHub stars](https://img.shields.io/github/stars/unclecode/toolshrink?style=flat&label=stars)](https://github.com/unclecode/toolshrink/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-chat-imagine](https://github.com/corrinehu/dsh-chat-imagine) | Adds in-chat image generation and display to DSH through configured APIs or local MMX, Codex, and Antigravity CLIs, with optional image recognition through those CLIs. | [![GitHub stars](https://img.shields.io/github/stars/corrinehu/dsh-chat-imagine?style=flat&label=stars)](https://github.com/corrinehu/dsh-chat-imagine/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-search-free](https://github.com/sheep-programmer/dsh-web-search-free) | Adds switchable anonymous Parallel or Exa web search to DSH and exposes the same providers through stdio and HTTP/SSE MCP transports. | [![GitHub stars](https://img.shields.io/github/stars/sheep-programmer/dsh-web-search-free?style=flat&label=stars)](https://github.com/sheep-programmer/dsh-web-search-free/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-chinese-mode](https://github.com/dawnliming/dsh-chinese-mode) | Adds a DSH Web toggle that injects a Simplified Chinese requirement into each session prompt. | [![GitHub stars](https://img.shields.io/github/stars/dawnliming/dsh-chinese-mode?style=flat&label=stars)](https://github.com/dawnliming/dsh-chinese-mode/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pbr-material](https://github.com/zhangx413/dsh-pbr-material) | Turns photos into tileable PBR material maps through local ComfyUI workflows, with setup tools, tiling checks, and a workbench. | [![GitHub stars](https://img.shields.io/github/stars/zhangx413/dsh-pbr-material?style=flat&label=stars)](https://github.com/zhangx413/dsh-pbr-material/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [InfiniteDSH](https://github.com/vdnight89/InfiniteDSH) | Turns each session into an interactive fiction project with 19 genre presets, keyword-triggered lore, prose-only guardrails, persistent story archives, and Markdown export. | [![GitHub stars](https://img.shields.io/github/stars/vdnight89/InfiniteDSH?style=flat&label=stars)](https://github.com/vdnight89/InfiniteDSH/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ocr-local](https://github.com/grelvan/dsh-ocr-local) | Runs fully local image OCR with PP-OCRv5 and ONNX Runtime in DeepSeek Harness Web and compatible terminal clients. | [![GitHub stars](https://img.shields.io/github/stars/grelvan/dsh-ocr-local?style=flat&label=stars)](https://github.com/grelvan/dsh-ocr-local/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-anchored-flash](https://github.com/ruler770525/dsh-anchored-flash) | Provides an experimental Minimal-anchored DSH preset with a configurable resident-tool whitelist and indirect AGENTS.md loading. | [![GitHub stars](https://img.shields.io/github/stars/ruler770525/dsh-anchored-flash?style=flat&label=stars)](https://github.com/ruler770525/dsh-anchored-flash/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [easycad-dsh-plugin](https://github.com/123qiang06/easycad-dsh-plugin) | Turns DSH prompts into editable build123d CAD models with STEP, STL, and GLB export, geometry checks, parameter editing, and an in-page 3D workbench. | [![GitHub stars](https://img.shields.io/github/stars/123qiang06/easycad-dsh-plugin?style=flat&label=stars)](https://github.com/123qiang06/easycad-dsh-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-community-plugins](https://github.com/HubaKing/dsh-community-plugins) | Teaches DSH plugin discovery and installation and adds installed-plugin audits plus pre-install tarball inspection against the local host. | [![GitHub stars](https://img.shields.io/github/stars/HubaKing/dsh-community-plugins?style=flat&label=stars)](https://github.com/HubaKing/dsh-community-plugins/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-withskillhub](https://github.com/lhwu1/dsh-withskillhub) | Embeds the public SkillHub marketplace in Harness settings for browsing, downloading, enabling, updating, and removing managed skills. | [![GitHub stars](https://img.shields.io/github/stars/lhwu1/dsh-withskillhub?style=flat&label=stars)](https://github.com/lhwu1/dsh-withskillhub/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tesseract-ocr](https://github.com/maxwell-feng/dsh-tesseract-ocr) · <sub>Archived</sub> | Runs attached images through local Tesseract OCR before sending recognized text to text-only models. | [![GitHub stars](https://img.shields.io/github/stars/maxwell-feng/dsh-tesseract-ocr?style=flat&label=stars)](https://github.com/maxwell-feng/dsh-tesseract-ocr/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-comfyui-node-development](https://github.com/shouwang37/dsh-comfyui-node-development) | Packages a bilingual, reference-backed ComfyUI custom-node development guide as a loadable Harness skill. | [![GitHub stars](https://img.shields.io/github/stars/shouwang37/dsh-comfyui-node-development?style=flat&label=stars)](https://github.com/shouwang37/dsh-comfyui-node-development/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-github-skills](https://github.com/Starfie1d1272/dsh-github-skills) | Adds skill-first GitHub workflows for PR triage, review feedback, CI diagnosis, and controlled publishing. | [![GitHub stars](https://img.shields.io/github/stars/Starfie1d1272/dsh-github-skills?style=flat&label=stars)](https://github.com/Starfie1d1272/dsh-github-skills/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-prompt-enhancer](https://github.com/yaoshuo530/dsh-prompt-enhancer) | Adds a composer button that rewrites prompts with session context and first-principles structure, asking clarifying questions when essential information is missing. | [![GitHub stars](https://img.shields.io/github/stars/yaoshuo530/dsh-prompt-enhancer?style=flat&label=stars)](https://github.com/yaoshuo530/dsh-prompt-enhancer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skills-manager](https://github.com/BAIKAI23333/dsh-skills-manager) | Imports and manages skills in the Web UI, with task-oriented skill groups that can be switched or disabled without restarting Harness. | [![GitHub stars](https://img.shields.io/github/stars/BAIKAI23333/dsh-skills-manager?style=flat&label=stars)](https://github.com/BAIKAI23333/dsh-skills-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-data-insight](https://github.com/duyanta123/dsh-data-insight) | Packages a DSH data-analysis skill with a CSV profiling script and chart or report guidance, using the host's existing file and shell tools. | [![GitHub stars](https://img.shields.io/github/stars/duyanta123/dsh-data-insight?style=flat&label=stars)](https://github.com/duyanta123/dsh-data-insight/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-track](https://github.com/fakechris/dsh-track) | Adds a task engine with decision-point capture, a Web task board, issue-lifecycle tools, and an accompanying workflow skill. | [![GitHub stars](https://img.shields.io/github/stars/fakechris/dsh-track?style=flat&label=stars)](https://github.com/fakechris/dsh-track/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-superpowers](https://github.com/JasonFreeLab/dsh-superpowers) | Ports fourteen Superpowers software-development methodology skills to native DSH skill registration with tool mappings and profile-level installation. | [![GitHub stars](https://img.shields.io/github/stars/JasonFreeLab/dsh-superpowers?style=flat&label=stars)](https://github.com/JasonFreeLab/dsh-superpowers/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-trading-toolkit](https://github.com/kentleenot/dsh-trading-toolkit) | Provides read-only A-share and US-stock quotes, OHLCV history, ADX regime signals, and a simple backtest preview through EastMoney. | [![GitHub stars](https://img.shields.io/github/stars/kentleenot/dsh-trading-toolkit?style=flat&label=stars)](https://github.com/kentleenot/dsh-trading-toolkit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-search-anysearch](https://github.com/mcxianyujun/dsh-web-search-anysearch) | Adds multi-engine web search and page fetching with AnySearch, local fallbacks, caching, and configurable routing. | [![GitHub stars](https://img.shields.io/github/stars/mcxianyujun/dsh-web-search-anysearch?style=flat&label=stars)](https://github.com/mcxianyujun/dsh-web-search-anysearch/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tool-csv](https://github.com/omdsh-dev/dsh-tool-csv) | Adds zero-dependency CSV parsing, querying, statistics, and conversion tools. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-tool-csv?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-tool-csv/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-wm](https://github.com/WayneJin0918/dsh-wm) | Adds a world-model research toolkit for contact-sheet inspection, route classification, rollout scoring, and iterative skill and evaluation work. | [![GitHub stars](https://img.shields.io/github/stars/WayneJin0918/dsh-wm?style=flat&label=stars)](https://github.com/WayneJin0918/dsh-wm/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [improved_vision_for_deepseek](https://github.com/zyh20041227/improved_vision_for_deepseek) | Preprocesses high-resolution images into an overview, overlapping coverage tiles, and optional dense-region crops for DSH vision models. | [![GitHub stars](https://img.shields.io/github/stars/zyh20041227/improved_vision_for_deepseek?style=flat&label=stars)](https://github.com/zyh20041227/improved_vision_for_deepseek/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-wsl-open](https://github.com/173787247/dsh-wsl-open) | Makes WSL Linux paths in DSH chat clickable and opens files with their default Windows app or folders in Explorer. | [![GitHub stars](https://img.shields.io/github/stars/173787247/dsh-wsl-open?style=flat&label=stars)](https://github.com/173787247/dsh-wsl-open/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-rea-agents](https://github.com/appthin/dsh-rea-agents) | Manages a version-pinned local REA installation and connects its MCP server to DSH, with explicit install, update, and removal controls. | [![GitHub stars](https://img.shields.io/github/stars/appthin/dsh-rea-agents?style=flat&label=stars)](https://github.com/appthin/dsh-rea-agents/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-free-web-search](https://github.com/delef/dsh-free-web-search) | Adds keyless Bing, DuckDuckGo, and SearXNG search plus optional keyed engines, time filters, and platform search. | [![GitHub stars](https://img.shields.io/github/stars/delef/dsh-free-web-search?style=flat&label=stars)](https://github.com/delef/dsh-free-web-search/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [codegraph](https://github.com/JohnXu22786/codegraph) | Indexes symbols, calls, and imports in SQLite and exposes caller, callee, dependency, impact, search, overview, and reindex tools through a Python CLI bridge. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/codegraph?style=flat&label=stars)](https://github.com/JohnXu22786/codegraph/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-image-transcription-plugin](https://github.com/kutcr/dsh-image-transcription-plugin) | Adds durable image transcriptions and on-demand historical image recall for text-only DSH models. | [![GitHub stars](https://img.shields.io/github/stars/kutcr/dsh-image-transcription-plugin?style=flat&label=stars)](https://github.com/kutcr/dsh-image-transcription-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-prompt-optimizer](https://github.com/lizhecome/deepseek-harness-prompt-optimizer) | Adds a composer control and optional pre-step hook that improve prompts through a configured auxiliary LLM. | [![GitHub stars](https://img.shields.io/github/stars/lizhecome/deepseek-harness-prompt-optimizer?style=flat&label=stars)](https://github.com/lizhecome/deepseek-harness-prompt-optimizer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-prompt-studio](https://github.com/Moeblack/dsh-prompt-studio) | Edits and previews user and built-in system-prompt sections inside DSH. | [![GitHub stars](https://img.shields.io/github/stars/Moeblack/dsh-prompt-studio?style=flat&label=stars)](https://github.com/Moeblack/dsh-prompt-studio/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-book2skill](https://github.com/omdsh-dev/dsh-book2skill) | Turns books into installable skills through a gated five-stage agent workflow. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-book2skill?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-book2skill/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [url-manager](https://github.com/Piccolo123/url-manager) | Adds a DSH-compatible skill for saving, categorizing, searching, and sharing web resources. | [![GitHub stars](https://img.shields.io/github/stars/Piccolo123/url-manager?style=flat&label=stars)](https://github.com/Piccolo123/url-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ops-mac](https://github.com/Salty-Mocha/dsh-ops-mac) | Ports dsh-ops file-search and PTC batch tools to Apple Silicon macOS using a bundled Rust worker. | [![GitHub stars](https://img.shields.io/github/stars/Salty-Mocha/dsh-ops-mac?style=flat&label=stars)](https://github.com/Salty-Mocha/dsh-ops-mac/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [experts-management](https://github.com/weibaohui/experts-management) | Manages installable individual and team expert personas and injects them into DSH turns through explicit user gestures. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/experts-management?style=flat&label=stars)](https://github.com/weibaohui/experts-management/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-gamemode](https://github.com/XCNXNXNX/dsh-gamemode) | Adds Minecraft-style slash commands for switching live sessions between DSH Creative and Standard presets. | [![GitHub stars](https://img.shields.io/github/stars/XCNXNXNX/dsh-gamemode?style=flat&label=stars)](https://github.com/XCNXNXNX/dsh-gamemode/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-spec-collab](https://github.com/zx490336534/dsh-spec-collab) | Guides product and engineering through Git-versioned requirement reviews, candidate patches, decisions, confirmations, and Ready Spec quality gates. | [![GitHub stars](https://img.shields.io/github/stars/zx490336534/dsh-spec-collab?style=flat&label=stars)](https://github.com/zx490336534/dsh-spec-collab/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-capability-index](https://github.com/777-Zen/dsh-capability-index) · <sub>Archived</sub> | Indexes installed DSH plugins and injects a task-specific shortlist of relevant capabilities before an agent begins work. | [![GitHub stars](https://img.shields.io/github/stars/777-Zen/dsh-capability-index?style=flat&label=stars)](https://github.com/777-Zen/dsh-capability-index/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-minimal-msys2](https://github.com/AythyaCrispus/dsh-minimal-msys2) | Adds a Windows minimal-mode preset with persistent MSYS2 or Git Bash and str_replace_editor for full-access sessions. | [![GitHub stars](https://img.shields.io/github/stars/AythyaCrispus/dsh-minimal-msys2?style=flat&label=stars)](https://github.com/AythyaCrispus/dsh-minimal-msys2/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-report-studio](https://github.com/ciceroyang/dsh-report-studio) | Turns DSH sessions into daily, weekly, handoff, or article reports with hashed artifacts, HTML export, indexing, and receipt verification. | [![GitHub stars](https://img.shields.io/github/stars/ciceroyang/dsh-report-studio?style=flat&label=stars)](https://github.com/ciceroyang/dsh-report-studio/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skill-manage](https://github.com/fuxin123z/dsh-skill-manage) | Adds an agent-facing tool for creating, patching, disabling, and deleting user or project skills with hot reload and deletion guards. | [![GitHub stars](https://img.shields.io/github/stars/fuxin123z/dsh-skill-manage?style=flat&label=stars)](https://github.com/fuxin123z/dsh-skill-manage/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [kubemd](https://github.com/guiyi-labs/kubemd) | Provides an evidence-first DSH skill for diagnosing live Kubernetes failures with falsifiable hypotheses, dry-run fixes, and reusable case records. | [![GitHub stars](https://img.shields.io/github/stars/guiyi-labs/kubemd?style=flat&label=stars)](https://github.com/guiyi-labs/kubemd/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-antv-infographic](https://github.com/HellowVirgil/dsh-antv-infographic) | Renders streaming, editable AntV infographics inside DSH replies with SVG or PNG export and source-DSL copying. | [![GitHub stars](https://img.shields.io/github/stars/HellowVirgil/dsh-antv-infographic?style=flat&label=stars)](https://github.com/HellowVirgil/dsh-antv-infographic/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [spec-driven](https://github.com/JohnXu22786/spec-driven) | Bundles skills, tools, templates, and a CLI for a five-step specification-driven workflow that validates assumptions and constrains scope. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/spec-driven?style=flat&label=stars)](https://github.com/JohnXu22786/spec-driven/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-input-suite](https://github.com/Ln1m/dsh-input-suite) | Adds per-session skill sets that switch the skill catalog and skill content exposed to a DSH agent. | [![GitHub stars](https://img.shields.io/github/stars/Ln1m/dsh-input-suite?style=flat&label=stars)](https://github.com/Ln1m/dsh-input-suite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tool-suite](https://github.com/Ln1m/dsh-tool-suite) | Bundles DSH extensions for mobile access, local file search, hot memory, checkpoints, and a configurable literature-search wrapper. | [![GitHub stars](https://img.shields.io/github/stars/Ln1m/dsh-tool-suite?style=flat&label=stars)](https://github.com/Ln1m/dsh-tool-suite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-skill-manager-gui](https://github.com/luoying2334/dsh-plugin-skill-manager-gui) | Adds a bilingual graphical manager for creating, editing, importing, relocating, enabling, and deleting global or workspace skills. | [![GitHub stars](https://img.shields.io/github/stars/luoying2334/dsh-plugin-skill-manager-gui?style=flat&label=stars)](https://github.com/luoying2334/dsh-plugin-skill-manager-gui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-stock-lookup](https://github.com/minyang-chen/dsh-stock-lookup) | Adds DSH tools that resolve US company names through SEC EDGAR and fetch live quotes and company profiles from Yahoo Finance. | [![GitHub stars](https://img.shields.io/github/stars/minyang-chen/dsh-stock-lookup?style=flat&label=stars)](https://github.com/minyang-chen/dsh-stock-lookup/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-minimal-web](https://github.com/Moeblack/dsh-minimal-web) | Adds a minimal coding-agent preset with a persistent shell, workspace instructions, and web search. | [![GitHub stars](https://img.shields.io/github/stars/Moeblack/dsh-minimal-web?style=flat&label=stars)](https://github.com/Moeblack/dsh-minimal-web/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-Bio-image-dup-check](https://github.com/PetCT/dsh-Bio-image-dup-check) | Adds local offline integrity checks for scientific images and PDFs, covering whole-image variants, copy-move regions, cross-image reuse, and exportable reports. | [![GitHub stars](https://img.shields.io/github/stars/PetCT/dsh-Bio-image-dup-check?style=flat&label=stars)](https://github.com/PetCT/dsh-Bio-image-dup-check/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-adb](https://github.com/SamXiaBing/dsh-adb) | Adds Android device discovery, structured logcat, APK installation, file transfer, and performance snapshots for bench debugging. | [![GitHub stars](https://img.shields.io/github/stars/SamXiaBing/dsh-adb?style=flat&label=stars)](https://github.com/SamXiaBing/dsh-adb/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-finance-db](https://github.com/zhiyaoli0221/dsh-finance-db) | Adds read-only DSH tools for A-share, Hong Kong, and US quotes, history, fundamentals, news, stock search, market overview, and provider health. | [![GitHub stars](https://img.shields.io/github/stars/zhiyaoli0221/dsh-finance-db?style=flat&label=stars)](https://github.com/zhiyaoli0221/dsh-finance-db/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-desktop-operator](https://github.com/zjh02249/dsh-desktop-operator) | Adds Windows desktop automation to DSH through UI Automation, screenshots, pointer and keyboard controls, confirmation gates, and a bundled MCP runtime. | [![GitHub stars](https://img.shields.io/github/stars/zjh02249/dsh-desktop-operator?style=flat&label=stars)](https://github.com/zjh02249/dsh-desktop-operator/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pianist](https://github.com/Laplace-bit/dsh-pianist) | Adds a piano performance tool to DSH with a deterministic musical timeline, sampled grand-piano audio, an interactive 88-key keyboard, and Canvas stage views. | [![GitHub stars](https://img.shields.io/github/stars/Laplace-bit/dsh-pianist?style=flat&label=stars)](https://github.com/Laplace-bit/dsh-pianist/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://laplace-bit.github.io/dsh-pianist/">dsh-pianist showcase and installation</a> · <sub>Docs</sub></li></ul></details> |
+| [deepseek-search-tools](https://github.com/ansellchen-boop/deepseek-search-tools) | Connects DSH web_search and web_fetch providers to DeepSeek's dedicated Search and Fetch APIs, with settings and usage tracking. | [![GitHub stars](https://img.shields.io/github/stars/ansellchen-boop/deepseek-search-tools?style=flat&label=stars)](https://github.com/ansellchen-boop/deepseek-search-tools/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-promptkit](https://github.com/fsrmqi/dsh-promptkit) | Adds a Prompt Studio and quick composer enhancer to DSH, supporting reusable prompt structures plus optional semantic rewriting through the session's current model. | [![GitHub stars](https://img.shields.io/github/stars/fsrmqi/dsh-promptkit?style=flat&label=stars)](https://github.com/fsrmqi/dsh-promptkit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [georesearch-dsh](https://github.com/georesearch-dsh/georesearch-dsh) | Adds evidence-grounded geoscience research projects to DSH with specialist skills, bounded repository inspection, persistent artifacts, source tracking, and reproducible reports. | [![GitHub stars](https://img.shields.io/github/stars/georesearch-dsh/georesearch-dsh?style=flat&label=stars)](https://github.com/georesearch-dsh/georesearch-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-artifact](https://github.com/Jannchie/dsh-artifact) | Adds HTML document and slide artifacts to DSH with sidebar previews, revision history, slide editing, and PowerPoint export. | [![GitHub stars](https://img.shields.io/github/stars/Jannchie/dsh-artifact?style=flat&label=stars)](https://github.com/Jannchie/dsh-artifact/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-qwen-studio](https://github.com/kingcharleslzy-ai/dsh-qwen-studio) | Adds Qwen image generation and reference editing to DSH through local Apple Silicon MLX or self-hosted CUDA backends. | [![GitHub stars](https://img.shields.io/github/stars/kingcharleslzy-ai/dsh-qwen-studio?style=flat&label=stars)](https://github.com/kingcharleslzy-ai/dsh-qwen-studio/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-omicos](https://github.com/omicverse/dsh-omicos) | Connects DSH to OmicOS bioinformatics workflows through a persistent Python kernel, capability search, analysis tools, and execution views. | [![GitHub stars](https://img.shields.io/github/stars/omicverse/dsh-omicos?style=flat&label=stars)](https://github.com/omicverse/dsh-omicos/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [SearchSieve](https://github.com/rangrongg/SearchSieve) | Adds a search-review tool that scores result pages for semantic relevance and expected-point coverage, filters noise, and exposes the evidence behind each decision. | [![GitHub stars](https://img.shields.io/github/stars/rangrongg/SearchSieve?style=flat&label=stars)](https://github.com/rangrongg/SearchSieve/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skill-curator](https://github.com/runfali/dsh-skill-curator) | Periodically reviews DSH conversations with a background subagent that creates, edits, merges, and prunes local skills with read-before-write checks and backups. | [![GitHub stars](https://img.shields.io/github/stars/runfali/dsh-skill-curator?style=flat&label=stars)](https://github.com/runfali/dsh-skill-curator/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-artifacts](https://github.com/zoahdev/dsh-artifacts) | Renders Markdown or JSON into self-contained HTML documents, cards, dashboards, and galleries from DSH or its companion CLI. | [![GitHub stars](https://img.shields.io/github/stars/zoahdev/dsh-artifacts?style=flat&label=stars)](https://github.com/zoahdev/dsh-artifacts/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [adversarial-review](https://github.com/JohnXu22786/adversarial-review) | Adds parallel correctness, security, and maintainability review lenses with deterministic checks, deduplication, severity grading, suppression rules, and review history. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/adversarial-review?style=flat&label=stars)](https://github.com/JohnXu22786/adversarial-review/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [browser-automation](https://github.com/JohnXu22786/browser-automation) | Adds Playwright browser automation tools for navigation, interaction, accessibility snapshots, screenshots, tabs, and JavaScript execution. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/browser-automation?style=flat&label=stars)](https://github.com/JohnXu22786/browser-automation/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [command-scout](https://github.com/JohnXu22786/command-scout) | Discovers declared Make, package-script, Just, and Deno tasks in a workspace and exposes them as deterministic agent tools. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/command-scout?style=flat&label=stars)](https://github.com/JohnXu22786/command-scout/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [computer-control](https://github.com/JohnXu22786/computer-control) | Bridges screenshot capture, pointer and keyboard input, accessibility-tree actions, confirmations, and an emergency stop into DeepSeek Harness over stdio JSON-RPC. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/computer-control?style=flat&label=stars)](https://github.com/JohnXu22786/computer-control/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [docgen](https://github.com/JohnXu22786/docgen) | Bundles prompt-only skills for generating READMEs, pull-request descriptions, changelogs, and code-review documents. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/docgen?style=flat&label=stars)](https://github.com/JohnXu22786/docgen/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [docs-retriever](https://github.com/JohnXu22786/docs-retriever) | Provides a zero-dependency MCP server for catalog lookup, version selection, and relevance-ranked extraction from versioned library documentation. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/docs-retriever?style=flat&label=stars)](https://github.com/JohnXu22786/docs-retriever/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [snippet-expander](https://github.com/JohnXu22786/snippet-expander) | Expands inline hashtag snippets before sending messages, with multiple libraries, aliases, variables, recursion guards, management tools, and a CLI. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/snippet-expander?style=flat&label=stars)](https://github.com/JohnXu22786/snippet-expander/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-code-intel](https://github.com/lonelymoon87/dsh-code-intel) | Adds symbol-aware code outlines, persistent indexing, and lexical or embedding-assisted search. | [![GitHub stars](https://img.shields.io/github/stars/lonelymoon87/dsh-code-intel?style=flat&label=stars)](https://github.com/lonelymoon87/dsh-code-intel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-browser-tool](https://github.com/mtaech/dsh-browser-tool) · <sub>Archived</sub> | Adds open, run, and close tools for Chromium tabs through headless, CDP, desktop-launch, or Browser Relay modes, with screenshots and script execution. | [![GitHub stars](https://img.shields.io/github/stars/mtaech/dsh-browser-tool?style=flat&label=stars)](https://github.com/mtaech/dsh-browser-tool/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-image-vision](https://github.com/niushuanan/dsh-image-vision) | Provides a source-integrated DSH vision extension that passes native attachments to vision models and gives text-only models an image tool with follow-up questions. | [![GitHub stars](https://img.shields.io/github/stars/niushuanan/dsh-image-vision?style=flat&label=stars)](https://github.com/niushuanan/dsh-image-vision/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-personal-directive](https://github.com/PerryLink/dsh-personal-directive) | Adds a customizable system-prompt directive with a model-facing tool and a Web header toggle for enabling or disabling it at runtime. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-personal-directive?style=flat&label=stars)](https://github.com/PerryLink/dsh-personal-directive/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [url-manager-mcp](https://github.com/Piccolo123/url-manager-mcp) | Provides an MCP server for saving, organizing, searching, and sharing URL collections. | [![GitHub stars](https://img.shields.io/github/stars/Piccolo123/url-manager-mcp?style=flat&label=stars)](https://github.com/Piccolo123/url-manager-mcp/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-capability-resolver](https://github.com/striveh/dsh-capability-resolver) | Matches requests against configured DSH tools and skills, then locally ranks community plugin candidates through a read-only resolver. | [![GitHub stars](https://img.shields.io/github/stars/striveh/dsh-capability-resolver?style=flat&label=stars)](https://github.com/striveh/dsh-capability-resolver/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-self-harness-tools](https://github.com/SuTang-vain/dsh-self-harness-tools) | Bundles dynamic Cordis plugins for deterministic probe batteries and an evidence archive dashboard. | [![GitHub stars](https://img.shields.io/github/stars/SuTang-vain/dsh-self-harness-tools?style=flat&label=stars)](https://github.com/SuTang-vain/dsh-self-harness-tools/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-search](https://github.com/YUANMINGXUE/dsh-search) | Adds browser_search and browser_fetch tools that drive a locally installed Chromium browser through CDP, requiring no search API key or cloud provider. | [![GitHub stars](https://img.shields.io/github/stars/YUANMINGXUE/dsh-search?style=flat&label=stars)](https://github.com/YUANMINGXUE/dsh-search/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-synomega](https://github.com/zbc0315/dsh-synomega) | Adds local organic-chemistry tools for retrosynthesis, forward prediction, route planning, SynScore, molecular evolution, and in-chat structure visualisation. | [![GitHub stars](https://img.shields.io/github/stars/zbc0315/dsh-synomega?style=flat&label=stars)](https://github.com/zbc0315/dsh-synomega/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-paper-survey](https://github.com/zeros335882878/dsh-paper-survey) | Bundles three DSH skills for interpret-first paper reading, user-confirmed literature surveys, and generated or revised presentation decks. | [![GitHub stars](https://img.shields.io/github/stars/zeros335882878/dsh-paper-survey?style=flat&label=stars)](https://github.com/zeros335882878/dsh-paper-survey/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+
+## Sessions & Storage
+
+| Project | Description | Stars | Referenced by |
+| --- | --- | --- | --- |
+| [claude-mem](https://github.com/thedotmack/claude-mem) | Connects Claude-Mem's worker to DSH for context injection, memory search and saving, and automatic transcript capture. | [![GitHub stars](https://img.shields.io/github/stars/thedotmack/claude-mem?style=flat&label=stars)](https://github.com/thedotmack/claude-mem/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memory-plugin](https://github.com/volcengine/OpenViking/tree/main/examples/dsh-memory-plugin) | Adds OpenViking-backed auto-recall, session capture, protected viking:// URIs, and model-invocable memory tools to DSH. | [![GitHub stars](https://img.shields.io/github/stars/volcengine/OpenViking?style=flat&label=stars)](https://github.com/volcengine/OpenViking/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://docs.openviking.ai/en/agent-integrations/17-dsh">OpenViking memory integration for DeepSeek Harness</a> · <sub>Docs</sub></li></ul></details> |
+| [EverOS](https://github.com/EverMind-AI/EverOS) | Provides a local-first, Markdown-native memory layer for agents with a dedicated DeepSeek Harness plugin. | [![GitHub stars](https://img.shields.io/github/stars/EverMind-AI/EverOS?style=flat&label=stars)](https://github.com/EverMind-AI/EverOS/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [MemOS](https://github.com/MemTensor/MemOS) | Adds local or cloud persistent memory to DSH with automatic recall, turn capture, hybrid retrieval, and a memory viewer. | [![GitHub stars](https://img.shields.io/github/stars/MemTensor/MemOS?style=flat&label=stars)](https://github.com/MemTensor/MemOS/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [ReMe](https://github.com/agentscope-ai/ReMe) | Connects DSH to ReMe with memory guidance, on-demand search, automatic turn capture, and scheduled memory consolidation. | [![GitHub stars](https://img.shields.io/github/stars/agentscope-ai/ReMe?style=flat&label=stars)](https://github.com/agentscope-ai/ReMe/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://reme.agentscope.io/en/integrations/dsh">ReMe plugin guide for DeepSeek Harness</a> · <sub>Docs</sub></li></ul></details> |
+| [memsearch](https://github.com/zilliztech/memsearch) | Adds shared Markdown memory to DSH with automatic capture, hybrid recall, native skills, background maintenance, and a read-only Web browser. | [![GitHub stars](https://img.shields.io/github/stars/zilliztech/memsearch?style=flat&label=stars)](https://github.com/zilliztech/memsearch/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://zilliztech.github.io/memsearch/platforms/dsh/">MemSearch DeepSeek Harness plugin</a> · <sub>Docs</sub></li></ul></details> |
+| [billion-context](https://github.com/ranxianglei/billion-context) | Adds native DSH context compression with reversible summaries, context search, usage inspection, and a launcher or profile installation path. | [![GitHub stars](https://img.shields.io/github/stars/ranxianglei/billion-context?style=flat&label=stars)](https://github.com/ranxianglei/billion-context/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [graph-memory](https://github.com/adoresever/graph-memory) | Adds a native DSH memory plugin that archives older turns and recalls source-backed knowledge across sessions. | [![GitHub stars](https://img.shields.io/github/stars/adoresever/graph-memory?style=flat&label=stars)](https://github.com/adoresever/graph-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [mnemon](https://github.com/mnemon-dev/mnemon) | Connects Mnemon's local graph memory to DSH through dsh-mnemon, combining runtime memory, project documents, and supervised long-term memory spaces. | [![GitHub stars](https://img.shields.io/github/stars/mnemon-dev/mnemon?style=flat&label=stars)](https://github.com/mnemon-dev/mnemon/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) | Coordinates per-turn memory, project documents, and retrievable memory spaces through configurable source plugins and selection strategies. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-mnemon?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-mnemon/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [flowix](https://github.com/text2future/flowix) | Ships a Flowix workspace with a DSH adapter and a local-notes memory plugin for agent projects. | [![GitHub stars](https://img.shields.io/github/stars/text2future/flowix?style=flat&label=stars)](https://github.com/text2future/flowix/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memory](https://github.com/FuRongJun-1999/dsh-memory) | Adds Markdown cognitive-graph memory, retrieval, and evidence-checking tools to DSH through a native plugin or stdio MCP server. | [![GitHub stars](https://img.shields.io/github/stars/FuRongJun-1999/dsh-memory?style=flat&label=stars)](https://github.com/FuRongJun-1999/dsh-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memory-evolve](https://github.com/csyangwen/dsh-memory-evolve) | Adds branch-aware long-term memory, review, skills, and task tracking across sessions. | [![GitHub stars](https://img.shields.io/github/stars/csyangwen/dsh-memory-evolve?style=flat&label=stars)](https://github.com/csyangwen/dsh-memory-evolve/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [sivtr](https://github.com/Ariestar/sivtr) | Provides an agent memory workspace with a DSH adapter, searchable MCP tools, and retained terminal evidence. | [![GitHub stars](https://img.shields.io/github/stars/Ariestar/sivtr?style=flat&label=stars)](https://github.com/Ariestar/sivtr/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-chat-import](https://github.com/Nwflower/dsh-chat-import) | Imports coding-assistant histories into resumable DSH sessions, preserves supported reasoning and tool records, and exports selected formats. | [![GitHub stars](https://img.shields.io/github/stars/Nwflower/dsh-chat-import?style=flat&label=stars)](https://github.com/Nwflower/dsh-chat-import/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-meow-memory](https://github.com/Phant0Meow/dsh-meow-memory) | Adds project-scoped SQLite memory with layered entries, BM25 recall, first-message injection, per-turn keyword hits, and idle dream consolidation. | [![GitHub stars](https://img.shields.io/github/stars/Phant0Meow/dsh-meow-memory?style=flat&label=stars)](https://github.com/Phant0Meow/dsh-meow-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager) | Adds archived-session search, workspace filters, bulk archiving and restoration, and confirmation-gated permanent deletion to DSH. | [![GitHub stars](https://img.shields.io/github/stars/MichengAI/dsh-archive-manager?style=flat&label=stars)](https://github.com/MichengAI/dsh-archive-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-bridge](https://github.com/Totoro-qaq/dsh-plugin-bridge) | Moves work between DSH presets through fixed-schema handoff summaries while preserving the preset isolation boundary. | [![GitHub stars](https://img.shields.io/github/stars/Totoro-qaq/dsh-plugin-bridge?style=flat&label=stars)](https://github.com/Totoro-qaq/dsh-plugin-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [mneme](https://github.com/slow-stack/mneme) | Stores cross-session memory in SQLite and editable Markdown, with entity timelines, autoDream and sleep consolidation, self-correction, and optional offline semantic retrieval. | [![GitHub stars](https://img.shields.io/github/stars/slow-stack/mneme?style=flat&label=stars)](https://github.com/slow-stack/mneme/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [billion-context-dsh](https://github.com/Tyan66666/billion-context-dsh) | Adds model-directed active context pruning with reversible compression and context search. | [![GitHub stars](https://img.shields.io/github/stars/Tyan66666/billion-context-dsh?style=flat&label=stars)](https://github.com/Tyan66666/billion-context-dsh/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://blog.yeyupiaoling.cn/article/1787711385495?lang=en">Billion-Context-DSH: model-directed context compression</a> · <sub>Blog</sub></li></ul></details> |
+| [dsh-rewind](https://github.com/SiriLee/dsh-rewind) | Rewinds a DSH conversation in place to an earlier user message, with optional previewed file restoration while preserving the append-only session log. | [![GitHub stars](https://img.shields.io/github/stars/SiriLee/dsh-rewind?style=flat&label=stars)](https://github.com/SiriLee/dsh-rewind/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memento](https://github.com/PerryLink/dsh-memento) | Provides layered, approval-gated SQLite memory and session-frozen prompt snapshots for DSH; feature development is frozen. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-memento?style=flat&label=stars)](https://github.com/PerryLink/dsh-memento/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-auto-memory](https://github.com/Aik358/dsh-auto-memory) | Adds proactive memory recall, layered consolidation, skill crystallization, calendar follow-ups, cross-tool imports, and experimental window handoffs to DSH. | [![GitHub stars](https://img.shields.io/github/stars/Aik358/dsh-auto-memory?style=flat&label=stars)](https://github.com/Aik358/dsh-auto-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-turn-rewind](https://github.com/Anionex/dsh-turn-rewind) | Restores project files to message-anchored checkpoints and can restart the corresponding DSH request after a reviewed rewind. | [![GitHub stars](https://img.shields.io/github/stars/Anionex/dsh-turn-rewind?style=flat&label=stars)](https://github.com/Anionex/dsh-turn-rewind/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-noema](https://github.com/ZSeven-W/dsh-noema) | Provides durable, inspectable long-term memory for DSH with recall tools and a Web settings interface. | [![GitHub stars](https://img.shields.io/github/stars/ZSeven-W/dsh-noema?style=flat&label=stars)](https://github.com/ZSeven-W/dsh-noema/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-EasyRewrite](https://github.com/Renzic-Stone/DSH-EasyRewrite) | Adds inline editing and recall for user messages, with deferred commits, draft recovery, image retention, and switchable conversation versions. | [![GitHub stars](https://img.shields.io/github/stars/Renzic-Stone/DSH-EasyRewrite?style=flat&label=stars)](https://github.com/Renzic-Stone/DSH-EasyRewrite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sieve](https://github.com/Sev7eEn7/dsh-sieve) | Uses a dedicated judge model to filter tool output, prune stale context, and disclose skills on demand while archiving originals for DSH. | [![GitHub stars](https://img.shields.io/github/stars/Sev7eEn7/dsh-sieve?style=flat&label=stars)](https://github.com/Sev7eEn7/dsh-sieve/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-auto-memory](https://github.com/AskTheWay/dsh-auto-memory) | Persists typed memories in Markdown files, injects a memory index into DSH prompts, and separates user and workspace scopes. | [![GitHub stars](https://img.shields.io/github/stars/AskTheWay/dsh-auto-memory?style=flat&label=stars)](https://github.com/AskTheWay/dsh-auto-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [causal-memory](https://github.com/JingxuanC/causal-memory) | Adds native DSH tools for persistent decision-to-outcome memory, causal retrieval, and counterfactual queries through a local store. | [![GitHub stars](https://img.shields.io/github/stars/JingxuanC/causal-memory?style=flat&label=stars)](https://github.com/JingxuanC/causal-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-manager](https://github.com/dream12347/dsh-session-manager) | Adds session recovery, a recycle bin, activity statistics, unread state, forking, workspace ordering, and configurable context-compression thresholds. | [![GitHub stars](https://img.shields.io/github/stars/dream12347/dsh-session-manager?style=flat&label=stars)](https://github.com/dream12347/dsh-session-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [StrataGate-AgentMemory](https://github.com/diqierjia/StrataGate-AgentMemory) | Adds local cross-session memory with layered events, source-preserving recall, a current-state graph, evidence gates, and controlled reinforcement. | [![GitHub stars](https://img.shields.io/github/stars/diqierjia/StrataGate-AgentMemory?style=flat&label=stars)](https://github.com/diqierjia/StrataGate-AgentMemory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-knowledge](https://github.com/Soren-ABT/dsh-knowledge) | Adds a local knowledge base to DSH with document chunking, embeddings, hybrid retrieval, and a management panel. | [![GitHub stars](https://img.shields.io/github/stars/Soren-ABT/dsh-knowledge?style=flat&label=stars)](https://github.com/Soren-ABT/dsh-knowledge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [opencontext](https://github.com/melandlabs/opencontext) | Adds durable memory, retrieval primitives, and audit-aware context to DSH through the OpenContext plugin. | [![GitHub stars](https://img.shields.io/github/stars/melandlabs/opencontext?style=flat&label=stars)](https://github.com/melandlabs/opencontext/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-message-edit](https://github.com/Moeblack/dsh-message-edit) | Adds branch-based message editing, reruns, retries, and a version timeline. | [![GitHub stars](https://img.shields.io/github/stars/Moeblack/dsh-message-edit?style=flat&label=stars)](https://github.com/Moeblack/dsh-message-edit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-workbench](https://github.com/PolinniZhong/dsh-session-workbench) | Adds full-text session search and recall references to DSH, plus controls for showing, hiding, and reordering conversation-view tabs. | [![GitHub stars](https://img.shields.io/github/stars/PolinniZhong/dsh-session-workbench?style=flat&label=stars)](https://github.com/PolinniZhong/dsh-session-workbench/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-nested-followups](https://github.com/sluminositys/dsh-nested-followups) | Creates isolated follow-up branches from earlier answers so exploratory questions do not alter the main conversation path. | [![GitHub stars](https://img.shields.io/github/stars/sluminositys/dsh-nested-followups?style=flat&label=stars)](https://github.com/sluminositys/dsh-nested-followups/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-filesnap](https://github.com/extracurricular-ai/dsh-filesnap) | Rewinds a DSH conversation and its workspace files together without Git, using content-addressed snapshots, forked sessions, redo support, and a bounded Rust engine. | [![GitHub stars](https://img.shields.io/github/stars/extracurricular-ai/dsh-filesnap?style=flat&label=stars)](https://github.com/extracurricular-ai/dsh-filesnap/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-recall-plugin](https://github.com/limbo947/dsh-recall-plugin) | Rewinds DSH conversations and workspace files together using previewed, incremental snapshots in an independent shadow Git repository. | [![GitHub stars](https://img.shields.io/github/stars/limbo947/dsh-recall-plugin?style=flat&label=stars)](https://github.com/limbo947/dsh-recall-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [CiteCiter](https://github.com/kirkchinese/CiteCiter) | Opens independent discussion or explanation topics from selected DSH replies, with model switching and a visual teaching board alongside the main task. | [![GitHub stars](https://img.shields.io/github/stars/kirkchinese/CiteCiter?style=flat&label=stars)](https://github.com/kirkchinese/CiteCiter/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memoir](https://github.com/Qinling-Melon-Farmers/dsh-memoir) | Adds local project memory with bounded prompt injection, BM25-ranked recall, editable records, and a Web management panel. | [![GitHub stars](https://img.shields.io/github/stars/Qinling-Melon-Farmers/dsh-memoir?style=flat&label=stars)](https://github.com/Qinling-Melon-Farmers/dsh-memoir/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-archived-chats](https://github.com/Ultronen/dsh-archived-chats) | Adds a local archive center with full-text search, read-only previews, history, ZIP backup and restore, recycle protection, and lineage views. | [![GitHub stars](https://img.shields.io/github/stars/Ultronen/dsh-archived-chats?style=flat&label=stars)](https://github.com/Ultronen/dsh-archived-chats/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-checkpoint-rewind](https://github.com/PerryLink/dsh-checkpoint-rewind) | Captures workspace, session-cursor, and plugin-config checkpoints and restores selected states through previewed, approval-gated rewinds. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-checkpoint-rewind?style=flat&label=stars)](https://github.com/PerryLink/dsh-checkpoint-rewind/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-layered-memory](https://github.com/JunNanLYS/dsh-layered-memory) | Adds layered cross-session memory to DSH that captures identity, projects, and preferences, injects relevant background automatically, and separates personal from work memories. | [![GitHub stars](https://img.shields.io/github/stars/JunNanLYS/dsh-layered-memory?style=flat&label=stars)](https://github.com/JunNanLYS/dsh-layered-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-sync](https://github.com/PerryLink/dsh-session-sync) | Mirrors the DSH session store to a user-controlled Git repository with keep-both conflict handling and confirmation-gated sync. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-session-sync?style=flat&label=stars)](https://github.com/PerryLink/dsh-session-sync/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-continual-evolve](https://github.com/ZK-Andy/dsh-continual-evolve) | Adds SQLite-backed workspace memory with gated writes, session-start index injection, reusable skills, and a memory-management panel. | [![GitHub stars](https://img.shields.io/github/stars/ZK-Andy/dsh-continual-evolve?style=flat&label=stars)](https://github.com/ZK-Andy/dsh-continual-evolve/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-compaction-instant](https://github.com/TsFreddie/dsh-compaction-instant) · <sub>Archived</sub> | Replaces model summarization with deterministic, near-lossless context compaction and exact recall. | [![GitHub stars](https://img.shields.io/github/stars/TsFreddie/dsh-compaction-instant?style=flat&label=stars)](https://github.com/TsFreddie/dsh-compaction-instant/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-md-notes](https://github.com/XieZongChen/dsh-md-notes) | Adds local Markdown note capture, editing, preview, and organization to a DSH Web sidebar. | [![GitHub stars](https://img.shields.io/github/stars/XieZongChen/dsh-md-notes?style=flat&label=stars)](https://github.com/XieZongChen/dsh-md-notes/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-history](https://github.com/chenproton/dsh-history) | Adds a searchable navigator for all user messages in a DSH session, with history loading, message jumps, ordering, and copying. | [![GitHub stars](https://img.shields.io/github/stars/chenproton/dsh-history?style=flat&label=stars)](https://github.com/chenproton/dsh-history/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sidechain](https://github.com/omdsh-dev/dsh-sidechain) | Adds persistent and one-shot side conversations without writing them into the main session history. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-sidechain?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-sidechain/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-movein](https://github.com/sjh9714/dsh-movein) | Previews and migrates instructions, skills, commands, agents, hooks, permission rules, and MCP configuration from Claude Code, with secondary Codex and OpenCode imports. | [![GitHub stars](https://img.shields.io/github/stars/sjh9714/dsh-movein?style=flat&label=stars)](https://github.com/sjh9714/dsh-movein/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-pin](https://github.com/PerryLink/dsh-session-pin) · <sub>Archived</sub> | Preserves a retired DSH sidebar organizer with workspace and session pins, colors, boards, tags, and saved views. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-session-pin?style=flat&label=stars)](https://github.com/PerryLink/dsh-session-pin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-surgeon](https://github.com/xiaoshenming/dsh-session-surgeon) | Inspects and repairs malformed DSH sessions with dry-run defaults and backups, and adds session-ID copying for referencing earlier conversations. | [![GitHub stars](https://img.shields.io/github/stars/xiaoshenming/dsh-session-surgeon?style=flat&label=stars)](https://github.com/xiaoshenming/dsh-session-surgeon/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-explain](https://github.com/yuezengwu/dsh-explain) | Adds an independent learning mode to DSH with explanations, persistent learning records, profile corrections, and scheduled reviews. | [![GitHub stars](https://img.shields.io/github/stars/yuezengwu/dsh-explain?style=flat&label=stars)](https://github.com/yuezengwu/dsh-explain/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-evolve](https://github.com/chenzheshushi-commits/dsh-evolve) | Combines local cross-session memory with reinforcement, conflict-aware approvals, and reversible skill evolution backed by checkpoints. | [![GitHub stars](https://img.shields.io/github/stars/chenzheshushi-commits/dsh-evolve?style=flat&label=stars)](https://github.com/chenzheshushi-commits/dsh-evolve/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Co-Engram](https://github.com/Co-Engram/Co-Engram) | Provides self-evolving team memory for DSH through durable engrams, graph relations, tiered retrieval, and feedback-driven importance. | [![GitHub stars](https://img.shields.io/github/stars/Co-Engram/Co-Engram?style=flat&label=stars)](https://github.com/Co-Engram/Co-Engram/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [powercontext-dsh](https://github.com/knqiufan/powercontext-dsh) | Connects DSH to a PowerContext Server over HTTP for scoped recall, memory writes, task handoffs, experience capture, and skill retrieval. | [![GitHub stars](https://img.shields.io/github/stars/knqiufan/powercontext-dsh?style=flat&label=stars)](https://github.com/knqiufan/powercontext-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [nowledge-mem-deepseek-harness](https://github.com/nowledge-co/nowledge-mem-deepseek-harness) | Connects DeepSeek Harness to Nowledge Mem for persistent personal memory. | [![GitHub stars](https://img.shields.io/github/stars/nowledge-co/nowledge-mem-deepseek-harness?style=flat&label=stars)](https://github.com/nowledge-co/nowledge-mem-deepseek-harness/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-health](https://github.com/omdsh-dev/dsh-session-health) | Scans session frames for torn writes, corruption, and empty histories without modifying data. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-session-health?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-session-health/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [onlyMemory-plugin](https://github.com/wilburli/onlyMemory-plugin) | Adds project-isolated long-term memory to DSH through an MCP server with SQLite storage, pure-JavaScript vector search, and JSON import and export. | [![GitHub stars](https://img.shields.io/github/stars/wilburli/onlyMemory-plugin?style=flat&label=stars)](https://github.com/wilburli/onlyMemory-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [busabase-dsh-plugin](https://github.com/busabase/busabase-dsh-plugin) | Connects DSH agents to Busabase for searchable knowledge and structured data with human-reviewed change requests. | [![GitHub stars](https://img.shields.io/github/stars/busabase/busabase-dsh-plugin?style=flat&label=stars)](https://github.com/busabase/busabase-dsh-plugin/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://busabase.com/docs/deepseek-harness-plugin">Busabase DeepSeek Harness plugin documentation</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-compressor](https://github.com/lifeodyssey/dsh-compressor) | Compresses verbose tool results before they consume more of a DSH session's working context. | [![GitHub stars](https://img.shields.io/github/stars/lifeodyssey/dsh-compressor?style=flat&label=stars)](https://github.com/lifeodyssey/dsh-compressor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-simple-wiki-memory](https://github.com/rainow/dsh-simple-wiki-memory) | Adds Git-backed long-term memory to DSH using plain Markdown pages without vector search or runtime model calls. | [![GitHub stars](https://img.shields.io/github/stars/rainow/dsh-simple-wiki-memory?style=flat&label=stars)](https://github.com/rainow/dsh-simple-wiki-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-honcho](https://github.com/plastic-labs/dsh-honcho) | Adds Honcho memory to DSH with prompt-context injection, background turn capture, search, reasoning, durable facts, and shared-workspace configuration. | [![GitHub stars](https://img.shields.io/github/stars/plastic-labs/dsh-honcho?style=flat&label=stars)](https://github.com/plastic-labs/dsh-honcho/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://honcho.dev/docs/v3/guides/integrations/deepseek-harness">Honcho DeepSeek Harness integration</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-kb](https://github.com/weibaohui/dsh-kb) | Adds shared knowledge libraries with search, source uploads, agent-driven wiki processing, page history, and feedback. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-kb?style=flat&label=stars)](https://github.com/weibaohui/dsh-kb/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-adaptive-context](https://github.com/Icstick/dsh-adaptive-context) | Adds a governed long-term memory plane to DSH with evidence-backed records, hybrid retrieval, immutable versions, audits, export, and rollback. | [![GitHub stars](https://img.shields.io/github/stars/Icstick/dsh-adaptive-context?style=flat&label=stars)](https://github.com/Icstick/dsh-adaptive-context/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-undo](https://github.com/LingLambda/dsh-undo) | Adds reversible context undo and redo at completed agent steps. | [![GitHub stars](https://img.shields.io/github/stars/LingLambda/dsh-undo?style=flat&label=stars)](https://github.com/LingLambda/dsh-undo/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-log-memory](https://github.com/says693/dsh-log-memory) | Guards against closing active browser windows and incrementally backs up session logs as raw archives or readable text. | [![GitHub stars](https://img.shields.io/github/stars/says693/dsh-log-memory?style=flat&label=stars)](https://github.com/says693/dsh-log-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-actions](https://github.com/xingyingyuzhui/dsh-session-actions) | Extends session menus with ID copying, pinning, Markdown export, permanent deletion, and an ordered pinned group. | [![GitHub stars](https://img.shields.io/github/stars/xingyingyuzhui/dsh-session-actions?style=flat&label=stars)](https://github.com/xingyingyuzhui/dsh-session-actions/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-project-prompt](https://github.com/imroc/dsh-project-prompt) | Injects machine-local project rules into DSH system prompts by matching Git remote, repository, or path, with worktree-aware precedence and configurable injection modes. | [![GitHub stars](https://img.shields.io/github/stars/imroc/dsh-project-prompt?style=flat&label=stars)](https://github.com/imroc/dsh-project-prompt/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-pause](https://github.com/watericetangcw/dsh-session-pause) | Pauses a DSH session after the current turn drains, persists its state, and resumes it after a restart. | [![GitHub stars](https://img.shields.io/github/stars/watericetangcw/dsh-session-pause?style=flat&label=stars)](https://github.com/watericetangcw/dsh-session-pause/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [better-session-management](https://github.com/boyun-zhang/better-session-management) | Adds chain views, bounded child sessions, one-off side questions, workspace trees, and controlled summary injection into parent sessions. | [![GitHub stars](https://img.shields.io/github/stars/boyun-zhang/better-session-management?style=flat&label=stars)](https://github.com/boyun-zhang/better-session-management/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memory-gate](https://github.com/GIT121995/dsh-memory-gate) | Applies configurable use, verify, or ignore decisions to retrieved memories and records feedback plus an audit trail. | [![GitHub stars](https://img.shields.io/github/stars/GIT121995/dsh-memory-gate?style=flat&label=stars)](https://github.com/GIT121995/dsh-memory-gate/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memory](https://github.com/qwert702/dsh-memory) | Adds project and global memory stores with automatic extraction, prompt injection, periodic consolidation, and a linked-memory graph. | [![GitHub stars](https://img.shields.io/github/stars/qwert702/dsh-memory?style=flat&label=stars)](https://github.com/qwert702/dsh-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-compact](https://github.com/zixin947/dsh-compact) | Adds automatic and manual context compaction to DSH sessions with threshold controls, summaries, and overflow recovery. | [![GitHub stars](https://img.shields.io/github/stars/zixin947/dsh-compact?style=flat&label=stars)](https://github.com/zixin947/dsh-compact/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-knowledge-base-local](https://github.com/CodfishYao/dsh-knowledge-base-local) | Adds a Markdown knowledge base with agent tools, PDF and Office extraction, search, a Web panel, CLI, and MCP access. | [![GitHub stars](https://img.shields.io/github/stars/CodfishYao/dsh-knowledge-base-local?style=flat&label=stars)](https://github.com/CodfishYao/dsh-knowledge-base-local/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-llm-wiki](https://github.com/FlyAIBox/dsh-llm-wiki) | Builds a Markdown-first knowledge base from local documents and public pages with immutable source evidence, traceable citations, and rebuildable full-text search. | [![GitHub stars](https://img.shields.io/github/stars/FlyAIBox/dsh-llm-wiki?style=flat&label=stars)](https://github.com/FlyAIBox/dsh-llm-wiki/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-dynamic-agents](https://github.com/hw-cola/dsh-dynamic-agents) | Adds selectable global and workspace rule libraries to DSH Web and injects chosen rules into session prompts with per-workspace state. | [![GitHub stars](https://img.shields.io/github/stars/hw-cola/dsh-dynamic-agents?style=flat&label=stars)](https://github.com/hw-cola/dsh-dynamic-agents/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-resume-on-restart](https://github.com/nickkkkkk123123/dsh-resume-on-restart) | Notifies the primary DSH agent after a service restart with downtime and the last active session, optionally waking it to decide how to continue. | [![GitHub stars](https://img.shields.io/github/stars/nickkkkkk123123/dsh-resume-on-restart?style=flat&label=stars)](https://github.com/nickkkkkk123123/dsh-resume-on-restart/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memory-porter](https://github.com/Shiye-10Pages/dsh-memory-porter) | Imports selected memories from Claude and ChatGPT exports into DSH with local evidence checks and item-by-item approval. | [![GitHub stars](https://img.shields.io/github/stars/Shiye-10Pages/dsh-memory-porter?style=flat&label=stars)](https://github.com/Shiye-10Pages/dsh-memory-porter/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-manager](https://github.com/SunshineR04/dsh-session-manager) | Adds archived-session listing, restore, and confirmation-gated permanent deletion through DSH settings, context menus, and model tools. | [![GitHub stars](https://img.shields.io/github/stars/SunshineR04/dsh-session-manager?style=flat&label=stars)](https://github.com/SunshineR04/dsh-session-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-search](https://github.com/Tieboyh/dsh-session-search) | Searches DSH and other agent session logs without maintaining a separate index. | [![GitHub stars](https://img.shields.io/github/stars/Tieboyh/dsh-session-search?style=flat&label=stars)](https://github.com/Tieboyh/dsh-session-search/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memory-migration](https://github.com/tieveto666-code/dsh-memory-migration) | Adds editable long-term identity, preference, method, and constraint memories to DSH with later-session recall and optional import from major assistant export archives. | [![GitHub stars](https://img.shields.io/github/stars/tieveto666-code/dsh-memory-migration?style=flat&label=stars)](https://github.com/tieveto666-code/dsh-memory-migration/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [context-razor](https://github.com/weibaohui/context-razor) | Shows per-message token estimates and precisely trims selected DSH context without LLM summarization. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/context-razor?style=flat&label=stars)](https://github.com/weibaohui/context-razor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-file-share](https://github.com/weibaohui/dsh-file-share) | Adds a session-workspace file browser with previews, uploads, downloads, ZIP exports, and file management. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-file-share?style=flat&label=stars)](https://github.com/weibaohui/dsh-file-share/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-context-tree](https://github.com/wr-web/dsh-context-tree) | Adds a trajectory-tree view to DSH with exact-turn forks, reusable context nodes, bounded lexical cross-session recall, and logged injection provenance. | [![GitHub stars](https://img.shields.io/github/stars/wr-web/dsh-context-tree?style=flat&label=stars)](https://github.com/wr-web/dsh-context-tree/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-rehearsal](https://github.com/wuwaka/dsh-rehearsal) | Preflights DSH upgrade conflicts and rehearses session migrations and replayed write turns on copies in an isolated DSH home. | [![GitHub stars](https://img.shields.io/github/stars/wuwaka/dsh-rehearsal?style=flat&label=stars)](https://github.com/wuwaka/dsh-rehearsal/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-chat-log](https://github.com/YupegLV/dsh-chat-log) | Folds fragmented DSH session events into readable chat logs without dropping other events, exposed through a /chat command and browser download. | [![GitHub stars](https://img.shields.io/github/stars/YupegLV/dsh-chat-log?style=flat&label=stars)](https://github.com/YupegLV/dsh-chat-log/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-trash](https://github.com/ZZZZZZZ-ZZZZZ/dsh-session-trash) | Adds a recoverable session trash to DSH on macOS and Linux, with restore controls and confirmed permanent deletion. | [![GitHub stars](https://img.shields.io/github/stars/ZZZZZZZ-ZZZZZ/dsh-session-trash?style=flat&label=stars)](https://github.com/ZZZZZZZ-ZZZZZ/dsh-session-trash/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [context-pruner](https://github.com/JohnXu22786/context-pruner) | Prunes stale, repeated, failed, and oversized session context according to configurable retention rules. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/context-pruner?style=flat&label=stars)](https://github.com/JohnXu22786/context-pruner/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [session-titler](https://github.com/JohnXu22786/session-titler) | Creates immediate keyword-based session titles and optionally refines them with a configured budget model after the conversation becomes idle. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/session-titler?style=flat&label=stars)](https://github.com/JohnXu22786/session-titler/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-memory](https://github.com/navid-kianfar/dsh-memory) | Adds per-project DSH memory in DuckDB with searchable decisions and context, always-injected rules, model tools, optional semantic recall, and a Web management panel. | [![GitHub stars](https://img.shields.io/github/stars/navid-kianfar/dsh-memory?style=flat&label=stars)](https://github.com/navid-kianfar/dsh-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-selection-memory](https://github.com/niushuanan/dsh-selection-memory) | Provides a source-integrated DSH extension for quoting, discussing, or remembering selected conversation text with separate editable user and AI memory stores. | [![GitHub stars](https://img.shields.io/github/stars/niushuanan/dsh-selection-memory?style=flat&label=stars)](https://github.com/niushuanan/dsh-selection-memory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-context-compressor](https://github.com/qwert702/dsh-context-compressor) | Condenses the current conversation, opens a fresh session in the same workspace, and injects the summary as its starting context. | [![GitHub stars](https://img.shields.io/github/stars/qwert702/dsh-context-compressor?style=flat&label=stars)](https://github.com/qwert702/dsh-context-compressor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+
+## Loops & Scheduling
+
+| Project | Description | Stars | Referenced by |
+| --- | --- | --- | --- |
+| [loopx](https://github.com/loopx-project/loopx) | Provides a durable, governed control plane and native DSH integration for long-horizon agent workflows. | [![GitHub stars](https://img.shields.io/github/stars/loopx-project/loopx?style=flat&label=stars)](https://github.com/loopx-project/loopx/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [ouroboros](https://github.com/Q00/ouroboros) | Brings Ouroboros' interview-gated and budgeted agent-evolution workflows into DSH through native tools and an optional DSH model backend. | [![GitHub stars](https://img.shields.io/github/stars/Q00/ouroboros?style=flat&label=stars)](https://github.com/Q00/ouroboros/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DeepSeek-Bot](https://github.com/Fei2411/DeepSeek-Bot) | Adds persistent DSH bots with individual memory, a supervising main bot, shared capabilities, and group chats with bot-to-bot handoffs. | [![GitHub stars](https://img.shields.io/github/stars/Fei2411/DeepSeek-Bot?style=flat&label=stars)](https://github.com/Fei2411/DeepSeek-Bot/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-agent-teams](https://github.com/NanmiCoder/dsh-agent-teams) | Coordinates durable DSH subagents through dependency-aware shared tasks, team messages, scheduling, and a live Web team view. | [![GitHub stars](https://img.shields.io/github/stars/NanmiCoder/dsh-agent-teams?style=flat&label=stars)](https://github.com/NanmiCoder/dsh-agent-teams/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [ccteam](https://github.com/firstintent/ccteam) | Embeds a multi-vendor agent-team workbench in DSH with orchestration tools, a supervised local engine, and remote browser, Telegram, or Lark control. | [![GitHub stars](https://img.shields.io/github/stars/firstintent/ccteam?style=flat&label=stars)](https://github.com/firstintent/ccteam/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-taskboard](https://github.com/shengsheng90/DSH-taskboard) | Adds a local SQLite-backed task board to DSH with projects, agent claiming and review, and a native Web interface. | [![GitHub stars](https://img.shields.io/github/stars/shengsheng90/DSH-taskboard?style=flat&label=stars)](https://github.com/shengsheng90/DSH-taskboard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-agent-team-gui](https://github.com/toolclub/dsh-agent-team-gui) | Runs persistent multi-model agent teams with lead planning, bounded task graphs, per-agent model and tool policies, run controls, and token views. | [![GitHub stars](https://img.shields.io/github/stars/toolclub/dsh-agent-team-gui?style=flat&label=stars)](https://github.com/toolclub/dsh-agent-team-gui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-lowtide](https://github.com/KelaoHu/dsh-lowtide) | Queues DSH tasks for supervised or unattended off-peak execution with schedules, budgets, file locks, and reviewable reports. | [![GitHub stars](https://img.shields.io/github/stars/KelaoHu/dsh-lowtide?style=flat&label=stars)](https://github.com/KelaoHu/dsh-lowtide/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-crew](https://github.com/ZSeven-W/dsh-crew) | Dispatches native DSH workers from Claude Code, Codex, Antigravity, or Grok, preserving DSH tools, sandbox, session history, and live subagent progress. | [![GitHub stars](https://img.shields.io/github/stars/ZSeven-W/dsh-crew?style=flat&label=stars)](https://github.com/ZSeven-W/dsh-crew/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mattpocock-skills-deck](https://github.com/FeatherHunter/dsh-mattpocock-skills-deck) | Turns Matt Pocock's skills into a DSH task board with guided planning, skill dispatch, progress tracking, and reviewable delivery workflows. | [![GitHub stars](https://img.shields.io/github/stars/FeatherHunter/dsh-mattpocock-skills-deck?style=flat&label=stars)](https://github.com/FeatherHunter/dsh-mattpocock-skills-deck/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-auto-continue](https://github.com/HsiangNianian/dsh-auto-continue) | Resumes DSH requests interrupted by classified non-human errors through host-side continuation prompts with configurable backoff, even when Web tabs are closed. | [![GitHub stars](https://img.shields.io/github/stars/HsiangNianian/dsh-auto-continue?style=flat&label=stars)](https://github.com/HsiangNianian/dsh-auto-continue/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh_workflow](https://github.com/omdsh-dev/dsh_workflow) | Adds reusable, observable, and recoverable multi-agent workflows to DeepSeek Harness. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh_workflow?style=flat&label=stars)](https://github.com/omdsh-dev/dsh_workflow/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-agency-agents](https://github.com/MichengAI/dsh-agency-agents) | Adds searchable expert personas and configurable teams that delegate specialist work while the parent DSH session verifies results and delivers the answer. | [![GitHub stars](https://img.shields.io/github/stars/MichengAI/dsh-agency-agents?style=flat&label=stars)](https://github.com/MichengAI/dsh-agency-agents/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [consensus-pipeline](https://github.com/fangqian616/consensus-pipeline) | Adds a multi-agent consensus pipeline for long-form research and other complex tasks through a DSH plugin. | [![GitHub stars](https://img.shields.io/github/stars/fangqian616/consensus-pipeline?style=flat&label=stars)](https://github.com/fangqian616/consensus-pipeline/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [odai](https://github.com/orziz/odai) | Adds an evidence-driven task-governance preset and DSH plugin for planning, orchestration, authorization boundaries, and verified delivery. | [![GitHub stars](https://img.shields.io/github/stars/orziz/odai?style=flat&label=stars)](https://github.com/orziz/odai/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-automation](https://github.com/titanwings/dsh-automation) | Schedules coding tasks in fresh agent sessions with Web and agent-side controls. | [![GitHub stars](https://img.shields.io/github/stars/titanwings/dsh-automation?style=flat&label=stars)](https://github.com/titanwings/dsh-automation/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-taskboard](https://github.com/cloader/dsh-taskboard) | Adds a DSH task board with scheduled agent runs, Git worktree isolation, execution reports, and human-controlled acceptance or rework. | [![GitHub stars](https://img.shields.io/github/stars/cloader/dsh-taskboard?style=flat&label=stars)](https://github.com/cloader/dsh-taskboard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [mstar-harness](https://github.com/btspoony/mstar-harness) | Coordinates role-based development workflows from requirements through implementation, review, acceptance, and pull-request delivery. | [![GitHub stars](https://img.shields.io/github/stars/btspoony/mstar-harness?style=flat&label=stars)](https://github.com/btspoony/mstar-harness/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-save-money](https://github.com/zhu168/dsh-save-money) | Schedules configurable pause-and-resume windows for long-running DSH tasks while preserving session progress between windows. | [![GitHub stars](https://img.shields.io/github/stars/zhu168/dsh-save-money?style=flat&label=stars)](https://github.com/zhu168/dsh-save-money/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-automation](https://github.com/MichengAI/dsh-automation) | Schedules standalone DSH tasks with configurable workspaces, models, skills and permissions, plus task controls and run history. | [![GitHub stars](https://img.shields.io/github/stars/MichengAI/dsh-automation?style=flat&label=stars)](https://github.com/MichengAI/dsh-automation/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-harness-one](https://github.com/chumingjun/dsh-harness-one) | Adds a visual workflow canvas with agent, script, condition, HTTP, output, and notification nodes, plus concurrent runs, schedules, and webhooks. | [![GitHub stars](https://img.shields.io/github/stars/chumingjun/dsh-harness-one?style=flat&label=stars)](https://github.com/chumingjun/dsh-harness-one/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-background-agents](https://github.com/PerryLink/dsh-background-agents) · <sub>Archived</sub> | Adds steerable background agents, durable progress and result tools, a Web dashboard, and persistent multi-agent team rooms. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-background-agents?style=flat&label=stars)](https://github.com/PerryLink/dsh-background-agents/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sentinel](https://github.com/fuhefei/dsh-sentinel) | Wakes agents from durable file, command, HTTP, process, and webhook conditions. | [![GitHub stars](https://img.shields.io/github/stars/fuhefei/dsh-sentinel?style=flat&label=stars)](https://github.com/fuhefei/dsh-sentinel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tasks](https://github.com/weibaohui/dsh-tasks) | Schedules prompts to run immediately or on recurring cron rules in new DSH agent sessions, with a Web management panel. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-tasks?style=flat&label=stars)](https://github.com/weibaohui/dsh-tasks/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [hermes-loop](https://github.com/weibaohui/hermes-loop) | Reviews DSH conversations and writes reusable skills or layered memory with automatic, approval-gated, or record-only modes and archival governance. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/hermes-loop?style=flat&label=stars)](https://github.com/weibaohui/hermes-loop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-self-evolving](https://github.com/timwhitez/dsh-self-evolving) | Runs bounded Cordis plugin evolution loops with isolated Loader admission, Harbor evaluation, crash-resumable journals, and auditable lineage. | [![GitHub stars](https://img.shields.io/github/stars/timwhitez/dsh-self-evolving?style=flat&label=stars)](https://github.com/timwhitez/dsh-self-evolving/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://github.com/deepseek-ai/deepseek-harness/discussions/2547">dsh-self-evolving: an evidence-first, crash-resumable self-evolution engine</a> · <sub>Article</sub></li></ul></details> |
+| [dsh-ha-orchestrator](https://github.com/Saktawdi/dsh-ha-orchestrator) | Adds model failover and fan-out, pipeline, supervisor, map-reduce, and router orchestration modes for DSH subagents. | [![GitHub stars](https://img.shields.io/github/stars/Saktawdi/dsh-ha-orchestrator?style=flat&label=stars)](https://github.com/Saktawdi/dsh-ha-orchestrator/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-monkey-desk](https://github.com/svmlearn/dsh-monkey-desk) | Visualizes workspace subagents as a live office and lets users dispatch, rework, wake, or archive them. | [![GitHub stars](https://img.shields.io/github/stars/svmlearn/dsh-monkey-desk?style=flat&label=stars)](https://github.com/svmlearn/dsh-monkey-desk/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-loop](https://github.com/vlln/dsh-loop) | Schedules recurring prompts inside DSH sessions, allowing multiple independent loops with model-facing tools and native session delivery. | [![GitHub stars](https://img.shields.io/github/stars/vlln/dsh-loop?style=flat&label=stars)](https://github.com/vlln/dsh-loop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-continue](https://github.com/weibaohui/dsh-continue) | Routes failed DSH turns through ordered rules that continue, switch models, compact then continue, or stop. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-continue?style=flat&label=stars)](https://github.com/weibaohui/dsh-continue/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-kanban-flow](https://github.com/thomasvvugt/dsh-kanban-flow) | Adds a workspace Kanban board whose cards create dedicated DSH task sessions and move through a guarded human-agent workflow with live activity updates. | [![GitHub stars](https://img.shields.io/github/stars/thomasvvugt/dsh-kanban-flow?style=flat&label=stars)](https://github.com/thomasvvugt/dsh-kanban-flow/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-input-traffic](https://github.com/drscrewdriver/dsh-input-traffic) | Adds interrupt-now, insert-next, and queue-later input lanes with editable ordering and optional peak-period session freezing. | [![GitHub stars](https://img.shields.io/github/stars/drscrewdriver/dsh-input-traffic?style=flat&label=stars)](https://github.com/drscrewdriver/dsh-input-traffic/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-commander](https://github.com/qwert702/dsh-commander) | Turns one DSH Web conversation into a commander that dispatches structured work to other sessions and returns their results as receipts. | [![GitHub stars](https://img.shields.io/github/stars/qwert702/dsh-commander?style=flat&label=stars)](https://github.com/qwert702/dsh-commander/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-monitor](https://github.com/AbnerAI/dsh-monitor) | Wakes DSH agents when persistent background watchers detect new NDJSON inbox entries or command-output changes. | [![GitHub stars](https://img.shields.io/github/stars/AbnerAI/dsh-monitor?style=flat&label=stars)](https://github.com/AbnerAI/dsh-monitor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [OffPeak](https://github.com/christophersmith2737-commits/OffPeak) | Warns about configurable peak-pricing windows and can schedule a prompt for replay outside those windows. | [![GitHub stars](https://img.shields.io/github/stars/christophersmith2737-commits/OffPeak?style=flat&label=stars)](https://github.com/christophersmith2737-commits/OffPeak/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-human-coding](https://github.com/gameswu/dsh-human-coding) | Adds a role-reversed coding mode in which the DSH agent assigns steps, reviews evidence, and tracks progress while the user writes and verifies the code. | [![GitHub stars](https://img.shields.io/github/stars/gameswu/dsh-human-coding?style=flat&label=stars)](https://github.com/gameswu/dsh-human-coding/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-goalmesh](https://github.com/Jarad-z/dsh-goalmesh) | Coordinates dependency-aware DSH agent meshes with bounded concurrency, recursive delegation, failure propagation, typed reports, and Web replay. | [![GitHub stars](https://img.shields.io/github/stars/Jarad-z/dsh-goalmesh?style=flat&label=stars)](https://github.com/Jarad-z/dsh-goalmesh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-factory](https://github.com/monotykamary/dsh-factory) | Turns DSH sessions into durable dependency-graph tasks with native agent runs, scheduled execution, safe Git worktree lanes, triage, and artifacts. | [![GitHub stars](https://img.shields.io/github/stars/monotykamary/dsh-factory?style=flat&label=stars)](https://github.com/monotykamary/dsh-factory/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-team-rooms](https://github.com/PerryLink/dsh-team-rooms) · <sub>Archived</sub> | Retired cross-session team rooms with shared messages, tasks, and timelines; the maintainer now directs users to native DSH Agent Teams. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-team-rooms?style=flat&label=stars)](https://github.com/PerryLink/dsh-team-rooms/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-team-task](https://github.com/Ready22Race/dsh-team-task) | Runs durable, reviewed multi-agent task DAGs with fenced workers, an append-only event log, and restart-aware reconciliation. | [![GitHub stars](https://img.shields.io/github/stars/Ready22Race/dsh-team-task?style=flat&label=stars)](https://github.com/Ready22Race/dsh-team-task/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-rss-daily](https://github.com/shangjian2023/dsh-rss-daily) | Creates daily briefings from 46 configurable RSS sources, edits them with the active DSH model or a rule fallback, and delivers them in chat or by webhook with catch-up. | [![GitHub stars](https://img.shields.io/github/stars/shangjian2023/dsh-rss-daily?style=flat&label=stars)](https://github.com/shangjian2023/dsh-rss-daily/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-round-table](https://github.com/vuchisu069-source/dsh-round-table) | Adds multi-agent group discussions with manual mentions, full-table rounds, relay chains, pause controls, and bounded turns. | [![GitHub stars](https://img.shields.io/github/stars/vuchisu069-source/dsh-round-table?style=flat&label=stars)](https://github.com/vuchisu069-source/dsh-round-table/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-product-subagent-console](https://github.com/Jokasa7/dsh-product-subagent-console) | Visualizes DSH subagent trees and approved plan graphs, compares plans with execution evidence, and previews recovery actions and shareable run summaries. | [![GitHub stars](https://img.shields.io/github/stars/Jokasa7/dsh-product-subagent-console?style=flat&label=stars)](https://github.com/Jokasa7/dsh-product-subagent-console/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://github.com/deepseek-ai/deepseek-harness/discussions/3989">Product Subagent Console: planning and evidence-backed recovery</a> · <sub>Article</sub></li></ul></details> |
+| [dsh-routed-subagent](https://github.com/bpc-oss/dsh-routed-subagent) | Dispatches one-shot subagents onto selected DSH presets with optional model, provider, background, and continuation controls. | [![GitHub stars](https://img.shields.io/github/stars/bpc-oss/dsh-routed-subagent?style=flat&label=stars)](https://github.com/bpc-oss/dsh-routed-subagent/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-nonurgent](https://github.com/BXY-Create/dsh-plugin-nonurgent) | Queues non-urgent tasks for configurable windows, checkpoints unfinished sessions, and resumes them later. | [![GitHub stars](https://img.shields.io/github/stars/BXY-Create/dsh-plugin-nonurgent?style=flat&label=stars)](https://github.com/BXY-Create/dsh-plugin-nonurgent/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-roundtable-harness](https://github.com/HSM266/dsh-roundtable-harness) | Runs multi-model roundtable discussions with shared context, configurable judging, optional spend attribution, and Markdown or DOCX reports. | [![GitHub stars](https://img.shields.io/github/stars/HSM266/dsh-roundtable-harness?style=flat&label=stars)](https://github.com/HSM266/dsh-roundtable-harness/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tower](https://github.com/louifinn/dsh-tower) | Coordinates multi-agent missions in Git worktrees, with persistent collaboration state and configurable review and merge gates. | [![GitHub stars](https://img.shields.io/github/stars/louifinn/dsh-tower?style=flat&label=stars)](https://github.com/louifinn/dsh-tower/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-subagent-cwd](https://github.com/lynx-gt/dsh-subagent-cwd) | Lets delegated sub-agents run in explicit working directories with supporting preset patches. | [![GitHub stars](https://img.shields.io/github/stars/lynx-gt/dsh-subagent-cwd?style=flat&label=stars)](https://github.com/lynx-gt/dsh-subagent-cwd/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tasks-manager](https://github.com/navid-kianfar/dsh-tasks-manager) | Adds a project-local SQLite task board to DSH with Kanban and list views, model-facing task tools, and card dispatch to background agent jobs. | [![GitHub stars](https://img.shields.io/github/stars/navid-kianfar/dsh-tasks-manager?style=flat&label=stars)](https://github.com/navid-kianfar/dsh-tasks-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-continue-on-limit](https://github.com/qwert702/dsh-continue-on-limit) | Automatically continues the currently open DSH session after an output-token cap, with idle-state checks and configurable retry limits. | [![GitHub stars](https://img.shields.io/github/stars/qwert702/dsh-continue-on-limit?style=flat&label=stars)](https://github.com/qwert702/dsh-continue-on-limit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-subagents](https://github.com/geekyfoxlab/dsh-subagents) | Packages focused subagent roles and council, parallel-review, and review-loop workflows as a lightweight skill layer over DSH's native delegation tools. | [![GitHub stars](https://img.shields.io/github/stars/geekyfoxlab/dsh-subagents?style=flat&label=stars)](https://github.com/geekyfoxlab/dsh-subagents/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-degen-heal](https://github.com/KakaruHayate/dsh-degen-heal) | Detects repeated, low-information, malformed-tool, or reasoning-leak output in DSH sessions and applies bounded recovery steering with fail-open lockout. | [![GitHub stars](https://img.shields.io/github/stars/KakaruHayate/dsh-degen-heal?style=flat&label=stars)](https://github.com/KakaruHayate/dsh-degen-heal/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-cron](https://github.com/TT-Wang/dsh-cron) | Schedules durable DSH outcomes across session endings, host restarts, and machine sleep using completion windows, effect checks, retries, and catch-up execution. | [![GitHub stars](https://img.shields.io/github/stars/TT-Wang/dsh-cron?style=flat&label=stars)](https://github.com/TT-Wang/dsh-cron/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-cron-tasks](https://github.com/Whale-Zhang/dsh-cron-tasks) | Adds one-shot and cron-scheduled DSH tasks with per-task models, time zones, overlap policy, isolated run history, controls, and model-facing tools. | [![GitHub stars](https://img.shields.io/github/stars/Whale-Zhang/dsh-cron-tasks?style=flat&label=stars)](https://github.com/Whale-Zhang/dsh-cron-tasks/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-flat-teams](https://github.com/whateverboy2333/dsh-flat-teams) | Coordinates leaderless teams across DSH sessions with structured task dispatch, persistent inboxes, progress projections, and a Web dashboard. | [![GitHub stars](https://img.shields.io/github/stars/whateverboy2333/dsh-flat-teams?style=flat&label=stars)](https://github.com/whateverboy2333/dsh-flat-teams/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-user-steer](https://github.com/wht567/dsh-user-steer) | Adds mid-turn user steering through slash commands and an always-visible injection bar above the DSH composer. | [![GitHub stars](https://img.shields.io/github/stars/wht567/dsh-user-steer?style=flat&label=stars)](https://github.com/wht567/dsh-user-steer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-fork-to-preset](https://github.com/bpc-oss/dsh-fork-to-preset) | Adds a DSH conversation action that forks completed history into a new session running a selected agent preset. | [![GitHub stars](https://img.shields.io/github/stars/bpc-oss/dsh-fork-to-preset?style=flat&label=stars)](https://github.com/bpc-oss/dsh-fork-to-preset/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [file-planning](https://github.com/JohnXu22786/file-planning) | Persists milestone and step state, dependencies, audit events, and retrospectives in a workspace-local planning ledger exposed through DSH tools and a CLI. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/file-planning?style=flat&label=stars)](https://github.com/JohnXu22786/file-planning/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-teamwork](https://github.com/niushuanan/dsh-teamwork) | Provides a source-integrated DSH teamwork extension using native subagents by default and optional external coding experts under one coordinating agent. | [![GitHub stars](https://img.shields.io/github/stars/niushuanan/dsh-teamwork?style=flat&label=stars)](https://github.com/niushuanan/dsh-teamwork/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [aifred-dsh-task-ledger](https://github.com/qiaoji1990-alt/aifred-dsh-task-ledger) | Adds provider-neutral DSH task lifecycle tools backed by an idempotent event ledger, with optional Aifred bridge integration. | [![GitHub stars](https://img.shields.io/github/stars/qiaoji1990-alt/aifred-dsh-task-ledger?style=flat&label=stars)](https://github.com/qiaoji1990-alt/aifred-dsh-task-ledger/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-verify-reflux](https://github.com/zouyuanqing/dsh-verify-reflux) | Adds tiered log-probability, sampling, and template judges for seeded best-of-N tournaments, with layered context feedback into DSH workflows. | [![GitHub stars](https://img.shields.io/github/stars/zouyuanqing/dsh-verify-reflux?style=flat&label=stars)](https://github.com/zouyuanqing/dsh-verify-reflux/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+
+| [dsh-global-todo](https://github.com/LUgABeEEE/dsh-global-todo) | Adds a cross-session todo list stored in one JSON file that a person and an agent both write, with creation times, attached documents and links, step lists dispatched as a numbered plan, and human-confirmed completion. | [![GitHub stars](https://img.shields.io/github/stars/LUgABeEEE/dsh-global-todo?style=flat&label=stars)](https://github.com/LUgABeEEE/dsh-global-todo/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+
+## Runtime & Sandboxes
+
+| Project | Description | Stars | Referenced by |
+| --- | --- | --- | --- |
+| [sandbase-harness](https://github.com/sandbaseai/sandbase-harness) | Connects DSH to a local agent runtime with sandboxed sessions, durable state, audit trails, and MCP controls. | [![GitHub stars](https://img.shields.io/github/stars/sandbaseai/sandbase-harness?style=flat&label=stars)](https://github.com/sandbaseai/sandbase-harness/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-gitbash-preset](https://github.com/liceses/dsh-gitbash-preset) | Adds a Windows Minimal preset that routes bash tools through Git Bash while preserving sandbox-aware controls. | [![GitHub stars](https://img.shields.io/github/stars/liceses/dsh-gitbash-preset?style=flat&label=stars)](https://github.com/liceses/dsh-gitbash-preset/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-permission-rules](https://github.com/PerryLink/dsh-permission-rules) | Applies hierarchical YAML allow, deny, and ask rules to DSH tool calls, with optional model review for unmatched requests and audit logging. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-permission-rules?style=flat&label=stars)](https://github.com/PerryLink/dsh-permission-rules/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-win32](https://github.com/sjh9714/dsh-win32) | Provides a Windows CLI to check and repair DSH's native PowerShell and Workspace Write stack, verify installed components, and remove legacy bundles offline. | [![GitHub stars](https://img.shields.io/github/stars/sjh9714/dsh-win32?style=flat&label=stars)](https://github.com/sjh9714/dsh-win32/stargazers) | <details><summary>3 pages</summary><ul><li><a href="https://github.com/Electricitysheep/dsh-handbook/blob/main/docs/02-quickstart.md">DeepSeek Harness Handbook: Windows minimal-mode troubleshooting</a> · <sub>Docs</sub></li><li><a href="https://github.com/Electricitysheep/dsh-handbook/blob/main/docs/07-ecosystem.md">DeepSeek Harness Handbook: dsh-win32 ecosystem entry</a> · <sub>Docs</sub></li><li><a href="https://github.com/deepseek-ai/deepseek-harness/discussions/1889">Proposal: add a Win32 ProcessInspector to subprocess-local</a> · <sub>Article</sub></li></ul></details> |
+| [deepseek-harness-docker](https://github.com/runzhliu/deepseek-harness-docker) | Packages DSH for Docker and Kubernetes with persistent data, browser support, health checks, version tracking, and smoke-tested upgrades. | [![GitHub stars](https://img.shields.io/github/stars/runzhliu/deepseek-harness-docker?style=flat&label=stars)](https://github.com/runzhliu/deepseek-harness-docker/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-approval-gate](https://github.com/moon09300731/dsh-approval-gate) | Classifies approval requests before execution, automatically allowing configured low-risk actions while routing uncertain cases to a human. | [![GitHub stars](https://img.shields.io/github/stars/moon09300731/dsh-approval-gate?style=flat&label=stars)](https://github.com/moon09300731/dsh-approval-gate/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-wsl-workspace](https://github.com/dsh-wsl-workspace-maintainers/dsh-wsl-workspace) | Runs DSH sessions in selected WSL workspaces with Linux-side Bash execution and Windows-share file access, using WSL as the command isolation boundary. | [![GitHub stars](https://img.shields.io/github/stars/dsh-wsl-workspace-maintainers/dsh-wsl-workspace?style=flat&label=stars)](https://github.com/dsh-wsl-workspace-maintainers/dsh-wsl-workspace/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-fnos](https://github.com/techysy/deepseek-harness-fnos) | Packages DSH for fnOS with managed Node and Bun dependencies, trusted-host access controls, proxy settings, and x86 or ARM builds. | [![GitHub stars](https://img.shields.io/github/stars/techysy/deepseek-harness-fnos?style=flat&label=stars)](https://github.com/techysy/deepseek-harness-fnos/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sandbox-escalation-fix](https://github.com/HakureiMonika/dsh-sandbox-escalation-fix) | Narrows DSH sandbox-escalation parameters to current session permissions and normalizes redundant requests; macOS support remains untested. | [![GitHub stars](https://img.shields.io/github/stars/HakureiMonika/dsh-sandbox-escalation-fix?style=flat&label=stars)](https://github.com/HakureiMonika/dsh-sandbox-escalation-fix/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-full-remote](https://github.com/JUANWANG-BUAA/dsh-full-remote) | Exposes a token-gated remote proxy while preserving DeepSeek Harness settings, credentials, files, and per-device sessions on the host. | [![GitHub stars](https://img.shields.io/github/stars/JUANWANG-BUAA/dsh-full-remote?style=flat&label=stars)](https://github.com/JUANWANG-BUAA/dsh-full-remote/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [oh-my-tianshu](https://github.com/huiliyi37/oh-my-tianshu) | Maintains an independent DSH-based agent distribution with Web and TUI clients, vision, memory, routing, verification, and code intelligence. | [![GitHub stars](https://img.shields.io/github/stars/huiliyi37/oh-my-tianshu?style=flat&label=stars)](https://github.com/huiliyi37/oh-my-tianshu/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [oh-my-dsh](https://github.com/agi-fans/oh-my-dsh) | Runs a plugin-first terminal coding agent on DeepSeek Harness with bundled TUI and workflow extensions. | [![GitHub stars](https://img.shields.io/github/stars/agi-fans/oh-my-dsh?style=flat&label=stars)](https://github.com/agi-fans/oh-my-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-approve-for-me](https://github.com/timeance/dsh-approve-for-me) | Applies rule-based automatic sandbox approvals with optional model review, one-time grants, fixed high-risk checks, and human fallback. | [![GitHub stars](https://img.shields.io/github/stars/timeance/dsh-approve-for-me?style=flat&label=stars)](https://github.com/timeance/dsh-approve-for-me/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ssh](https://github.com/UynajGI/dsh-ssh) | Adds SSH execution, SFTP filesystem access, ProxyJump chains, and remote PTY support. | [![GitHub stars](https://img.shields.io/github/stars/UynajGI/dsh-ssh?style=flat&label=stars)](https://github.com/UynajGI/dsh-ssh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-phone-remote](https://github.com/zetaluolang-cyber/deepseek-harness-phone-remote) | Runs a persistent DeepSeek Harness workspace that can be reached from a phone over Tailscale. | [![GitHub stars](https://img.shields.io/github/stars/zetaluolang-cyber/deepseek-harness-phone-remote?style=flat&label=stars)](https://github.com/zetaluolang-cyber/deepseek-harness-phone-remote/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-bash-encoding](https://github.com/lhh010/dsh-bash-encoding) | Decodes mixed UTF-16LE, UTF-8, and GBK shell output for Windows and WSL sessions. | [![GitHub stars](https://img.shields.io/github/stars/lhh010/dsh-bash-encoding?style=flat&label=stars)](https://github.com/lhh010/dsh-bash-encoding/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-webgate](https://github.com/CWNU-Open-Source-Community/dsh-webgate) | Adds LAN access, Cloudflare Tunnel, or FRP remote access to DSH Web with QR links and an optional login portal. | [![GitHub stars](https://img.shields.io/github/stars/CWNU-Open-Source-Community/dsh-webgate?style=flat&label=stars)](https://github.com/CWNU-Open-Source-Community/dsh-webgate/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-file-claim](https://github.com/Nwflower/dsh-file-claim) | Coordinates file claims, stale takeovers, and pending merges across concurrent DSH sessions. | [![GitHub stars](https://img.shields.io/github/stars/Nwflower/dsh-file-claim?style=flat&label=stars)](https://github.com/Nwflower/dsh-file-claim/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-windows-shell-policy](https://github.com/LAN-TINA-WS/dsh-windows-shell-policy) | Adds a Windows shell policy that detects Git Bash or MSYS2, switches Bash and PowerShell from settings, and registers the selected shell tool. | [![GitHub stars](https://img.shields.io/github/stars/LAN-TINA-WS/dsh-windows-shell-policy?style=flat&label=stars)](https://github.com/LAN-TINA-WS/dsh-windows-shell-policy/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-net-access](https://github.com/Gumiho12345/dsh-plugin-net-access) | Adds a Windows Net Access preset that uses an OpenSSL curl while retaining workspace-write file restrictions. | [![GitHub stars](https://img.shields.io/github/stars/Gumiho12345/dsh-plugin-net-access?style=flat&label=stars)](https://github.com/Gumiho12345/dsh-plugin-net-access/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ssh](https://github.com/jmcc-guo/dsh-ssh) | Adds model-managed SSH connections and a live multi-tab terminal panel shared by agents and users. | [![GitHub stars](https://img.shields.io/github/stars/jmcc-guo/dsh-ssh?style=flat&label=stars)](https://github.com/jmcc-guo/dsh-ssh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-container](https://github.com/GHJIVHIDD/dsh-plugin-container) | Adds a DSH Web Docker monitoring and control panel with agent tools and a default observation-only mode. | [![GitHub stars](https://img.shields.io/github/stars/GHJIVHIDD/dsh-plugin-container?style=flat&label=stars)](https://github.com/GHJIVHIDD/dsh-plugin-container/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-lan-bridge](https://github.com/Def1ce/dsh-lan-bridge) | Adds a randomUUID polyfill and optional LAN proxy for opening DSH Web on older or non-secure mobile browsers. | [![GitHub stars](https://img.shields.io/github/stars/Def1ce/dsh-lan-bridge?style=flat&label=stars)](https://github.com/Def1ce/dsh-lan-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [worktree-mgr](https://github.com/JohnXu22786/worktree-mgr) | Creates task-isolated Git worktrees and manages their branch naming, status, synchronization, finish, cleanup, ledger, and lifecycle hooks. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/worktree-mgr?style=flat&label=stars)](https://github.com/JohnXu22786/worktree-mgr/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-auto-review](https://github.com/delef/dsh-plugin-auto-review) | Reviews native DSH approval requests with configured model reviewers and rejects failed, timed-out, or invalid reviews, while retaining a manual mode. | [![GitHub stars](https://img.shields.io/github/stars/delef/dsh-plugin-auto-review?style=flat&label=stars)](https://github.com/delef/dsh-plugin-auto-review/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-wsl-native](https://github.com/Han-1413141/dsh-wsl-native) | Connects Windows and WSL tools and runs native Linux DSH sessions alongside Windows sessions in one interface. | [![GitHub stars](https://img.shields.io/github/stars/Han-1413141/dsh-wsl-native?style=flat&label=stars)](https://github.com/Han-1413141/dsh-wsl-native/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [safety-net](https://github.com/JohnXu22786/safety-net) | Intercepts destructive shell and Git commands before execution, applies configurable policy, and requires interactive confirmation or fails closed without a TTY. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/safety-net?style=flat&label=stars)](https://github.com/JohnXu22786/safety-net/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [secret-guard](https://github.com/JohnXu22786/secret-guard) | Blocks common sensitive-file access, masks secret-shaped tool output, records an audit journal, and exposes inspection tools while documenting bypass limits. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/secret-guard?style=flat&label=stars)](https://github.com/JohnXu22786/secret-guard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-guardian](https://github.com/lonelymoon87/dsh-guardian) | Enforces dangerous-operation policies and redacts credentials from canonical tool output. | [![GitHub stars](https://img.shields.io/github/stars/lonelymoon87/dsh-guardian?style=flat&label=stars)](https://github.com/lonelymoon87/dsh-guardian/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tool-approval](https://github.com/ilharp/dsh-tool-approval) | Adds a manual approval gate for tool calls in DeepSeek Harness. | [![GitHub stars](https://img.shields.io/github/stars/ilharp/dsh-tool-approval?style=flat&label=stars)](https://github.com/ilharp/dsh-tool-approval/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+
+## UI & Clients
+
+| Project | Description | Stars | Referenced by |
+| --- | --- | --- | --- |
+| [open-design](https://github.com/nexu-io/open-design) | Runs the official DSH CLI inside OpenDesign for design workflows with structured streaming, model discovery, cancellation, and session resume. | [![GitHub stars](https://img.shields.io/github/stars/nexu-io/open-design?style=flat&label=stars)](https://github.com/nexu-io/open-design/stargazers) | <details><summary>2 pages</summary><ul><li><a href="https://open-design.ai/agents/deepseek-harness-design/">How to Use DeepSeek Harness for UI Design</a> · <sub>Docs</sub></li><li><a href="https://open-design.ai/updates/#deepseek-harness">OpenDesign 0.19.1: Design with the DeepSeek Harness</a> · <sub>Blog</sub></li></ul></details> |
+| [orca](https://github.com/stablyai/orca) | Runs DeepSeek Harness CLI sessions in a desktop agent workspace with Git worktrees, activity hooks, and remote or mobile access. | [![GitHub stars](https://img.shields.io/github/stars/stablyai/orca?style=flat&label=stars)](https://github.com/stablyai/orca/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-desktop](https://github.com/anywhere-labs/dsh-desktop) | Packages the official DSH Web UI as a managed macOS and Windows desktop app with a bundled runtime and system tray. | [![GitHub stars](https://img.shields.io/github/stars/anywhere-labs/dsh-desktop?style=flat&label=stars)](https://github.com/anywhere-labs/dsh-desktop/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://www.dshdesktop.cn/">DeepSeek Harness Desktop</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-desktop](https://github.com/dataelement/dsh-desktop) | Provides a local-first macOS and Windows desktop shell that starts Harness, manages profiles, plugins, providers, and sessions, and opens the full Web interface. | [![GitHub stars](https://img.shields.io/github/stars/dataelement/dsh-desktop?style=flat&label=stars)](https://github.com/dataelement/dsh-desktop/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://www.dshdesktop.com/">DSH Desktop by Dataelem: setup and downloads</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-web](https://github.com/zhu1090093659/dsh-web) | Extends DSH Web and Desktop with task automation, remote access, SSH and Git workspaces, session archives, usage tracking, and themes. | [![GitHub stars](https://img.shields.io/github/stars/zhu1090093659/dsh-web?style=flat&label=stars)](https://github.com/zhu1090093659/dsh-web/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [iPolloWork](https://github.com/Devin-AXIS/iPolloWork) | Provides a cross-platform agent workbench that can run DSH as a peer runtime and install editable Design, PPT, and Video views into DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/Devin-AXIS/iPolloWork?style=flat&label=stars)](https://github.com/Devin-AXIS/iPolloWork/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://www.bestpractices.dev/en/projects/14127/passing">OpenSSF Best Practices: iPolloWork</a> · <sub>Article</sub></li></ul></details> |
+| [openpencil](https://github.com/ZSeven-W/openpencil) | Provides the vector-design editor and .op document format used by its companion DSH preview and editing plugin. | [![GitHub stars](https://img.shields.io/github/stars/ZSeven-W/openpencil?style=flat&label=stars)](https://github.com/ZSeven-W/openpencil/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DeepSeek-Balance-Whale-Widget](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget) | Adds a draggable DSH companion with configurable provider balances, local usage and cost estimates, budget alerts, and custom bubbles. | [![GitHub stars](https://img.shields.io/github/stars/MeteorNOX/DeepSeek-Balance-Whale-Widget?style=flat&label=stars)](https://github.com/MeteorNOX/DeepSeek-Balance-Whale-Widget/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-TUI](https://github.com/ccch1mneyyy/dsh-TUI) | Provides a terminal UI for DSH with streaming replies, tool cards, session management, rewind, context metrics, and extensible panels. | [![GitHub stars](https://img.shields.io/github/stars/ccch1mneyyy/dsh-TUI?style=flat&label=stars)](https://github.com/ccch1mneyyy/dsh-TUI/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [desktop-cc-gui](https://github.com/zhukunpenglinyutong/desktop-cc-gui) | Provides a multi-engine coding desktop client that can adopt or start a local Harness host and manage DSH sessions alongside other agent runtimes. | [![GitHub stars](https://img.shields.io/github/stars/zhukunpenglinyutong/desktop-cc-gui?style=flat&label=stars)](https://github.com/zhukunpenglinyutong/desktop-cc-gui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-better-sidebar](https://github.com/omdsh-dev/DSH-better-sidebar) | Extends the native DSH sidebar and bottom workbench with editable files, terminal, Git changes, task views, and plugin-registered tabs. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/DSH-better-sidebar?style=flat&label=stars)](https://github.com/omdsh-dev/DSH-better-sidebar/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [EchoBird](https://github.com/edison7009/EchoBird) | Offers one-click installation and model switching for DeepSeek Harness alongside other coding-agent runtimes. | [![GitHub stars](https://img.shields.io/github/stars/edison7009/EchoBird?style=flat&label=stars)](https://github.com/edison7009/EchoBird/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-desktop](https://github.com/dsh-tauri/deepseek-harness-desktop) | Packages DSH in a Tauri desktop client with managed runtime setup, profiles, updates, remote access, and native desktop integrations. | [![GitHub stars](https://img.shields.io/github/stars/dsh-tauri/deepseek-harness-desktop?style=flat&label=stars)](https://github.com/dsh-tauri/deepseek-harness-desktop/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://dshtauri.mintlify.site/zh-CN/installation">DeepSeek Harness Tauri Desktop installation guide</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-deep-whale](https://github.com/Small-tailqwq/dsh-deep-whale) | Adds whale-character themes and a skin manager to DSH Web and Desktop. | [![GitHub stars](https://img.shields.io/github/stars/Small-tailqwq/dsh-deep-whale?style=flat&label=stars)](https://github.com/Small-tailqwq/dsh-deep-whale/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-context](https://github.com/bowenliang123/dsh-context) | Visualizes DSH context composition, request history, compaction, token estimates, session usage, and agent relationships in dashboards and a context browser. | [![GitHub stars](https://img.shields.io/github/stars/bowenliang123/dsh-context?style=flat&label=stars)](https://github.com/bowenliang123/dsh-context/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [EAC-Desktop](https://github.com/Ebony-Vinyl/EAC-Desktop) | Packages DSH in a Windows Tauri desktop app with a bundled runtime, plugin management, recovery snapshots, file and terminal panels, and themes. | [![GitHub stars](https://img.shields.io/github/stars/Ebony-Vinyl/EAC-Desktop?style=flat&label=stars)](https://github.com/Ebony-Vinyl/EAC-Desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pocket](https://github.com/shaobeichen/dsh-pocket) | Mirrors a desktop DSH Web session to phones over local or public networking after QR-code pairing. | [![GitHub stars](https://img.shields.io/github/stars/shaobeichen/dsh-pocket?style=flat&label=stars)](https://github.com/shaobeichen/dsh-pocket/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pet](https://github.com/PC2005-cloud/dsh-pet) | Displays a task-aware desktop pet with transparent animations and a pipeline for custom character assets. | [![GitHub stars](https://img.shields.io/github/stars/PC2005-cloud/dsh-pet?style=flat&label=stars)](https://github.com/PC2005-cloud/dsh-pet/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [AI-Novel-Writer](https://github.com/EthanYoQ/AI-Novel-Writer) | Preserves a feature-frozen DSH novel-writing preview with structured planning, drafting, review, and human-approved updates. | [![GitHub stars](https://img.shields.io/github/stars/EthanYoQ/AI-Novel-Writer?style=flat&label=stars)](https://github.com/EthanYoQ/AI-Novel-Writer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSHA](https://github.com/DSH-APP/DSHA) | Runs DSH on Android in a bundled Ubuntu environment with guided setup, a WebView UI, and a device shell bridge. | [![GitHub stars](https://img.shields.io/github/stars/DSH-APP/DSHA?style=flat&label=stars)](https://github.com/DSH-APP/DSHA/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-wallpaper-engine](https://github.com/elysia395/dsh-wallpaper-engine) | Renders local Wallpaper Engine scenes, Web wallpapers, and videos behind DSH chats with glass effects, typography controls, and appearance presets. | [![GitHub stars](https://img.shields.io/github/stars/elysia395/dsh-wallpaper-engine?style=flat&label=stars)](https://github.com/elysia395/dsh-wallpaper-engine/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-design](https://github.com/Devin-AXIS/deepseek-design) | Adds editable Design and PPT studios to DSH for AI generation, visual refinement, templates, and PDF or PPTX export. | [![GitHub stars](https://img.shields.io/github/stars/Devin-AXIS/deepseek-design?style=flat&label=stars)](https://github.com/Devin-AXIS/deepseek-design/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [jingyun-dsh](https://github.com/jingyunstudio/jingyun-dsh) | Adds branded DSH client surfaces for accounts, subscriptions, payments, assets, agents, skills, plugins, and product packaging. | [![GitHub stars](https://img.shields.io/github/stars/jingyunstudio/jingyun-dsh?style=flat&label=stars)](https://github.com/jingyunstudio/jingyun-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Wegent](https://github.com/wecode-ai/Wegent) | Embeds DSH in the Wegent desktop workbench with plugin storage, executor sessions, and desktop UI integration. | [![GitHub stars](https://img.shields.io/github/stars/wecode-ai/Wegent?style=flat&label=stars)](https://github.com/wecode-ai/Wegent/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-desktop](https://github.com/ningbainb/deepseek-harness-desktop) | Bundles DSH and Node.js into a Windows desktop distribution with macOS and Linux previews, plugin management, skills, and remote-work tools. | [![GitHub stars](https://img.shields.io/github/stars/ningbainb/deepseek-harness-desktop?style=flat&label=stars)](https://github.com/ningbainb/deepseek-harness-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-worktable](https://github.com/Aisland-SJL/dsh-worktable) | Adds a project app drawer, dockable file, terminal and browser panes, conversation bindings, and a control room showing live project activity. | [![GitHub stars](https://img.shields.io/github/stars/Aisland-SJL/dsh-worktable?style=flat&label=stars)](https://github.com/Aisland-SJL/dsh-worktable/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mobile-apk](https://github.com/kelai141/dsh-mobile-apk) | Wraps DSH in an Android WebView app with an embedded Termux runtime, watchdog, SAF directory bridge, and verified runtime updates. | [![GitHub stars](https://img.shields.io/github/stars/kelai141/dsh-mobile-apk?style=flat&label=stars)](https://github.com/kelai141/dsh-mobile-apk/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh_desktop](https://github.com/myYangyunfan/dsh_desktop) | Packages DSH as a Windows and macOS Tauri desktop client with a bundled runtime, official plugins, updates, and managed startup. | [![GitHub stars](https://img.shields.io/github/stars/myYangyunfan/dsh_desktop?style=flat&label=stars)](https://github.com/myYangyunfan/dsh_desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dshcode](https://github.com/whitelonng/dshcode) | Packages DSH in an Electron app for macOS and Windows with plugin management, interactive interface cards, session archives, and desktop notifications. | [![GitHub stars](https://img.shields.io/github/stars/whitelonng/dshcode?style=flat&label=stars)](https://github.com/whitelonng/dshcode/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-studio](https://github.com/fufankeji/deepseek-harness-studio) | Provides a desktop workbench for installing, discovering, managing, and visually configuring DeepSeek Harness plugins without editing configuration files. | [![GitHub stars](https://img.shields.io/github/stars/fufankeji/deepseek-harness-studio?style=flat&label=stars)](https://github.com/fufankeji/deepseek-harness-studio/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ads](https://github.com/Nagi-ovo/dsh-ads) | Restyles DSH Web as a parody 2005 portal with configurable ads, pop-ups, and fake games. | [![GitHub stars](https://img.shields.io/github/stars/Nagi-ovo/dsh-ads?style=flat&label=stars)](https://github.com/Nagi-ovo/dsh-ads/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Minke](https://github.com/lencx/Minke) | Turns Harness into a local-first desktop workspace with conversations, project files, terminals, web tools, plugins, and native desktop controls. | [![GitHub stars](https://img.shields.io/github/stars/lencx/Minke?style=flat&label=stars)](https://github.com/lencx/Minke/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [working-activity](https://github.com/ccch1mneyyy/working-activity) | Extends DSH status surfaces with live tool activity, progress, pace, context warnings, and configurable animations. | [![GitHub stars](https://img.shields.io/github/stars/ccch1mneyyy/working-activity?style=flat&label=stars)](https://github.com/ccch1mneyyy/working-activity/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [thoughtdag](https://github.com/chenxiachan/thoughtdag) | Embeds an editable thought graph in DSH Web so selected nodes and links become the next agent context. | [![GitHub stars](https://img.shields.io/github/stars/chenxiachan/thoughtdag?style=flat&label=stars)](https://github.com/chenxiachan/thoughtdag/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-genui](https://github.com/omdsh-dev/dsh-genui) | Renders interactive layouts, charts, forms, diagrams, quizzes, and 3D scenes in assistant replies, with actions routed back to the model. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-genui?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-genui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mobile](https://github.com/Clarklevis1995/dsh-mobile) | Provides native Android and iOS clients with shared Kotlin logic for DSH sessions, live traces, approvals, and workspace files through a mobile gateway. | [![GitHub stars](https://img.shields.io/github/stars/Clarklevis1995/dsh-mobile?style=flat&label=stars)](https://github.com/Clarklevis1995/dsh-mobile/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-synapse](https://github.com/liangmianya/dsh-synapse) | Adds a zoomable conversation canvas that maps DSH sessions, forks, messages, and tool activity without replacing the native session system. | [![GitHub stars](https://img.shields.io/github/stars/liangmianya/dsh-synapse?style=flat&label=stars)](https://github.com/liangmianya/dsh-synapse/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mobile](https://github.com/saya-ch/dsh-mobile) | Connects mobile browsers and an Android app to DSH sessions over paired HTTPS, with local-network and optional remote-tunnel access. | [![GitHub stars](https://img.shields.io/github/stars/saya-ch/dsh-mobile?style=flat&label=stars)](https://github.com/saya-ch/dsh-mobile/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-desktop](https://github.com/vibeinging/dsh-desktop) | Bundles the official DSH Web interface and runtime with optional community plugins for files, terminals, Git worktrees, tasks, and remote access. | [![GitHub stars](https://img.shields.io/github/stars/vibeinging/dsh-desktop?style=flat&label=stars)](https://github.com/vibeinging/dsh-desktop/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://dshdesktopstation.com/">DSH Desktop Bundle Edition</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-dafeiyu](https://github.com/QCYTSN/dsh-dafeiyu) | Adds an always-on-top Windows desktop companion driven by real DeepSeek Harness agent state. | [![GitHub stars](https://img.shields.io/github/stars/QCYTSN/dsh-dafeiyu?style=flat&label=stars)](https://github.com/QCYTSN/dsh-dafeiyu/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-Transparent-UI-Plugin](https://github.com/WYH66666666/DSH-Transparent-UI-Plugin) | Adds a configurable glass-style theme for DSH Web with adjustable blur, backgrounds, and native UI restoration. | [![GitHub stars](https://img.shields.io/github/stars/WYH66666666/DSH-Transparent-UI-Plugin?style=flat&label=stars)](https://github.com/WYH66666666/DSH-Transparent-UI-Plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [open-sea-skin](https://github.com/d-dev0101/open-sea-skin) | Adds an interactive WebGPU ocean theme to DSH Web, with a browser extension and static installer as alternative delivery options. | [![GitHub stars](https://img.shields.io/github/stars/d-dev0101/open-sea-skin?style=flat&label=stars)](https://github.com/d-dev0101/open-sea-skin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [whale-girl](https://github.com/vlln/whale-girl) | Adds a draggable DSH pet with feeding, play, session reactions, and an optional desktop companion. | [![GitHub stars](https://img.shields.io/github/stars/vlln/whale-girl?style=flat&label=stars)](https://github.com/vlln/whale-girl/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [ds-harness-remote](https://github.com/liguobao/ds-harness-remote) | Provides paired browser, desktop, and mobile access to DSH hosts for continuing sessions, transferring files, and responding to approvals over encrypted links. | [![GitHub stars](https://img.shields.io/github/stars/liguobao/ds-harness-remote?style=flat&label=stars)](https://github.com/liguobao/ds-harness-remote/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [oh-dsh](https://github.com/hust-open-atom-club/oh-dsh) | Packages DSH into a desktop, Web, and terminal distribution with a bundled Node.js runtime, tools, plugins, and managed startup. | [![GitHub stars](https://img.shields.io/github/stars/hust-open-atom-club/oh-dsh?style=flat&label=stars)](https://github.com/hust-open-atom-club/oh-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-visualize](https://github.com/Nagi-ovo/dsh-visualize) | Renders interactive generative UI cards directly inside conversations. | [![GitHub stars](https://img.shields.io/github/stars/Nagi-ovo/dsh-visualize?style=flat&label=stars)](https://github.com/Nagi-ovo/dsh-visualize/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tianshu-tui](https://github.com/huiliyi37/dsh-tianshu-tui) | Provides an ANSI-rendered DSH terminal interface with composable TDD, evidence-gate, vision, code-intelligence, memory, and recall workflows. | [![GitHub stars](https://img.shields.io/github/stars/huiliyi37/dsh-tianshu-tui?style=flat&label=stars)](https://github.com/huiliyi37/dsh-tianshu-tui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DeepSeekGUI](https://github.com/See-Sol-Lab/DeepSeekGUI) | Packages DSH as a Windows desktop workbench with project, Git, pull-request, worktree, browser, change-review, and memory panels. | [![GitHub stars](https://img.shields.io/github/stars/See-Sol-Lab/DeepSeekGUI?style=flat&label=stars)](https://github.com/See-Sol-Lab/DeepSeekGUI/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [pilot-harness](https://github.com/op7418/pilot-harness) | Packages a cross-platform DSH desktop client with a CodePilot-inspired theme and companion plugins for worktrees, schedules, and session export. | [![GitHub stars](https://img.shields.io/github/stars/op7418/pilot-harness?style=flat&label=stars)](https://github.com/op7418/pilot-harness/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-desktop](https://github.com/agent-earth/deepseek-harness-desktop) | Packages DSH as a minimal cross-platform desktop wrapper with a bundled runtime, installers, and loopback-only navigation. | [![GitHub stars](https://img.shields.io/github/stars/agent-earth/deepseek-harness-desktop?style=flat&label=stars)](https://github.com/agent-earth/deepseek-harness-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-dream-skin](https://github.com/RevolutionLA/dsh-dream-skin) | Adds eight native DSH Web themes plus custom colors, backgrounds, transparency, blur, and importable theme packs. | [![GitHub stars](https://img.shields.io/github/stars/RevolutionLA/dsh-dream-skin?style=flat&label=stars)](https://github.com/RevolutionLA/dsh-dream-skin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-agent-rp](https://github.com/hewzhew/dsh-agent-rp) | Adds role-play sessions with character cards, world books, presets, persistent memory, and SillyTavern imports. | [![GitHub stars](https://img.shields.io/github/stars/hewzhew/dsh-agent-rp?style=flat&label=stars)](https://github.com/hewzhew/dsh-agent-rp/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skin-market](https://github.com/kingOfSoySauce/dsh-skin-market) | Adds a DSH Settings marketplace for browsing, installing, enabling, updating, and removing curated community skins. | [![GitHub stars](https://img.shields.io/github/stars/kingOfSoySauce/dsh-skin-market?style=flat&label=stars)](https://github.com/kingOfSoySauce/dsh-skin-market/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-launcher](https://github.com/Ruler4396/dsh-launcher) · <sub>Archived</sub> | Runs DSH on Windows through silent startup and a lightweight WebView2 shell. | [![GitHub stars](https://img.shields.io/github/stars/Ruler4396/dsh-launcher?style=flat&label=stars)](https://github.com/Ruler4396/dsh-launcher/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [seektty](https://github.com/Hilbert-beinghappy/seektty) | Provides a DeepSeek-styled terminal interface for DSH with session, tool, diff, plan, and subagent views. | [![GitHub stars](https://img.shields.io/github/stars/Hilbert-beinghappy/seektty?style=flat&label=stars)](https://github.com/Hilbert-beinghappy/seektty/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-openpencil](https://github.com/ZSeven-W/dsh-openpencil) | Integrates OpenPencil design preview and editing into DeepSeek Harness. | [![GitHub stars](https://img.shields.io/github/stars/ZSeven-W/dsh-openpencil?style=flat&label=stars)](https://github.com/ZSeven-W/dsh-openpencil/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [WhaleIsle](https://github.com/ChisaAlter/WhaleIsle) | Packages DSH as Whale Isle for Windows and Apple-silicon macOS with file, terminal, Git, plugin, usage, and optional mobile-access controls. | [![GitHub stars](https://img.shields.io/github/stars/ChisaAlter/WhaleIsle?style=flat&label=stars)](https://github.com/ChisaAlter/WhaleIsle/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-codex-ui](https://github.com/MichengAI/dsh-codex-ui) | Adds a Codex-style DSH sidebar, workspace tree, global search, session menus, and turn navigation through public UI slots. | [![GitHub stars](https://img.shields.io/github/stars/MichengAI/dsh-codex-ui?style=flat&label=stars)](https://github.com/MichengAI/dsh-codex-ui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-for-vscode](https://github.com/skymecode/deepseek-harness-for-vscode) | Provides a native VS Code workbench with a bundled DSH runtime, editor context, persistent sessions, approvals, and plugin management. | [![GitHub stars](https://img.shields.io/github/stars/skymecode/deepseek-harness-for-vscode?style=flat&label=stars)](https://github.com/skymecode/deepseek-harness-for-vscode/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-status-rotator](https://github.com/01Virex/dsh-status-rotator) | Replaces DSH turn-status text with configurable phase-aware typewriter phrases and gradients. | [![GitHub stars](https://img.shields.io/github/stars/01Virex/dsh-status-rotator?style=flat&label=stars)](https://github.com/01Virex/dsh-status-rotator/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [cetus](https://github.com/drewnekota/cetus) | Runs DSH inside a macOS desktop assistant with global launch, scheduled tasks, screen context, and review workflows. | [![GitHub stars](https://img.shields.io/github/stars/drewnekota/cetus?style=flat&label=stars)](https://github.com/drewnekota/cetus/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-annotation](https://github.com/omdsh-dev/dsh-annotation) | Attaches inline text annotations to messages and maps replies back to each note. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-annotation?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-annotation/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-mobile](https://github.com/mexiaosqwq/dsh-web-mobile) | Adds responsive mobile layouts and touch-oriented interaction fixes to DeepSeek Harness Web. | [![GitHub stars](https://img.shields.io/github/stars/mexiaosqwq/dsh-web-mobile?style=flat&label=stars)](https://github.com/mexiaosqwq/dsh-web-mobile/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sev](https://github.com/Buzzso/dsh-sev) | Manages remote headless DSH hosts from the local Web UI through SSH tunnels, combining session browsing, health recovery, and model-callable one-shot remote tasks. | [![GitHub stars](https://img.shields.io/github/stars/Buzzso/dsh-sev?style=flat&label=stars)](https://github.com/Buzzso/dsh-sev/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-liketavern](https://github.com/Amakurai/dsh-liketavern) | Turns DSH Web into a SillyTavern-style roleplay frontend with character cards, lorebooks, memory, and rollback. | [![GitHub stars](https://img.shields.io/github/stars/Amakurai/dsh-liketavern?style=flat&label=stars)](https://github.com/Amakurai/dsh-liketavern/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-genui](https://github.com/pengyue-polaron/deepseek-harness-genui) | Lets DeepSeek Harness generate and run code-defined interfaces inline or on a separate canvas with isolated browser execution. | [![GitHub stars](https://img.shields.io/github/stars/pengyue-polaron/deepseek-harness-genui?style=flat&label=stars)](https://github.com/pengyue-polaron/deepseek-harness-genui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-codex-desktop](https://github.com/MichengAI/dsh-codex-desktop) | Packages DSH and Node.js into a cross-platform desktop workbench with installers, a local runtime, and integrated companion plugins. | [![GitHub stars](https://img.shields.io/github/stars/MichengAI/dsh-codex-desktop?style=flat&label=stars)](https://github.com/MichengAI/dsh-codex-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-vscode-layout](https://github.com/anoslide/dsh-vscode-layout) | Transforms DSH Web into a VS Code-style three-pane workspace with a file tree, tabs, editor, and desktop launcher. | [![GitHub stars](https://img.shields.io/github/stars/anoslide/dsh-vscode-layout?style=flat&label=stars)](https://github.com/anoslide/dsh-vscode-layout/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-desktop](https://github.com/baihejiangnan/deepseek-harness-desktop) | Runs isolated Windows DSH instances with separate homes, ports, profiles, and windows, plus reusable multi-instance workflow orchestration. | [![GitHub stars](https://img.shields.io/github/stars/baihejiangnan/deepseek-harness-desktop?style=flat&label=stars)](https://github.com/baihejiangnan/deepseek-harness-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-desktop](https://github.com/bruc3van/dsh-desktop) | Packages the official DSH Web UI in a desktop client with bundled runtime, background operation, local or remote connections, and optional post-install plugin review. | [![GitHub stars](https://img.shields.io/github/stars/bruc3van/dsh-desktop?style=flat&label=stars)](https://github.com/bruc3van/dsh-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-better-display](https://github.com/aa2246740/dsh-better-display) | Adds a separate DSH reading view with folded reasoning and tool details, final-answer focus, and interactive cards or small Web apps. | [![GitHub stars](https://img.shields.io/github/stars/aa2246740/dsh-better-display?style=flat&label=stars)](https://github.com/aa2246740/dsh-better-display/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-smooth-stream](https://github.com/Laplace-bit/dsh-smooth-stream) | Smooths streamed conversation rendering, line growth, tool-card motion, and bottom-follow behavior while honoring reduced-motion preferences. | [![GitHub stars](https://img.shields.io/github/stars/Laplace-bit/dsh-smooth-stream?style=flat&label=stars)](https://github.com/Laplace-bit/dsh-smooth-stream/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Martty](https://github.com/openma-ai/Martty) | Provides Martty, a DSH-first Cordis terminal interface with streaming conversations, session controls, approvals, and optional ACP agent connections. | [![GitHub stars](https://img.shields.io/github/stars/openma-ai/Martty?style=flat&label=stars)](https://github.com/openma-ai/Martty/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mcp-panel](https://github.com/PerryLink/dsh-mcp-panel) | Adds an MCP management console with server status, diagnostics, trial calls, and approval-gated profile changes for adding, editing, or removing servers. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-mcp-panel?style=flat&label=stars)](https://github.com/PerryLink/dsh-mcp-panel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-Portable](https://github.com/WSL043/DSH-Portable) | Provides portable Windows, macOS, and Linux DSH builds with bundled runtimes, local data, plugin controls, updates, repair, and redacted diagnostics. | [![GitHub stars](https://img.shields.io/github/stars/WSL043/DSH-Portable?style=flat&label=stars)](https://github.com/WSL043/DSH-Portable/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://wsl043.github.io/DSH-Portable/">DSH-Portable documentation</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-auto-collapse](https://github.com/a179-sanae/dsh-auto-collapse) | Automatically collapses completed reasoning and tool steps while preserving access to their full contents. | [![GitHub stars](https://img.shields.io/github/stars/a179-sanae/dsh-auto-collapse?style=flat&label=stars)](https://github.com/a179-sanae/dsh-auto-collapse/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-meow-smooth](https://github.com/Phant0Meow/dsh-meow-smooth) | Improves DSH Web on mobile with responsive interaction tweaks, cross-session task alerts, Web Push and webhook notifications, and optional response compression. | [![GitHub stars](https://img.shields.io/github/stars/Phant0Meow/dsh-meow-smooth?style=flat&label=stars)](https://github.com/Phant0Meow/dsh-meow-smooth/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-desktop-hub](https://github.com/FlashingChen/dsh-desktop-hub) | Packages DSH in an Electron desktop console with bundled runtime and separate Harness, plugin, MCP, and skill management tabs. | [![GitHub stars](https://img.shields.io/github/stars/FlashingChen/dsh-desktop-hub?style=flat&label=stars)](https://github.com/FlashingChen/dsh-desktop-hub/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-desktop](https://github.com/xiincs/deepseek-harness-desktop) | Packages DeepSeek Harness as a Tauri desktop app with bundled Node.js, automatic updates, and confirmation-aware plugin installation. | [![GitHub stars](https://img.shields.io/github/stars/xiincs/deepseek-harness-desktop?style=flat&label=stars)](https://github.com/xiincs/deepseek-harness-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tether](https://github.com/zexadev/dsh-tether) | Connects Android and experimental iOS clients to DSH through paired links with relay fallback, and can run DSH locally on Android arm64. | [![GitHub stars](https://img.shields.io/github/stars/zexadev/dsh-tether?style=flat&label=stars)](https://github.com/zexadev/dsh-tether/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [BioDSH](https://github.com/sagirimo/BioDSH) | Packages DSH as a bioinformatics desktop workbench with curated skills, reproducible examples, a managed Python environment, and application control. | [![GitHub stars](https://img.shields.io/github/stars/sagirimo/BioDSH?style=flat&label=stars)](https://github.com/sagirimo/BioDSH/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tavern-v2](https://github.com/chen731215-dev/dsh-tavern-v2) | Adds a native DSH roleplay workspace with character cards, worldbooks, session-scoped presets, memory summaries, relationship graphs, and story controls. | [![GitHub stars](https://img.shields.io/github/stars/chen731215-dev/dsh-tavern-v2?style=flat&label=stars)](https://github.com/chen731215-dev/dsh-tavern-v2/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Codingns4DSH](https://github.com/jingyi0605/Codingns4DSH) | Integrates external coding agents, persistent terminals, Git and workspace tools, and optional remote access into DSH. | [![GitHub stars](https://img.shields.io/github/stars/jingyi0605/Codingns4DSH?style=flat&label=stars)](https://github.com/jingyi0605/Codingns4DSH/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-navbar](https://github.com/vlln/dsh-navbar) · <sub>Archived</sub> | Adds a conversation navigator for jumping between user-message nodes. | [![GitHub stars](https://img.shields.io/github/stars/vlln/dsh-navbar?style=flat&label=stars)](https://github.com/vlln/dsh-navbar/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-emoji](https://github.com/hellodigua/dsh-emoji) | Adds semantic custom reaction images to DSH responses with built-in and user-uploaded sticker packs. | [![GitHub stars](https://img.shields.io/github/stars/hellodigua/dsh-emoji?style=flat&label=stars)](https://github.com/hellodigua/dsh-emoji/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-android](https://github.com/FunnelCakes/deepseek-harness-android) | Installs and runs DSH natively inside Android Termux with Web UI access and automated compatibility fixes. | [![GitHub stars](https://img.shields.io/github/stars/FunnelCakes/deepseek-harness-android?style=flat&label=stars)](https://github.com/FunnelCakes/deepseek-harness-android/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-Remote](https://github.com/Blank-not-black/dsh-Remote) | Provides a mobile DSH console for sessions, approvals, questions, and file transfer over authenticated LAN or Tailscale connections. | [![GitHub stars](https://img.shields.io/github/stars/Blank-not-black/dsh-Remote?style=flat&label=stars)](https://github.com/Blank-not-black/dsh-Remote/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-file-review](https://github.com/left0ver/dsh-file-review) | Adds a post-turn file-review panel that shows diffs for files changed by the agent. | [![GitHub stars](https://img.shields.io/github/stars/left0ver/dsh-file-review?style=flat&label=stars)](https://github.com/left0ver/dsh-file-review/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-any-background](https://github.com/Tkingxiao/dsh-any-background) | Customizes DSH themes with image, video, or generated wallpapers, color tools, and independent opacity and blur controls for interface surfaces. | [![GitHub stars](https://img.shields.io/github/stars/Tkingxiao/dsh-any-background?style=flat&label=stars)](https://github.com/Tkingxiao/dsh-any-background/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DeepSeek-Harness-Desktop](https://github.com/Links2008/DeepSeek-Harness-Desktop) | Packages DSH as a Windows Electron desktop app with a persistent daemon, plugin market, IM integrations, updates, and startup recovery. | [![GitHub stars](https://img.shields.io/github/stars/Links2008/DeepSeek-Harness-Desktop?style=flat&label=stars)](https://github.com/Links2008/DeepSeek-Harness-Desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-code](https://github.com/UNLINEARITY/dsh-code) | Provides a Claude Code-style terminal interface over DeepSeek Harness agents, sessions, tools, permissions, sandboxes, and plugins. | [![GitHub stars](https://img.shields.io/github/stars/UNLINEARITY/dsh-code?style=flat&label=stars)](https://github.com/UNLINEARITY/dsh-code/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ui-whale](https://github.com/lhh010/dsh-ui-whale) | Adds an animated pixel-whale companion that reacts to agent activity. | [![GitHub stars](https://img.shields.io/github/stars/lhh010/dsh-ui-whale?style=flat&label=stars)](https://github.com/lhh010/dsh-ui-whale/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-workspace-explorer](https://github.com/Jiyr0119/dsh-workspace-explorer) | Adds a workspace file-tree popup to DSH Web for browsing, previewing, creating, renaming, deleting, and attaching files to prompts. | [![GitHub stars](https://img.shields.io/github/stars/Jiyr0119/dsh-workspace-explorer?style=flat&label=stars)](https://github.com/Jiyr0119/dsh-workspace-explorer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DshCockpit](https://github.com/Lxiayu/DshCockpit) | Packages DSH as a desktop cockpit with usage and cost views, runtime management, remote channels, scheduled tasks, and session search. | [![GitHub stars](https://img.shields.io/github/stars/Lxiayu/DshCockpit?style=flat&label=stars)](https://github.com/Lxiayu/DshCockpit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tavern](https://github.com/chen731215-dev/dsh-tavern) · <sub>Archived</sub> | Adds a DSH Web role-play panel for managing character cards, world books, and switchable presets. | [![GitHub stars](https://img.shields.io/github/stars/chen731215-dev/dsh-tavern?style=flat&label=stars)](https://github.com/chen731215-dev/dsh-tavern/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-desktop](https://github.com/liguobao/dsh-desktop) · <sub>Archived</sub> | Packages DSH as a hardened cross-platform Electron client with a bundled runtime, verified updates, and plugin management. | [![GitHub stars](https://img.shields.io/github/stars/liguobao/dsh-desktop?style=flat&label=stars)](https://github.com/liguobao/dsh-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-zh_pro](https://github.com/magian1127/deepseek-harness-zh_pro) | Adds Chinese UI completion, optional prompt localization, reasoning display controls, archive management, multi-select, deletion, and local-service monitoring. | [![GitHub stars](https://img.shields.io/github/stars/magian1127/deepseek-harness-zh_pro?style=flat&label=stars)](https://github.com/magian1127/deepseek-harness-zh_pro/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-voice-scribe](https://github.com/PensiveFei/dsh-voice-scribe) | Adds push-to-talk transcription to the DSH composer using browser speech recognition or an OpenAI-compatible ASR endpoint, with optional model-based cleanup. | [![GitHub stars](https://img.shields.io/github/stars/PensiveFei/dsh-voice-scribe?style=flat&label=stars)](https://github.com/PensiveFei/dsh-voice-scribe/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-whale-galgame](https://github.com/JAdpp/dsh-whale-galgame) | Adds a task-event-aware visual-novel panel with multiple characters, persistent affinity, and locally stored state. | [![GitHub stars](https://img.shields.io/github/stars/JAdpp/dsh-whale-galgame?style=flat&label=stars)](https://github.com/JAdpp/dsh-whale-galgame/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-minigames](https://github.com/lhh010/dsh-minigames) | Adds a draggable, dockable DSH Web window of offline mini-games with an extensible game registry. | [![GitHub stars](https://img.shields.io/github/stars/lhh010/dsh-minigames?style=flat&label=stars)](https://github.com/lhh010/dsh-minigames/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh_theme_terraria](https://github.com/10086ggqq/dsh_theme_terraria) | Replaces DSH Web with a self-contained Terraria-style interface while preserving sessions, streaming, approvals, model switching, and workspaces. | [![GitHub stars](https://img.shields.io/github/stars/10086ggqq/dsh_theme_terraria?style=flat&label=stars)](https://github.com/10086ggqq/dsh_theme_terraria/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-qq2006](https://github.com/LaplaceYoung/dsh-qq2006) | Adds a switchable QQ2006-inspired theme and asset set to the DSH Web interface. | [![GitHub stars](https://img.shields.io/github/stars/LaplaceYoung/dsh-qq2006?style=flat&label=stars)](https://github.com/LaplaceYoung/dsh-qq2006/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-vscode](https://github.com/Lixxx1/dsh-vscode) | Embeds DSH sessions, tools, approvals, change review, and native debugger control in an alpha VS Code sidebar. | [![GitHub stars](https://img.shields.io/github/stars/Lixxx1/dsh-vscode?style=flat&label=stars)](https://github.com/Lixxx1/dsh-vscode/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-remote-mobile](https://github.com/IceApriler/dsh-remote-mobile) | Adds LAN and Tailscale access to DSH Web with mobile layout fixes, QR pairing, password authentication, encrypted credential exchange, device controls, and brute-force lockouts. | [![GitHub stars](https://img.shields.io/github/stars/IceApriler/dsh-remote-mobile?style=flat&label=stars)](https://github.com/IceApriler/dsh-remote-mobile/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-review](https://github.com/CanglongCl/dsh-web-review) | Lets agents inspect rendered web pages and use element annotations as editing feedback. | [![GitHub stars](https://img.shields.io/github/stars/CanglongCl/dsh-web-review?style=flat&label=stars)](https://github.com/CanglongCl/dsh-web-review/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-better-input](https://github.com/DIAG5/dsh-better-input) | Enhances DSH input with browser speech recognition, model-assisted prompt refinement, templates, local document conversion, OCR, and file attachments. | [![GitHub stars](https://img.shields.io/github/stars/DIAG5/dsh-better-input?style=flat&label=stars)](https://github.com/DIAG5/dsh-better-input/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-stickers](https://github.com/william-jin-cmu/dsh-stickers) | Adds shared stickers for user reactions, agent tools, and a chat command in DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/william-jin-cmu/dsh-stickers?style=flat&label=stars)](https://github.com/william-jin-cmu/dsh-stickers/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-spotlight](https://github.com/0xsline/dsh-spotlight) | Adds a keyboard-first command palette for sessions, workspaces, and common DSH actions. | [![GitHub stars](https://img.shields.io/github/stars/0xsline/dsh-spotlight?style=flat&label=stars)](https://github.com/0xsline/dsh-spotlight/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-conversation-navigator](https://github.com/gjj-star/dsh-conversation-navigator) | Adds a browser-only DSH conversation navigator with question-and-answer search, highlighted matches, turn-step expansion, timeline controls, and jump-to-message actions. | [![GitHub stars](https://img.shields.io/github/stars/gjj-star/dsh-conversation-navigator?style=flat&label=stars)](https://github.com/gjj-star/dsh-conversation-navigator/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-pet-rs](https://github.com/HuanLinOTO/dsh-plugin-pet-rs) | Runs a cross-platform Rust desktop pet that reflects DSH session states through a transparent window and system tray. | [![GitHub stars](https://img.shields.io/github/stars/HuanLinOTO/dsh-plugin-pet-rs?style=flat&label=stars)](https://github.com/HuanLinOTO/dsh-plugin-pet-rs/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-milestone](https://github.com/SnowCrescenter-tech/dsh-milestone) | Adds a Git-style milestone timeline for navigating turns and inspecting message timing. | [![GitHub stars](https://img.shields.io/github/stars/SnowCrescenter-tech/dsh-milestone?style=flat&label=stars)](https://github.com/SnowCrescenter-tech/dsh-milestone/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ears](https://github.com/WizisCool/dsh-ears) | Adds DSH dictation through browser Web Speech, local Whisper, or ASR APIs, with editable transcripts and optional model-based polishing. | [![GitHub stars](https://img.shields.io/github/stars/WizisCool/dsh-ears?style=flat&label=stars)](https://github.com/WizisCool/dsh-ears/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [mayfly](https://github.com/Ephemeral-AI-Lab/mayfly) | Provides a Cordis-native DSH terminal UI with diagrams, live status, side conversations, a subagent tree, and plugin-contributed panes. | [![GitHub stars](https://img.shields.io/github/stars/Ephemeral-AI-Lab/mayfly?style=flat&label=stars)](https://github.com/Ephemeral-AI-Lab/mayfly/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-context-menu](https://github.com/baihejiangnan/dsh-session-context-menu) | Adds native-style context menus across DeepSeek Harness sessions, workspaces, settings, conversations, and input areas. | [![GitHub stars](https://img.shields.io/github/stars/baihejiangnan/dsh-session-context-menu?style=flat&label=stars)](https://github.com/baihejiangnan/dsh-session-context-menu/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-focus-chat](https://github.com/dingyi222666/dsh-focus-chat) · <sub>Archived</sub> | Adds a focused conversation view that folds tool and reasoning details into compact turn summaries. | [![GitHub stars](https://img.shields.io/github/stars/dingyi222666/dsh-focus-chat?style=flat&label=stars)](https://github.com/dingyi222666/dsh-focus-chat/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [ramify-dsh](https://github.com/yanglongyun/ramify-dsh) | Adds a branching canvas for generating, comparing, and revisiting alternative proposals inside DeepSeek Harness. | [![GitHub stars](https://img.shields.io/github/stars/yanglongyun/ramify-dsh?style=flat&label=stars)](https://github.com/yanglongyun/ramify-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [blue](https://github.com/dsh-blue/blue) · <sub>Archived</sub> | Archived Cordis-based DSH terminal UI; development continues as Mayfly. | [![GitHub stars](https://img.shields.io/github/stars/dsh-blue/blue?style=flat&label=stars)](https://github.com/dsh-blue/blue/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://dsh-blue.dev/en/guide/">Blue quickstart and installation guide</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-better-markdown](https://github.com/zerob13/dsh-better-markdown) | Replaces DSH Web's streaming Markdown renderer with a guarded Markstream-based view supporting Mermaid, KaTeX, and resilient fallbacks. | [![GitHub stars](https://img.shields.io/github/stars/zerob13/dsh-better-markdown?style=flat&label=stars)](https://github.com/zerob13/dsh-better-markdown/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-balance-meter](https://github.com/Ghost011118/dsh-balance-meter) | Shows DeepSeek account balance and model-aware session cost estimates in DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/Ghost011118/dsh-balance-meter?style=flat&label=stars)](https://github.com/Ghost011118/dsh-balance-meter/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pi-tui](https://github.com/XMoon/dsh-pi-tui) | Provides a third-party terminal interface for DeepSeek Harness using a bundled fork of Pi TUI. | [![GitHub stars](https://img.shields.io/github/stars/XMoon/dsh-pi-tui?style=flat&label=stars)](https://github.com/XMoon/dsh-pi-tui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-hello-kitty-suite](https://github.com/Angel2518975237/deepseek-harness-hello-kitty-suite) | Bundles a responsive light-and-dark Hello Kitty skin for DSH Web with turn-completion cards, sounds, and background system notifications. | [![GitHub stars](https://img.shields.io/github/stars/Angel2518975237/deepseek-harness-hello-kitty-suite?style=flat&label=stars)](https://github.com/Angel2518975237/deepseek-harness-hello-kitty-suite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-android-app](https://github.com/Jensen-Yao/deepseek-harness-android-app) | Packages a tap-driven Android controller that installs and manages DSH through Termux, with browser access and storage controls. | [![GitHub stars](https://img.shields.io/github/stars/Jensen-Yao/deepseek-harness-android-app?style=flat&label=stars)](https://github.com/Jensen-Yao/deepseek-harness-android-app/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [orbis](https://github.com/icodesign/orbis) | Provides a mobile client and remote-control bridge for DeepSeek Harness sessions. | [![GitHub stars](https://img.shields.io/github/stars/icodesign/orbis?style=flat&label=stars)](https://github.com/icodesign/orbis/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skin](https://github.com/KinGao294/dsh-skin) | Adds a curated skin switcher and persistent custom wallpaper controls to DeepSeek Harness Web. | [![GitHub stars](https://img.shields.io/github/stars/KinGao294/dsh-skin?style=flat&label=stars)](https://github.com/KinGao294/dsh-skin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-composer-history](https://github.com/PerryLink/dsh-composer-history) | Adds persistent composer history, edge-aware arrow recall, Ctrl+R search, snippets, and templates to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-composer-history?style=flat&label=stars)](https://github.com/PerryLink/dsh-composer-history/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-visualizer](https://github.com/abiddotdev/dsh-visualizer) | Streams HTML visualizations into DSH chat cards with live previews, downloadable files, and element-level feedback. | [![GitHub stars](https://img.shields.io/github/stars/abiddotdev/dsh-visualizer?style=flat&label=stars)](https://github.com/abiddotdev/dsh-visualizer/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://www.reddit.com/r/DeepSeek/comments/1vytc75/built_visualizer_plugin_for_deepseek_harness/">DSH Visualizer: streaming charts and interactive visuals</a> · <sub>Article</sub></li></ul></details> |
+| [dsh-talk](https://github.com/PerryLink/dsh-talk) | Adds speech input, configurable text-to-speech replies, event announcements, and speak-to-interrupt controls to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-talk?style=flat&label=stars)](https://github.com/PerryLink/dsh-talk/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DeepSeek-Harness-Browser](https://github.com/tonyd2wild/DeepSeek-Harness-Browser) | Embeds a Chrome DevTools Protocol browser pane in DSH and renders previews of local files, Markdown, and PDFs. | [![GitHub stars](https://img.shields.io/github/stars/tonyd2wild/DeepSeek-Harness-Browser?style=flat&label=stars)](https://github.com/tonyd2wild/DeepSeek-Harness-Browser/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-manners](https://github.com/Moeblack/deepseek-manners) | Adds a configurable thank-you phrase after messages in DeepSeek Harness. | [![GitHub stars](https://img.shields.io/github/stars/Moeblack/deepseek-manners?style=flat&label=stars)](https://github.com/Moeblack/deepseek-manners/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-output-styles](https://github.com/PerryLink/dsh-output-styles) | Adds per-session output-style selection, prompt directives, rendering rules, and Markdown or sanitized-HTML export. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-output-styles?style=flat&label=stars)](https://github.com/PerryLink/dsh-output-styles/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [weshop-dsh-plugin](https://github.com/weshopai/weshop-dsh-plugin) | Adds a synchronized visual workspace to DSH for generating and editing e-commerce images and video on an infinite canvas. | [![GitHub stars](https://img.shields.io/github/stars/weshopai/weshop-dsh-plugin?style=flat&label=stars)](https://github.com/weshopai/weshop-dsh-plugin/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://www.reddit.com/r/DeepSeek/comments/1vo6ymi/i_built_an_image_and_video_generation_agent/">I built an image and video generation agent plugin for DeepSeek Harness</a> · <sub>Article</sub></li></ul></details> |
+| [dsh-usage-panel](https://github.com/AlfredChaos/dsh-usage-panel) | Adds a read-only DSH usage page with token totals, activity heatmaps, daily model bars, and model shares. | [![GitHub stars](https://img.shields.io/github/stars/AlfredChaos/dsh-usage-panel?style=flat&label=stars)](https://github.com/AlfredChaos/dsh-usage-panel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-desktop](https://github.com/baiyuscc13724-max/deepseek-harness-desktop) | Runs the official DSH Web UI in a Windows desktop shell with verified updates, themes, and plugin management. | [![GitHub stars](https://img.shields.io/github/stars/baiyuscc13724-max/deepseek-harness-desktop?style=flat&label=stars)](https://github.com/baiyuscc13724-max/deepseek-harness-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-billing](https://github.com/bpc-oss/dsh-web-billing) | Tracks per-message token charges with configurable RMB and USD pricing rules. | [![GitHub stars](https://img.shields.io/github/stars/bpc-oss/dsh-web-billing?style=flat&label=stars)](https://github.com/bpc-oss/dsh-web-billing/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-studio](https://github.com/euanguo/dsh-studio) | Provides desktop and Web development workbenches for DSH with project files, editing, Git review, terminals, a browser, subagents, and a guarded plugin marketplace. | [![GitHub stars](https://img.shields.io/github/stars/euanguo/dsh-studio?style=flat&label=stars)](https://github.com/euanguo/dsh-studio/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-live2d-companion](https://github.com/Tisitan/dsh-live2d-companion) | Adds a Live2D companion and monitoring panel that reacts to DSH task and approval events. | [![GitHub stars](https://img.shields.io/github/stars/Tisitan/dsh-live2d-companion?style=flat&label=stars)](https://github.com/Tisitan/dsh-live2d-companion/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plannotator](https://github.com/titanwings/dsh-plannotator) | Collects anchored comments on agent plans and returns structured review feedback. | [![GitHub stars](https://img.shields.io/github/stars/titanwings/dsh-plannotator?style=flat&label=stars)](https://github.com/titanwings/dsh-plannotator/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-side-chat](https://github.com/AHGGG/dsh-side-chat) | Adds Codex-style side conversations for asking focused questions about selected text without interrupting the main chat. | [![GitHub stars](https://img.shields.io/github/stars/AHGGG/dsh-side-chat?style=flat&label=stars)](https://github.com/AHGGG/dsh-side-chat/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-grok-tui](https://github.com/chen-001/dsh-grok-tui) | Connects DSH sessions to the grok-build terminal interface through a local bridge. | [![GitHub stars](https://img.shields.io/github/stars/chen-001/dsh-grok-tui?style=flat&label=stars)](https://github.com/chen-001/dsh-grok-tui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-smooth-stream](https://github.com/SpookySandwich/dsh-plugin-smooth-stream) | Adds paragraph-batched response rendering, selectable reveal animations, and smooth scroll-follow behavior to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/SpookySandwich/dsh-plugin-smooth-stream?style=flat&label=stars)](https://github.com/SpookySandwich/dsh-plugin-smooth-stream/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-opencode-go-usage](https://github.com/v587d/dsh-opencode-go-usage) | Shows OpenCode Go subscription usage in the DSH Web composer dock alongside the built-in conversation statistics. | [![GitHub stars](https://img.shields.io/github/stars/v587d/dsh-opencode-go-usage?style=flat&label=stars)](https://github.com/v587d/dsh-opencode-go-usage/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugins](https://github.com/Horizon215/dsh-plugins) | Bundles a prompt-template manager and a token-usage dashboard with per-turn statistics, trends, and editable price presets. | [![GitHub stars](https://img.shields.io/github/stars/Horizon215/dsh-plugins?style=flat&label=stars)](https://github.com/Horizon215/dsh-plugins/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-file-uploader](https://github.com/Mooling0602/dsh-web-file-uploader) | Adds model-aware file uploads, attachment cards, deduplication, and deployment size-limit checks to DeepSeek Harness Web. | [![GitHub stars](https://img.shields.io/github/stars/Mooling0602/dsh-web-file-uploader?style=flat&label=stars)](https://github.com/Mooling0602/dsh-web-file-uploader/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-hud](https://github.com/a903067276-rgb/dsh-hud) | Adds a native-sidebar or floating DSH status panel for Git activity, MCP servers, skills, the active model, token usage, and balance. | [![GitHub stars](https://img.shields.io/github/stars/a903067276-rgb/dsh-hud?style=flat&label=stars)](https://github.com/a903067276-rgb/dsh-hud/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-paste-input](https://github.com/lhh010/dsh-paste-input) | Adds paste, drag-and-drop, and file picking to the DSH message composer. | [![GitHub stars](https://img.shields.io/github/stars/lhh010/dsh-paste-input?style=flat&label=stars)](https://github.com/lhh010/dsh-paste-input/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-explorer](https://github.com/No-PRM/dsh-explorer) | Adds a VS Code-style file tree with Git state, previews, diffs, search, and drag-to-reference support to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/No-PRM/dsh-explorer?style=flat&label=stars)](https://github.com/No-PRM/dsh-explorer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-spend](https://github.com/nonewind/dsh-spend) | Displays token usage, estimated spend, billing-plan breakdowns, and time-series charts. | [![GitHub stars](https://img.shields.io/github/stars/nonewind/dsh-spend?style=flat&label=stars)](https://github.com/nonewind/dsh-spend/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-workspace-files](https://github.com/sqfcyily/dsh-workspace-files) | Adds a DSH workspace file browser with previews and Git controls for staging, commits, pull, push, branch switching, and line-level diffs. | [![GitHub stars](https://img.shields.io/github/stars/sqfcyily/dsh-workspace-files?style=flat&label=stars)](https://github.com/sqfcyily/dsh-workspace-files/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-task-status](https://github.com/vlln/dsh-task-status) · <sub>Archived</sub> | Displays background-task progress and live output tails in conversations. | [![GitHub stars](https://img.shields.io/github/stars/vlln/dsh-task-status?style=flat&label=stars)](https://github.com/vlln/dsh-task-status/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [codex-deskpet-for-deepseek-harness](https://github.com/yihanz0107/codex-deskpet-for-deepseek-harness) | Adds a cross-platform DSH desktop pet with task-state bubbles, saved appearance settings, quick phrases, and a catalog compatible with Codex pet formats. | [![GitHub stars](https://img.shields.io/github/stars/yihanz0107/codex-deskpet-for-deepseek-harness?style=flat&label=stars)](https://github.com/yihanz0107/codex-deskpet-for-deepseek-harness/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [NoLetMe](https://github.com/Yuer6327/NoLetMe) | Displays local, real-time counts of reasoning-style keywords while treating them as observational fingerprints rather than model identity. | [![GitHub stars](https://img.shields.io/github/stars/Yuer6327/NoLetMe?style=flat&label=stars)](https://github.com/Yuer6327/NoLetMe/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-opencodego-usage](https://github.com/BeiZi6/dsh-opencodego-usage) | Shows OpenCodeGo rolling, weekly, and monthly quota windows with reset times in DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/BeiZi6/dsh-opencodego-usage?style=flat&label=stars)](https://github.com/BeiZi6/dsh-opencodego-usage/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sticky-notes](https://github.com/charrywhite/dsh-sticky-notes) | Adds draggable text and image notes with multiple skins, persistence, and model-readable or writable content. | [![GitHub stars](https://img.shields.io/github/stars/charrywhite/dsh-sticky-notes?style=flat&label=stars)](https://github.com/charrywhite/dsh-sticky-notes/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-desktop](https://github.com/CSlawyer1985/dsh-desktop) | Packages DSH Web and its runtime as a cross-platform desktop app that reuses local profiles, plugins, and sessions. | [![GitHub stars](https://img.shields.io/github/stars/CSlawyer1985/dsh-desktop?style=flat&label=stars)](https://github.com/CSlawyer1985/dsh-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-desktop-on-windows](https://github.com/GengruiZhu/deepseek-harness-desktop-on-windows) | Preserves discontinued Windows desktop builds and maintains DSH plugins for usage badges, embedded panels, pets, and document previews. | [![GitHub stars](https://img.shields.io/github/stars/GengruiZhu/deepseek-harness-desktop-on-windows?style=flat&label=stars)](https://github.com/GengruiZhu/deepseek-harness-desktop-on-windows/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-feng-gu](https://github.com/KeqingMoe/dsh-feng-gu) | Shows the current DeepSeek peak or off-peak pricing period in the Web UI with a live countdown and rate details. | [![GitHub stars](https://img.shields.io/github/stars/KeqingMoe/dsh-feng-gu?style=flat&label=stars)](https://github.com/KeqingMoe/dsh-feng-gu/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ui-progress](https://github.com/lhh010/dsh-ui-progress) | Shows DSH todo progress, token speed, ETA, background-agent activity, usage, and cache-hit details beside the composer. | [![GitHub stars](https://img.shields.io/github/stars/lhh010/dsh-ui-progress?style=flat&label=stars)](https://github.com/lhh010/dsh-ui-progress/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-neu-theme](https://github.com/Lhy723/dsh-neu-theme) | Adds light and dark neumorphic glass themes, ambient lighting, textures, and micro-interactions to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/Lhy723/dsh-neu-theme?style=flat&label=stars)](https://github.com/Lhy723/dsh-neu-theme/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-intelligent-ui](https://github.com/my-dsh/deepseek-intelligent-ui) | Renders model-generated openui-lang programs as interactive DSH chat interfaces with forms, charts, tables, and shared state. | [![GitHub stars](https://img.shields.io/github/stars/my-dsh/deepseek-intelligent-ui?style=flat&label=stars)](https://github.com/my-dsh/deepseek-intelligent-ui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-smart-title](https://github.com/weibaohui/dsh-smart-title) | Generates DSH titles with an LLM, with first-message creation, throttled refreshes, long-session limits, and manual-title protection. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-smart-title?style=flat&label=stars)](https://github.com/weibaohui/dsh-smart-title/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mobile-shell](https://github.com/Yui-Little/dsh-mobile-shell) | Adapts the Harness Web UI for narrow screens with a drawer layout, safe-area handling, mobile settings, and a plugin browser. | [![GitHub stars](https://img.shields.io/github/stars/Yui-Little/dsh-mobile-shell?style=flat&label=stars)](https://github.com/Yui-Little/dsh-mobile-shell/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dskin](https://github.com/dancingmemory/dskin) | Adds a reversible pixel-pet skin to DSH Web with selectable cats, interactions, and local-only rendering. | [![GitHub stars](https://img.shields.io/github/stars/dancingmemory/dskin?style=flat&label=stars)](https://github.com/dancingmemory/dskin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-jupyter](https://github.com/kikulmj/dsh-jupyter) | Adds a notebook-style DSH Web workbench backed by local Jupyter kernels and a local shell. | [![GitHub stars](https://img.shields.io/github/stars/kikulmj/dsh-jupyter?style=flat&label=stars)](https://github.com/kikulmj/dsh-jupyter/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-attention-badge](https://github.com/Luaphes/dsh-web-attention-badge) | Marks DSH Web sessions that need attention or have unseen completions through frame, title, and favicon indicators. | [![GitHub stars](https://img.shields.io/github/stars/Luaphes/dsh-web-attention-badge?style=flat&label=stars)](https://github.com/Luaphes/dsh-web-attention-badge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-conversation-outline](https://github.com/lzbaclz/dsh-conversation-outline) | Adds a right-edge conversation outline with hover previews and click-to-jump navigation to DeepSeek Harness Web. | [![GitHub stars](https://img.shields.io/github/stars/lzbaclz/dsh-conversation-outline?style=flat&label=stars)](https://github.com/lzbaclz/dsh-conversation-outline/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-whale-girl](https://github.com/nickkkkkk123123/dsh-whale-girl) | Adds a draggable whale-girl widget inside DSH Web and Desktop with balance, usage and context indicators, provider switching, and playful interactions. | [![GitHub stars](https://img.shields.io/github/stars/nickkkkkk123123/dsh-whale-girl?style=flat&label=stars)](https://github.com/nickkkkkk123123/dsh-whale-girl/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pet-ronaldo](https://github.com/Stellum-Waq/dsh-pet-ronaldo) | Adds an animated Ronaldo desktop pet that reacts to agent states, plays completion audio, and supports custom sprites. | [![GitHub stars](https://img.shields.io/github/stars/Stellum-Waq/dsh-pet-ronaldo?style=flat&label=stars)](https://github.com/Stellum-Waq/dsh-pet-ronaldo/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-attachments](https://github.com/WJZ-P/dsh-attachments) | Adds drag-and-drop image and file attachments with previews, session history, downloads, and workspace-visible paths. | [![GitHub stars](https://img.shields.io/github/stars/WJZ-P/dsh-attachments?style=flat&label=stars)](https://github.com/WJZ-P/dsh-attachments/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-terminal-ui](https://github.com/jame100101/dsh-terminal-ui) | Provides an installable React and Ink terminal UI for DSH with persistent sessions, per-session presets, plugin controls, approvals, and usage estimates. | [![GitHub stars](https://img.shields.io/github/stars/jame100101/dsh-terminal-ui?style=flat&label=stars)](https://github.com/jame100101/dsh-terminal-ui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skin-pack](https://github.com/keman-ai/dsh-skin-pack) | Collects independently installable DSH Web themes in one monorepo, with per-theme release packages spanning color, glass, character, and animated visual styles. | [![GitHub stars](https://img.shields.io/github/stars/keman-ai/dsh-skin-pack?style=flat&label=stars)](https://github.com/keman-ai/dsh-skin-pack/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-digipet](https://github.com/swaylq/dsh-digipet) | Adds a zero-token digital pet that grows and evolves from local DSH work activity. | [![GitHub stars](https://img.shields.io/github/stars/swaylq/dsh-digipet?style=flat&label=stars)](https://github.com/swaylq/dsh-digipet/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-page-preview](https://github.com/watericetangcw/dsh-page-preview) | Lets DSH agents open and display Web page previews inside the conversation interface. | [![GitHub stars](https://img.shields.io/github/stars/watericetangcw/dsh-page-preview?style=flat&label=stars)](https://github.com/watericetangcw/dsh-page-preview/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-quick-phrases](https://github.com/xianrui69/dsh-quick-phrases) | Adds a local quick-phrase chip bar and slash-triggered phrase menu above the DSH composer, with editable groups and no conversation-log or model-context writes. | [![GitHub stars](https://img.shields.io/github/stars/xianrui69/dsh-quick-phrases?style=flat&label=stars)](https://github.com/xianrui69/dsh-quick-phrases/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-desktop](https://github.com/Yaobaisheep/dsh-desktop) | Runs DSH in a Windows WebView2 desktop client that downloads and manages its own local runtime. | [![GitHub stars](https://img.shields.io/github/stars/Yaobaisheep/dsh-desktop?style=flat&label=stars)](https://github.com/Yaobaisheep/dsh-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-theme-plugin](https://github.com/BeiZi6/dsh-theme-plugin) | Adds preset and custom light or dark palettes, fonts, sidebar translucency, and contrast controls to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/BeiZi6/dsh-theme-plugin?style=flat&label=stars)](https://github.com/BeiZi6/dsh-theme-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-local-terminal](https://github.com/Daisuki0721/dsh-local-terminal) | Embeds multiple persistent local zsh terminals in DSH Web with resizable xterm.js panels. | [![GitHub stars](https://img.shields.io/github/stars/Daisuki0721/dsh-local-terminal?style=flat&label=stars)](https://github.com/Daisuki0721/dsh-local-terminal/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mcp-diff](https://github.com/Fakek0f3sT/dsh-mcp-diff) | Renders consistent, collapsed-by-default diff cards for DSH file mutations from built-in write tools and MCP filesystem edit or write calls. | [![GitHub stars](https://img.shields.io/github/stars/Fakek0f3sT/dsh-mcp-diff?style=flat&label=stars)](https://github.com/Fakek0f3sT/dsh-mcp-diff/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH_Mobile](https://github.com/jayantTang/DSH_Mobile) | Connects an iOS client to remote DSH sessions through a host plugin and a self-hostable WSS relay. | [![GitHub stars](https://img.shields.io/github/stars/jayantTang/DSH_Mobile?style=flat&label=stars)](https://github.com/jayantTang/DSH_Mobile/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-chat](https://github.com/MarkJun236/DSH-chat) | Adds a workspace-free chat panel that reuses configured Harness models and keeps multiple local conversation histories. | [![GitHub stars](https://img.shields.io/github/stars/MarkJun236/DSH-chat?style=flat&label=stars)](https://github.com/MarkJun236/DSH-chat/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-auto-translate](https://github.com/qwert702/dsh-auto-translate) | Adds Chinese translations for live reasoning and final replies plus tool-output summaries through independent requests outside DSH session history. | [![GitHub stars](https://img.shields.io/github/stars/qwert702/dsh-auto-translate?style=flat&label=stars)](https://github.com/qwert702/dsh-auto-translate/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-deeplink](https://github.com/qyw233/dsh-deeplink) | Adds URL deep links that open a specific DSH session or workspace directly. | [![GitHub stars](https://img.shields.io/github/stars/qyw233/dsh-deeplink?style=flat&label=stars)](https://github.com/qyw233/dsh-deeplink/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-more-details](https://github.com/RZRZ-Q/dsh-more-details) | Opens selected DSH Desktop text in a DeepSeek Web side chat and returns saved discussions as references for the main conversation. | [![GitHub stars](https://img.shields.io/github/stars/RZRZ-Q/dsh-more-details?style=flat&label=stars)](https://github.com/RZRZ-Q/dsh-more-details/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-macos-desktop](https://github.com/Taylor-Cat/dsh-macos-desktop) | Reworks DeepSeek Harness Web as a macOS-style desktop with windowed tools, files, notes, search, and themed conversations. | [![GitHub stars](https://img.shields.io/github/stars/Taylor-Cat/dsh-macos-desktop?style=flat&label=stars)](https://github.com/Taylor-Cat/dsh-macos-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-valuz-genui](https://github.com/valuz-ai/dsh-valuz-genui) | Lets agents emit validated declarative UI surfaces that persist with tool results and send user interactions back as ordinary messages. | [![GitHub stars](https://img.shields.io/github/stars/valuz-ai/dsh-valuz-genui?style=flat&label=stars)](https://github.com/valuz-ai/dsh-valuz-genui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-vscode-sidebar](https://github.com/yushenghai1106/deepseek-harness-vscode-sidebar) | Adds a VS Code sidebar for editor context, session selection, approvals, and results while the native DSH SDK runtime owns execution and persistence. | [![GitHub stars](https://img.shields.io/github/stars/yushenghai1106/deepseek-harness-vscode-sidebar?style=flat&label=stars)](https://github.com/yushenghai1106/deepseek-harness-vscode-sidebar/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-composer-layout](https://github.com/lavapapa/dsh-composer-layout) | Adds an optional dockable right-side Composer to DSH Web so long answers remain visible while users write and revise detailed prompts. | [![GitHub stars](https://img.shields.io/github/stars/lavapapa/dsh-composer-layout?style=flat&label=stars)](https://github.com/lavapapa/dsh-composer-layout/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://github.com/deepseek-ai/deepseek-harness/discussions/3578">DSH Composer Layout plugin announcement</a> · <sub>Article</sub></li></ul></details> |
+| [dsh-unread-dot](https://github.com/Bing-Bryan/dsh-unread-dot) | Shows macOS Dock badges and plays a chime when a DSH PWA finishes a turn or needs attention. | [![GitHub stars](https://img.shields.io/github/stars/Bing-Bryan/dsh-unread-dot?style=flat&label=stars)](https://github.com/Bing-Bryan/dsh-unread-dot/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-newsboard](https://github.com/c-ling/dsh-plugin-newsboard) | Adds a draggable AI and technology news board fed by RSS or JSON, with search, filters, and optional bilingual translation. | [![GitHub stars](https://img.shields.io/github/stars/c-ling/dsh-plugin-newsboard?style=flat&label=stars)](https://github.com/c-ling/dsh-plugin-newsboard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-model-picker](https://github.com/genius-alray/dsh-model-picker) · <sub>Archived</sub> | Replaces the DSH Web model selector with a searchable dialog supporting provider groups, favorites, and reasoning levels. | [![GitHub stars](https://img.shields.io/github/stars/genius-alray/dsh-model-picker?style=flat&label=stars)](https://github.com/genius-alray/dsh-model-picker/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-file-uploads](https://github.com/l541402398/dsh-file-uploads) | Adds arbitrary local-file uploads and attachment management to the DSH Web composer. | [![GitHub stars](https://img.shields.io/github/stars/l541402398/dsh-file-uploads?style=flat&label=stars)](https://github.com/l541402398/dsh-file-uploads/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-input-history](https://github.com/lhh010/dsh-input-history) | Adds terminal-style keyboard navigation through previously sent messages. | [![GitHub stars](https://img.shields.io/github/stars/lhh010/dsh-input-history?style=flat&label=stars)](https://github.com/lhh010/dsh-input-history/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-git-gui](https://github.com/lovetree128/dsh-git-gui) | Adds a Git sidebar for viewing changes, committing or reverting files, and synchronizing with remotes. | [![GitHub stars](https://img.shields.io/github/stars/lovetree128/dsh-git-gui?style=flat&label=stars)](https://github.com/lovetree128/dsh-git-gui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tui](https://github.com/orriduck/dsh-tui) | Provides a compact terminal client with DSH session awareness. | [![GitHub stars](https://img.shields.io/github/stars/orriduck/dsh-tui?style=flat&label=stars)](https://github.com/orriduck/dsh-tui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-Desktop](https://github.com/qinyre/dsh-Desktop) | Packages DSH as a self-contained Windows Electron app with service control, a bundled runtime, plugin management, and automatic backups. | [![GitHub stars](https://img.shields.io/github/stars/qinyre/dsh-Desktop?style=flat&label=stars)](https://github.com/qinyre/dsh-Desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-aurora-wallpaper](https://github.com/wangkaxds/dsh-aurora-wallpaper) | Streams local Wallpaper Engine videos or previews as DSH backgrounds with theme and picker controls. | [![GitHub stars](https://img.shields.io/github/stars/wangkaxds/dsh-aurora-wallpaper?style=flat&label=stars)](https://github.com/wangkaxds/dsh-aurora-wallpaper/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-opencode-go-usage](https://github.com/xiaweiliang060035/dsh-opencode-go-usage) | Shows rolling, weekly, and monthly OpenCode Go usage for every configured key in a live DSH Web widget. | [![GitHub stars](https://img.shields.io/github/stars/xiaweiliang060035/dsh-opencode-go-usage?style=flat&label=stars)](https://github.com/xiaweiliang060035/dsh-opencode-go-usage/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-enhance](https://github.com/yangzhe1991/dsh-web-enhance) | Adds reasoning expansion, session-cost and quota views, desktop file opening, and completion chimes or tab alerts to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/yangzhe1991/dsh-web-enhance?style=flat&label=stars)](https://github.com/yangzhe1991/dsh-web-enhance/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-deepseek-quota](https://github.com/yingjunnan/dsh-deepseek-quota) | Shows DeepSeek API balance, estimated daily use, and current-conversation cost in a DSH Web card. | [![GitHub stars](https://img.shields.io/github/stars/yingjunnan/dsh-deepseek-quota?style=flat&label=stars)](https://github.com/yingjunnan/dsh-deepseek-quota/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-homepage-skin](https://github.com/yushi-xxh/dsh-homepage-skin) | Adds a light- and dark-aware DSH Web background with WebGL fluid light, a dot-line grid, and a point-cloud whale. | [![GitHub stars](https://img.shields.io/github/stars/yushi-xxh/dsh-homepage-skin?style=flat&label=stars)](https://github.com/yushi-xxh/dsh-homepage-skin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-macos](https://github.com/aibinghezzz-stack/deepseek-harness-macos) | Wraps DSH in a native Swift and WebKit macOS app with service management, downloads, file picking, and workspace support. | [![GitHub stars](https://img.shields.io/github/stars/aibinghezzz-stack/deepseek-harness-macos?style=flat&label=stars)](https://github.com/aibinghezzz-stack/deepseek-harness-macos/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-working-activity](https://github.com/ccch1mneyyy/dsh-working-activity) · <sub>Archived</sub> | Shows live model activity, active tools, and turn summaries in DSH status surfaces. | [![GitHub stars](https://img.shields.io/github/stars/ccch1mneyyy/dsh-working-activity?style=flat&label=stars)](https://github.com/ccch1mneyyy/dsh-working-activity/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skin-studio](https://github.com/daboge-beach/dsh-skin-studio) | Provides built-in DSH skins, a community gallery, live previews, and scaffolding for custom theme packages. | [![GitHub stars](https://img.shields.io/github/stars/daboge-beach/dsh-skin-studio?style=flat&label=stars)](https://github.com/daboge-beach/dsh-skin-studio/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-prompt-predict](https://github.com/ferrisching/dsh-prompt-predict) | Shows model-predicted next messages as ghost text in the DSH composer, with accept, partial-accept, and dismiss controls. | [![GitHub stars](https://img.shields.io/github/stars/ferrisching/dsh-prompt-predict?style=flat&label=stars)](https://github.com/ferrisching/dsh-prompt-predict/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-coding-companion](https://github.com/FxRayHughes/dsh-coding-companion) | Opens a Windows companion window that plays user-selected media while agents work and freezes playback while DSH waits. | [![GitHub stars](https://img.shields.io/github/stars/FxRayHughes/dsh-coding-companion?style=flat&label=stars)](https://github.com/FxRayHughes/dsh-coding-companion/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sticky-disclosure](https://github.com/Han-1413141/dsh-sticky-disclosure) | Collapses expanded thinking and tool disclosures across a conversation with one shortcut. | [![GitHub stars](https://img.shields.io/github/stars/Han-1413141/dsh-sticky-disclosure?style=flat&label=stars)](https://github.com/Han-1413141/dsh-sticky-disclosure/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ui-skin](https://github.com/huabai-flowerwhite/dsh-ui-skin) | Adds draggable and crop-aware image or video backgrounds, translucent interface surfaces, and reusable skin history to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/huabai-flowerwhite/dsh-ui-skin?style=flat&label=stars)](https://github.com/huabai-flowerwhite/dsh-ui-skin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-side-suite](https://github.com/Ln1m/dsh-side-suite) | Adds file browsing, local-file opening, service cards, and persistent task folders to the DSH Web layout. | [![GitHub stars](https://img.shields.io/github/stars/Ln1m/dsh-side-suite?style=flat&label=stars)](https://github.com/Ln1m/dsh-side-suite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-jump-rail](https://github.com/Memory455/dsh-jump-rail) | Adds a compact conversation jump rail for navigating long DeepSeek Harness Web sessions. | [![GitHub stars](https://img.shields.io/github/stars/Memory455/dsh-jump-rail?style=flat&label=stars)](https://github.com/Memory455/dsh-jump-rail/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek_harness_client](https://github.com/new-bee-666/deepseek_harness_client) | Packages a Windows DSH desktop client with an embedded runtime, custom backgrounds, and DeepSeek API balance display. | [![GitHub stars](https://img.shields.io/github/stars/new-bee-666/deepseek_harness_client?style=flat&label=stars)](https://github.com/new-bee-666/deepseek_harness_client/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-daily-progress](https://github.com/omdsh-dev/dsh-daily-progress) | Adds daily plans, completion streaks, weekly rates, and reminder controls to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-daily-progress?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-daily-progress/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-turn-index](https://github.com/Simon314620/dsh-turn-index) | Adds a sidebar index for jumping directly to individual conversation turns. | [![GitHub stars](https://img.shields.io/github/stars/Simon314620/dsh-turn-index?style=flat&label=stars)](https://github.com/Simon314620/dsh-turn-index/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-destop](https://github.com/TIGA054762/dsh-destop) | Packages a Windows Electron DSH client with file preview, a subagent tree, image recognition, and portable builds. | [![GitHub stars](https://img.shields.io/github/stars/TIGA054762/dsh-destop?style=flat&label=stars)](https://github.com/TIGA054762/dsh-destop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-settings-ui](https://github.com/weibaohui/dsh-settings-ui) | Customizes the DSH settings window size, opacity, and light or dark backgrounds with live previews. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-settings-ui?style=flat&label=stars)](https://github.com/weibaohui/dsh-settings-ui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-turn-rail](https://github.com/Yujm888/dsh-turn-rail) | Adds an auto-hiding DSH Web turn rail with hover previews, search, and direct navigation. | [![GitHub stars](https://img.shields.io/github/stars/Yujm888/dsh-turn-rail?style=flat&label=stars)](https://github.com/Yujm888/dsh-turn-rail/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-open-go](https://github.com/Animal2404/dsh-open-go) | Shows OpenCode Go quotas and official billing breakdowns in a DSH sidebar widget. | [![GitHub stars](https://img.shields.io/github/stars/Animal2404/dsh-open-go?style=flat&label=stars)](https://github.com/Animal2404/dsh-open-go/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-native-macos](https://github.com/DanielW203/dsh-native-macos) | Provides a SwiftUI macOS client with DSH runtime version management, upgrade checks and rollback, configuration recovery, and WeChat remote control. | [![GitHub stars](https://img.shields.io/github/stars/DanielW203/dsh-native-macos?style=flat&label=stars)](https://github.com/DanielW203/dsh-native-macos/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-canvas](https://github.com/GHJIVHIDD/dsh-plugin-canvas) | Adds a sandboxed HTML canvas for agent-rendered prototypes, positional annotations, notes, and visual review. | [![GitHub stars](https://img.shields.io/github/stars/GHJIVHIDD/dsh-plugin-canvas?style=flat&label=stars)](https://github.com/GHJIVHIDD/dsh-plugin-canvas/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-visual-edit](https://github.com/Han-1413141/dsh-visual-edit) | Adds element and region annotations to DSH previews, sends visual feedback to the composer, and compares page changes. | [![GitHub stars](https://img.shields.io/github/stars/Han-1413141/dsh-visual-edit?style=flat&label=stars)](https://github.com/Han-1413141/dsh-visual-edit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-chrome-suite](https://github.com/Ln1m/dsh-chrome-suite) | Adds DSH controls for restarting the active instance, archiving idle sessions, and viewing balance and session costs. | [![GitHub stars](https://img.shields.io/github/stars/Ln1m/dsh-chrome-suite?style=flat&label=stars)](https://github.com/Ln1m/dsh-chrome-suite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-host-suite](https://github.com/Ln1m/dsh-host-suite) | Provides a Windows WebView2 shell for local DSH, with automatic server startup, a tray companion, and startup splash. | [![GitHub stars](https://img.shields.io/github/stars/Ln1m/dsh-host-suite?style=flat&label=stars)](https://github.com/Ln1m/dsh-host-suite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pane-suite](https://github.com/Ln1m/dsh-pane-suite) | Adds document previews, a WebView2 browser, and per-file context visibility controls to the DSH right sidebar. | [![GitHub stars](https://img.shields.io/github/stars/Ln1m/dsh-pane-suite?style=flat&label=stars)](https://github.com/Ln1m/dsh-pane-suite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-vk-suite](https://github.com/Ln1m/dsh-vk-suite) | Builds a three-column DSH Web layout with shared extension slots, settings navigation, usage views, and transitions. | [![GitHub stars](https://img.shields.io/github/stars/Ln1m/dsh-vk-suite?style=flat&label=stars)](https://github.com/Ln1m/dsh-vk-suite/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [cedardsh-desktop](https://github.com/maiziman/cedardsh-desktop) | Packages CedarDSH Desktop for Windows as an extract-and-run DSH app with a bundled Node.js runtime and no separate installer. | [![GitHub stars](https://img.shields.io/github/stars/maiziman/cedardsh-desktop?style=flat&label=stars)](https://github.com/maiziman/cedardsh-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-matrix-think](https://github.com/me93-ghb/dsh-matrix-think) | Adds a browser-only Matrix-rain visualization for expanded DSH reasoning panels without network access, persistence, or changes to model traffic. | [![GitHub stars](https://img.shields.io/github/stars/me93-ghb/dsh-matrix-think?style=flat&label=stars)](https://github.com/me93-ghb/dsh-matrix-think/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mood](https://github.com/Raphaelutumn/dsh-mood) | Adds a local, read-only four-state status light that classifies recent DSH tool failures, repetition, and activity without changing prompts or tool behavior. | [![GitHub stars](https://img.shields.io/github/stars/Raphaelutumn/dsh-mood?style=flat&label=stars)](https://github.com/Raphaelutumn/dsh-mood/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-client-prompt-library](https://github.com/subingbo/dsh-client-prompt-library) | Adds a local prompt library to DSH Web with categories, favorites, search, JSON import and export, and insertion at the current cursor. | [![GitHub stars](https://img.shields.io/github/stars/subingbo/dsh-client-prompt-library?style=flat&label=stars)](https://github.com/subingbo/dsh-client-prompt-library/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-split-screen](https://github.com/YEYEYEYESHIFU/dsh-split-screen) | Adds side-by-side multi-agent conversations to DSH Web with pane focus shortcuts, a compact TUI-style composer, and image paste or drop. | [![GitHub stars](https://img.shields.io/github/stars/YEYEYEYESHIFU/dsh-split-screen?style=flat&label=stars)](https://github.com/YEYEYEYESHIFU/dsh-split-screen/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tmux-cc](https://github.com/adrianleb/dsh-tmux-cc) | Adds a persistent DSH Web dock for viewing and controlling native tmux sessions, windows, and panes. | [![GitHub stars](https://img.shields.io/github/stars/adrianleb/dsh-tmux-cc?style=flat&label=stars)](https://github.com/adrianleb/dsh-tmux-cc/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-workspace](https://github.com/AstralFoundry/dsh-workspace) | Adds a DSH workspace sidebar with project files, an editor, terminal, Git status and diffs, plugin management, and guided Harness version updates. | [![GitHub stars](https://img.shields.io/github/stars/AstralFoundry/dsh-workspace?style=flat&label=stars)](https://github.com/AstralFoundry/dsh-workspace/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-terminal-tabs](https://github.com/bbboy31/dsh-terminal-tabs) | Adds a Terminals view to DSH Web for live background-job counts, streamed output, tabbed process inspection, and one-click termination. | [![GitHub stars](https://img.shields.io/github/stars/bbboy31/dsh-terminal-tabs?style=flat&label=stars)](https://github.com/bbboy31/dsh-terminal-tabs/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-question-rail](https://github.com/LeonSone/dsh-question-rail) | Adds a compact right-edge question rail to DSH Web that lists user turns and smooth-scrolls to the selected point without reacting to streaming updates. | [![GitHub stars](https://img.shields.io/github/stars/LeonSone/dsh-question-rail?style=flat&label=stars)](https://github.com/LeonSone/dsh-question-rail/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-bocchi-rock-skin](https://github.com/liangyu0907/dsh-bocchi-rock-skin) | Adds a Bocchi the Rock-inspired DSH Web skin with warm glass styling, themed wallpapers, and light or dark variants. | [![GitHub stars](https://img.shields.io/github/stars/liangyu0907/dsh-bocchi-rock-skin?style=flat&label=stars)](https://github.com/liangyu0907/dsh-bocchi-rock-skin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-multi-window](https://github.com/niushuanan/dsh-multi-window) | Provides a source-integrated DSH Web extension for running multiple conversations side by side with isolated navigation, drafts, and runtime state. | [![GitHub stars](https://img.shields.io/github/stars/niushuanan/dsh-multi-window?style=flat&label=stars)](https://github.com/niushuanan/dsh-multi-window/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-vscode-desktop](https://github.com/Shonean/deepseek-harness-vscode-desktop) | Provides VS Code and desktop clients for DSH with streaming chat, inline diffs, file and selection context, approvals, plan review, and a shared kernel plugin. | [![GitHub stars](https://img.shields.io/github/stars/Shonean/deepseek-harness-vscode-desktop?style=flat&label=stars)](https://github.com/Shonean/deepseek-harness-vscode-desktop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ambient](https://github.com/weibaohui/dsh-ambient) | Plays local ambient audio in DSH with a floating player, folder-based scenes, playback modes, and sleep timers. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-ambient?style=flat&label=stars)](https://github.com/weibaohui/dsh-ambient/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+
+## Integrations
+
+| Project | Description | Stars | Referenced by |
+| --- | --- | --- | --- |
+| [OpenBiliClaw](https://github.com/whiteguo233/OpenBiliClaw) | Adds a DSH Web panel and Agent Bridge tools for personalized discovery across Bilibili and other content platforms. | [![GitHub stars](https://img.shields.io/github/stars/whiteguo233/OpenBiliClaw?style=flat&label=stars)](https://github.com/whiteguo233/OpenBiliClaw/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-im](https://github.com/xmanrui/dsh-im) | Connects DSH to Feishu, WeChat, DingTalk, WeCom, QQ, Slack, Telegram, Discord, WhatsApp, iMessage, and an optional AI Office connector. | [![GitHub stars](https://img.shields.io/github/stars/xmanrui/dsh-im?style=flat&label=stars)](https://github.com/xmanrui/dsh-im/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-browser](https://github.com/omdsh-dev/dsh-browser) | Connects DSH agents to Chrome or Firefox for browser observation, navigation, page interaction, and screenshots through a browser extension. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-browser?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-browser/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Invoice-Downloader](https://github.com/EthanYoQ/Invoice-Downloader) | Adds a DSH sidebar plugin for local IMAP invoice collection, OCR, archiving, and Excel reimbursement summaries. | [![GitHub stars](https://img.shields.io/github/stars/EthanYoQ/Invoice-Downloader?style=flat&label=stars)](https://github.com/EthanYoQ/Invoice-Downloader/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [FQGate-agent](https://github.com/fqgate/FQGate-agent) | Connects DSH to the separately distributed local FQGate gateway for securities data, research skills, and MCP chart interfaces. | [![GitHub stars](https://img.shields.io/github/stars/fqgate/FQGate-agent?style=flat&label=stars)](https://github.com/fqgate/FQGate-agent/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [pi2dsh](https://github.com/weijiafu14/pi2dsh) | Runs compatible Pi extensions inside DeepSeek Harness through a native host-ABI bridge. | [![GitHub stars](https://img.shields.io/github/stars/weijiafu14/pi2dsh?style=flat&label=stars)](https://github.com/weijiafu14/pi2dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-bridge](https://github.com/wenbin-wb/dsh-bridge) | Extends DSH to mobile browsers and messaging bots with QR pairing, configurable access authentication, tunnels, and remote workspace controls. | [![GitHub stars](https://img.shields.io/github/stars/wenbin-wb/dsh-bridge?style=flat&label=stars)](https://github.com/wenbin-wb/dsh-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-android](https://github.com/ZSeven-W/dsh-android) | Lets DSH build, install, and control an Android emulator or USB device with a live stream and adb tools. | [![GitHub stars](https://img.shields.io/github/stars/ZSeven-W/dsh-android?style=flat&label=stars)](https://github.com/ZSeven-W/dsh-android/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [anime-find](https://github.com/cocofhu/anime-find) | Adds multi-source anime search, Bangumi metadata cards, and resource browsing to DeepSeek Harness. | [![GitHub stars](https://img.shields.io/github/stars/cocofhu/anime-find?style=flat&label=stars)](https://github.com/cocofhu/anime-find/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-remote](https://github.com/flymysql/dsh-remote) | Adds SSH workspace selection, remote command tools, and SFTP mirroring into a local DSH workspace. | [![GitHub stars](https://img.shields.io/github/stars/flymysql/dsh-remote?style=flat&label=stars)](https://github.com/flymysql/dsh-remote/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-qqbot](https://github.com/tencent-connect/dsh-qqbot) | Connects QQ bots to DSH agents with QR-code setup, isolated conversations, model controls, and Markdown replies. | [![GitHub stars](https://img.shields.io/github/stars/tencent-connect/dsh-qqbot?style=flat&label=stars)](https://github.com/tencent-connect/dsh-qqbot/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-imagegen](https://github.com/dickpy/dsh-imagegen) | Adds image generation and editing through configurable compatible endpoints, with an infinite canvas, editable posters, and a shared gallery. | [![GitHub stars](https://img.shields.io/github/stars/dickpy/dsh-imagegen?style=flat&label=stars)](https://github.com/dickpy/dsh-imagegen/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-comfyui](https://github.com/fandc520/dsh-comfyui) | Connects DSH to ComfyUI for workflow execution, node discovery, image and video generation, asynchronous jobs, and result previews. | [![GitHub stars](https://img.shields.io/github/stars/fandc520/dsh-comfyui?style=flat&label=stars)](https://github.com/fandc520/dsh-comfyui/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tabbit](https://github.com/Tabbit-Browser/dsh-tabbit) | Connects DSH to Tabbit Browser through native code-first tools for authenticated page interaction, screenshots, information extraction, and browser testing. | [![GitHub stars](https://img.shields.io/github/stars/Tabbit-Browser/dsh-tabbit?style=flat&label=stars)](https://github.com/Tabbit-Browser/dsh-tabbit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-openmaic](https://github.com/THU-MAIC/dsh-openmaic) | Brings OpenMAIC classrooms, slides, interactive widgets, and teaching flows into DSH. | [![GitHub stars](https://img.shields.io/github/stars/THU-MAIC/dsh-openmaic?style=flat&label=stars)](https://github.com/THU-MAIC/dsh-openmaic/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [opencues](https://github.com/opencues/opencues) | Adds OpenCues' text-field-based LLM interaction protocol to DSH through a dedicated bundle. | [![GitHub stars](https://img.shields.io/github/stars/opencues/opencues?style=flat&label=stars)](https://github.com/opencues/opencues/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [huaweicloud-devkit](https://github.com/huaweicloud/huaweicloud-devkit) | Installs Huawei Cloud skills, MCP tools, and guardrails into DeepSeek Harness and other supported agent hosts. | [![GitHub stars](https://img.shields.io/github/stars/huaweicloud/huaweicloud-devkit?style=flat&label=stars)](https://github.com/huaweicloud/huaweicloud-devkit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-openbiliclaw](https://github.com/whiteguo233/dsh-openbiliclaw) | Embeds OpenBiliClaw recommendations and agent-bridge tools into the DSH interface. | [![GitHub stars](https://img.shields.io/github/stars/whiteguo233/dsh-openbiliclaw?style=flat&label=stars)](https://github.com/whiteguo233/dsh-openbiliclaw/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-with-chatgpt](https://github.com/BeforeWave/dsh-with-chatgpt) | Bridges browser-based ChatGPT to local project tools and native DSH task sessions, with a DSH panel for project associations and activity records. | [![GitHub stars](https://img.shields.io/github/stars/BeforeWave/dsh-with-chatgpt?style=flat&label=stars)](https://github.com/BeforeWave/dsh-with-chatgpt/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-remote](https://github.com/xgone/dsh-remote) | Adds authenticated remote-browser access to DSH with optional TOTP MFA, role-based permissions, and allowlisted file previews. | [![GitHub stars](https://img.shields.io/github/stars/xgone/dsh-remote?style=flat&label=stars)](https://github.com/xgone/dsh-remote/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSHana](https://github.com/Nyasers/DSHana) | Runs DSH as a managed subagent executor inside HanaAgent, with an embedded Web interface, host-model access, and bundled runtime dependencies. | [![GitHub stars](https://img.shields.io/github/stars/Nyasers/DSHana?style=flat&label=stars)](https://github.com/Nyasers/DSHana/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-lark](https://github.com/omdsh-dev/dsh-lark) | Connects DSH to Lark or Feishu as an IM bot channel with streaming replies, approvals, and session controls. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-lark?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-lark/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-remote](https://github.com/mrRisega/dsh-remote) | Provides authenticated mobile remote control for DSH Web through a tunnel, including session, tool, and approval controls. | [![GitHub stars](https://img.shields.io/github/stars/mrRisega/dsh-remote?style=flat&label=stars)](https://github.com/mrRisega/dsh-remote/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-notifier](https://github.com/THEWOLFWALKER/dsh-notifier) | Routes DSH notifications, approvals, questions, remote conversations, and task controls across multiple channels and a management console. | [![GitHub stars](https://img.shields.io/github/stars/THEWOLFWALKER/dsh-notifier?style=flat&label=stars)](https://github.com/THEWOLFWALKER/dsh-notifier/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-open-in-vscode](https://github.com/omdsh-dev/dsh-open-in-vscode) | Opens the active DSH workspace in VS Code or another configured editor. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-open-in-vscode?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-open-in-vscode/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [ax-feishu-bridge](https://github.com/AX1202/ax-feishu-bridge) | Bridges DeepSeek Harness and Pi sessions to Feishu or Lark with QR-code setup, model switching, and isolated DSH configuration. | [![GitHub stars](https://img.shields.io/github/stars/AX1202/ax-feishu-bridge?style=flat&label=stars)](https://github.com/AX1202/ax-feishu-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-im-gateway](https://github.com/zhuiyueya/dsh-im-gateway) | Connects DeepSeek Harness sessions to WeChat, Feishu, Telegram, Discord, and other messaging channels through one gateway. | [![GitHub stars](https://img.shields.io/github/stars/zhuiyueya/dsh-im-gateway?style=flat&label=stars)](https://github.com/zhuiyueya/dsh-im-gateway/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [qiaomu-rss-dsh](https://github.com/joeseesun/qiaomu-rss-dsh) | Adds RSS reading, feed discovery, subscriptions, OPML transfer, and article-aware conversations in the native DSH interface. | [![GitHub stars](https://img.shields.io/github/stars/joeseesun/qiaomu-rss-dsh?style=flat&label=stars)](https://github.com/joeseesun/qiaomu-rss-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-lark-link](https://github.com/amlyczz/dsh-lark-link) | Bridges Harness agents to Feishu and Lark with guided app setup, durable inbound and outbound delivery, cards, media, access controls, and native sessions. | [![GitHub stars](https://img.shields.io/github/stars/amlyczz/dsh-lark-link?style=flat&label=stars)](https://github.com/amlyczz/dsh-lark-link/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-acp](https://github.com/openma-ai/deepseek-harness-acp) | Connects DeepSeek Harness to ACP editors such as Zed while reusing its sessions and credentials. | [![GitHub stars](https://img.shields.io/github/stars/openma-ai/deepseek-harness-acp?style=flat&label=stars)](https://github.com/openma-ai/deepseek-harness-acp/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-lark-bot](https://github.com/PlutoKeating/dsh-lark-bot) | Bridges DSH into Feishu and Lark with streaming cards, project workspaces, parallel tasks, role presets, cross-session notifications, and recovery controls. | [![GitHub stars](https://img.shields.io/github/stars/PlutoKeating/dsh-lark-bot?style=flat&label=stars)](https://github.com/PlutoKeating/dsh-lark-bot/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-share](https://github.com/hellodigua/dsh-share) | Exports selected DSH conversation turns as PNG, Markdown, or offline HTML, with rich-content handling and selectable turns. | [![GitHub stars](https://img.shields.io/github/stars/hellodigua/dsh-share?style=flat&label=stars)](https://github.com/hellodigua/dsh-share/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-action](https://github.com/Lixiaoyiao/deepseek-harness-action) | Runs DeepSeek Harness from GitHub events for code review, CI diagnosis, fixes, and issue-to-PR work. | [![GitHub stars](https://img.shields.io/github/stars/Lixiaoyiao/deepseek-harness-action?style=flat&label=stars)](https://github.com/Lixiaoyiao/deepseek-harness-action/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-zotero](https://github.com/Vncntvx/dsh-zotero) | Connects DSH agents to Zotero for literature search, evidence extraction, attachment access, and citation export. | [![GitHub stars](https://img.shields.io/github/stars/Vncntvx/dsh-zotero?style=flat&label=stars)](https://github.com/Vncntvx/dsh-zotero/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-interconnect](https://github.com/Chinesezjc/dsh-interconnect) | Enables message and event handoffs across DeepSeek Harness instances. | [![GitHub stars](https://img.shields.io/github/stars/Chinesezjc/dsh-interconnect?style=flat&label=stars)](https://github.com/Chinesezjc/dsh-interconnect/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-feishu](https://github.com/PGZXB/dsh-feishu) | Provides a panel-driven Feishu interface for DSH with streaming cards, in-card questions, approvals, and session controls. | [![GitHub stars](https://img.shields.io/github/stars/PGZXB/dsh-feishu?style=flat&label=stars)](https://github.com/PGZXB/dsh-feishu/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-obsidian](https://github.com/mingzeng21/dsh-obsidian) | Connects DSH to a local Obsidian vault for searching, reading, writing, moving, and trashing notes. | [![GitHub stars](https://img.shields.io/github/stars/mingzeng21/dsh-obsidian?style=flat&label=stars)](https://github.com/mingzeng21/dsh-obsidian/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-claude-move](https://github.com/PerryLink/dsh-claude-move) | Migrates Claude Code, Codex, OpenCode, and Hermes sessions, skills, memory, and instructions into DSH with approval; feature development is frozen. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-claude-move?style=flat&label=stars)](https://github.com/PerryLink/dsh-claude-move/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mcp-manager](https://github.com/Js2Hou/dsh-mcp-manager) | Adds a DSH settings panel for adding, editing, testing, enabling, and disabling MCP servers. | [![GitHub stars](https://img.shields.io/github/stars/Js2Hou/dsh-mcp-manager?style=flat&label=stars)](https://github.com/Js2Hou/dsh-mcp-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-github](https://github.com/PerryLink/dsh-github) | Adds approval-gated GitHub pull-request and issue workflows, repository search and file tools, review jobs, and CI integration. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-github?style=flat&label=stars)](https://github.com/PerryLink/dsh-github/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-hdc-bridge](https://github.com/1na-ko/dsh-hdc-bridge) | Adds a HarmonyOS bridge to DSH with HDC device tools, screenshots, logs, app control, a live panel, offline official knowledge, and optional DevEco build and emulator workflows. | [![GitHub stars](https://img.shields.io/github/stars/1na-ko/dsh-hdc-bridge?style=flat&label=stars)](https://github.com/1na-ko/dsh-hdc-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-awiki](https://github.com/AgentConnect/dsh-awiki) | Adds AWiki identity, direct and group messaging, mail, approved agent tools, and an optional hosted DeepSeek model provider to DSH. | [![GitHub stars](https://img.shields.io/github/stars/AgentConnect/dsh-awiki?style=flat&label=stars)](https://github.com/AgentConnect/dsh-awiki/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-firecrawl](https://github.com/firecrawl/dsh-firecrawl) | Connects the built-in web search and fetch seams to Firecrawl for hosted retrieval, JavaScript rendering, anti-bot handling, and PDF parsing. | [![GitHub stars](https://img.shields.io/github/stars/firecrawl/dsh-firecrawl?style=flat&label=stars)](https://github.com/firecrawl/dsh-firecrawl/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-dify-builder](https://github.com/newbieYi/dsh-dify-builder) | Builds and previews local Dify workflows through live conversation in DSH, with an installer for the required services and credentials. | [![GitHub stars](https://img.shields.io/github/stars/newbieYi/dsh-dify-builder?style=flat&label=stars)](https://github.com/newbieYi/dsh-dify-builder/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-telegram-channel](https://github.com/hi-wenw/dsh-telegram-channel) | Connects Telegram chats to active DSH Web sessions for remote messaging, approvals, and session control. | [![GitHub stars](https://img.shields.io/github/stars/hi-wenw/dsh-telegram-channel?style=flat&label=stars)](https://github.com/hi-wenw/dsh-telegram-channel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-harness-mcp-server](https://github.com/chushixixin/dsh-harness-mcp-server) | Exposes DeepSeek Harness agent capabilities to MCP clients through a server bridge. | [![GitHub stars](https://img.shields.io/github/stars/chushixixin/dsh-harness-mcp-server?style=flat&label=stars)](https://github.com/chushixixin/dsh-harness-mcp-server/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-observe](https://github.com/PerryLink/dsh-observe) | Exports sanitized DSH traces and token or cost metrics to OTLP or Langfuse with batching, retries, and a durable offline buffer. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-observe?style=flat&label=stars)](https://github.com/PerryLink/dsh-observe/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Flowboard](https://github.com/juntaoding/Flowboard) | Adds an alpha collaboration layer for goals, meetings, people, tasks, agent execution, progress, and shared documents inside Harness. | [![GitHub stars](https://img.shields.io/github/stars/juntaoding/Flowboard?style=flat&label=stars)](https://github.com/juntaoding/Flowboard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DeepSeek-Harness-Gov](https://github.com/Ramenne/DeepSeek-Harness-Gov) | Bundles a government-service Web portal and a DSH command that converts session outlines into deterministic Word 2003 XML red-header documents. | [![GitHub stars](https://img.shields.io/github/stars/Ramenne/DeepSeek-Harness-Gov?style=flat&label=stars)](https://github.com/Ramenne/DeepSeek-Harness-Gov/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-acp-for-bitfun](https://github.com/bobleer/dsh-acp-for-bitfun) | Connects BitFun and DeepSeek Harness through the Agent Client Protocol. | [![GitHub stars](https://img.shields.io/github/stars/bobleer/dsh-acp-for-bitfun?style=flat&label=stars)](https://github.com/bobleer/dsh-acp-for-bitfun/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-better-browser](https://github.com/titanwings/dsh-better-browser) | Exposes a signed-in WebBridge browser to DSH through a controlled tool set. | [![GitHub stars](https://img.shields.io/github/stars/titanwings/dsh-better-browser?style=flat&label=stars)](https://github.com/titanwings/dsh-better-browser/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-island](https://github.com/cdxiaodong/dsh-island) | Shows DSH session, tool, status, and approval events in a native macOS menu-bar panel with in-panel allow or deny actions. | [![GitHub stars](https://img.shields.io/github/stars/cdxiaodong/dsh-island?style=flat&label=stars)](https://github.com/cdxiaodong/dsh-island/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-acp](https://github.com/dushaobindoudou/dsh-acp) | Exposes a full Harness agent over Agent Client Protocol with streaming, tool calls, approvals, cancellation, and durable sessions for editors and other clients. | [![GitHub stars](https://img.shields.io/github/stars/dushaobindoudou/dsh-acp?style=flat&label=stars)](https://github.com/dushaobindoudou/dsh-acp/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mcp-lens](https://github.com/labmimors/dsh-mcp-lens) | Keeps large MCP catalogs behind two model-facing tools, reveals exact schemas on demand, and rechecks allow and deny rules before each call. | [![GitHub stars](https://img.shields.io/github/stars/labmimors/dsh-mcp-lens?style=flat&label=stars)](https://github.com/labmimors/dsh-mcp-lens/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-agent-bridge](https://github.com/zmh2000829/DSH-agent-bridge) | Bridges Grok Build into DSH Web over ACP while retaining native sessions, streaming, tool views, approvals, Markdown diffs, and command handling. | [![GitHub stars](https://img.shields.io/github/stars/zmh2000829/DSH-agent-bridge?style=flat&label=stars)](https://github.com/zmh2000829/DSH-agent-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-browser-playwright](https://github.com/ChenyuHeee/dsh-browser-playwright) | Adds snapshot-first Playwright browser automation with stable accessibility refs, per-session contexts, and gated JavaScript. | [![GitHub stars](https://img.shields.io/github/stars/ChenyuHeee/dsh-browser-playwright?style=flat&label=stars)](https://github.com/ChenyuHeee/dsh-browser-playwright/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-claude-bridge](https://github.com/YYTbit/dsh-plugin-claude-bridge) | Imports Claude Code memory, skills, and configuration into DeepSeek Harness. | [![GitHub stars](https://img.shields.io/github/stars/YYTbit/dsh-plugin-claude-bridge?style=flat&label=stars)](https://github.com/YYTbit/dsh-plugin-claude-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ask-peer](https://github.com/zzhzz/dsh-ask-peer) | Lets agents ask trusted peers directly over a LAN with signed contacts, approval controls, parallel queries, and read-only session-context answers. | [![GitHub stars](https://img.shields.io/github/stars/zzhzz/dsh-ask-peer?style=flat&label=stars)](https://github.com/zzhzz/dsh-ask-peer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-vision](https://github.com/54xkeee/dsh-vision) | Routes image-reading requests from DSH to configurable browser, IDE, Gemini, or local vision backends with staged detail escalation. | [![GitHub stars](https://img.shields.io/github/stars/54xkeee/dsh-vision?style=flat&label=stars)](https://github.com/54xkeee/dsh-vision/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-grafana](https://github.com/guhanfei-ai/dsh-grafana) | Lets DSH inspect and modify Grafana dashboards through conversational requests starting from a dashboard URL. | [![GitHub stars](https://img.shields.io/github/stars/guhanfei-ai/dsh-grafana?style=flat&label=stars)](https://github.com/guhanfei-ai/dsh-grafana/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-github-login](https://github.com/Noob-stupid/dsh-github-login) | Provides a visual GitHub device-flow login for DSH and can synchronize the resulting authentication with the GitHub CLI. | [![GitHub stars](https://img.shields.io/github/stars/Noob-stupid/dsh-github-login?style=flat&label=stars)](https://github.com/Noob-stupid/dsh-github-login/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [whale-notify](https://github.com/Mochabafey/whale-notify) | Connects DSH to Feishu, QQ, email, and webhook notifications with two-way chat, scheduled reports, and local memory. | [![GitHub stars](https://img.shields.io/github/stars/Mochabafey/whale-notify?style=flat&label=stars)](https://github.com/Mochabafey/whale-notify/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-lark-meeting-notifier](https://github.com/yeruizhi/dsh-lark-meeting-notifier) | Reads a user's Lark calendar through lark-cli and surfaces upcoming meeting reminders in DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/yeruizhi/dsh-lark-meeting-notifier?style=flat&label=stars)](https://github.com/yeruizhi/dsh-lark-meeting-notifier/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [astrbot_plugin_dsh_bridge](https://github.com/Fantasality/astrbot_plugin_dsh_bridge) | Lets AstrBot invoke local or LAN DSH sessions through chat commands and injects DSH tool guidance into prompts. | [![GitHub stars](https://img.shields.io/github/stars/Fantasality/astrbot_plugin_dsh_bridge?style=flat&label=stars)](https://github.com/Fantasality/astrbot_plugin_dsh_bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-timeline-studio-plugin](https://github.com/MartinDelophy/dsh-timeline-studio-plugin) | Connects DSH to Timeline Studio for project inspection, semantic edit previews, transactional timeline changes, and MP4 rendering. | [![GitHub stars](https://img.shields.io/github/stars/MartinDelophy/dsh-timeline-studio-plugin?style=flat&label=stars)](https://github.com/MartinDelophy/dsh-timeline-studio-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-context7](https://github.com/Nrxous/dsh-context7) | Adds Context7 library-documentation lookup tools to DSH with optional authenticated access. | [![GitHub stars](https://img.shields.io/github/stars/Nrxous/dsh-context7?style=flat&label=stars)](https://github.com/Nrxous/dsh-context7/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [NimuQDock-dsh](https://github.com/NimuStudio/NimuQDock-dsh) | Bridges DSH to QQ through NapCat and OneBot v11, adding group and private chats, persona-driven participation, layered memory, allowlists, and a local control console. | [![GitHub stars](https://img.shields.io/github/stars/NimuStudio/NimuQDock-dsh?style=flat&label=stars)](https://github.com/NimuStudio/NimuQDock-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ticktick](https://github.com/PerryLink/dsh-ticktick) | Connects DSH to the TickTick or Dida365 MCP service with task lists, search, drag reordering, and eleven agent tools. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-ticktick?style=flat&label=stars)](https://github.com/PerryLink/dsh-ticktick/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-swarmdrop](https://github.com/swarm-apps/dsh-swarmdrop) | Transfers files between a DSH agent and a paired phone with end-to-end encryption, without requiring an account or public IP address. | [![GitHub stars](https://img.shields.io/github/stars/swarm-apps/dsh-swarmdrop?style=flat&label=stars)](https://github.com/swarm-apps/dsh-swarmdrop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-browser-fs](https://github.com/whitefirer/dsh-browser-fs) | Bridges a browser-authorized local filesystem into DSH through File System Access and a WebSocket relay for agent and human use. | [![GitHub stars](https://img.shields.io/github/stars/whitefirer/dsh-browser-fs?style=flat&label=stars)](https://github.com/whitefirer/dsh-browser-fs/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-milvus](https://github.com/zilliztech/dsh-milvus) | Adds read-only Milvus collection inspection, scalar queries, and dense, BM25, or hybrid search tools to DSH. | [![GitHub stars](https://img.shields.io/github/stars/zilliztech/dsh-milvus?style=flat&label=stars)](https://github.com/zilliztech/dsh-milvus/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-forge](https://github.com/maxmilian/dsh-forge) | Adds read-only DSH tools for GitHub, Gitea, and Forgejo repositories, issues, pull requests, diffs, Actions runs, jobs, and logs. | [![GitHub stars](https://img.shields.io/github/stars/maxmilian/dsh-forge?style=flat&label=stars)](https://github.com/maxmilian/dsh-forge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin](https://github.com/PicGo/dsh-plugin) | Uploads images and files from DSH to image-hosting services configured through PicGo. | [![GitHub stars](https://img.shields.io/github/stars/PicGo/dsh-plugin?style=flat&label=stars)](https://github.com/PicGo/dsh-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-shopify-plugins](https://github.com/sakthiveltofficial/dsh-shopify-plugins) | Adds more than 210 policy-aware Shopify Admin REST and GraphQL tools to DSH for catalog, orders, customers, inventory, fulfillment, marketing, themes, and bulk operations. | [![GitHub stars](https://img.shields.io/github/stars/sakthiveltofficial/dsh-shopify-plugins?style=flat&label=stars)](https://github.com/sakthiveltofficial/dsh-shopify-plugins/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-gsv](https://github.com/TaoruiLiu19/dsh-gsv) | Adds message read-aloud to DSH through cloud Edge voices or local GSV-TTS-Lite, with configurable voices and optional automatic narration. | [![GitHub stars](https://img.shields.io/github/stars/TaoruiLiu19/dsh-gsv?style=flat&label=stars)](https://github.com/TaoruiLiu19/dsh-gsv/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-im-hub](https://github.com/ThreeBody6666/dsh-im-hub) | Connects DSH to Feishu, WeCom, and Telegram chats through long-lived outbound connections and per-chat agent sessions. | [![GitHub stars](https://img.shields.io/github/stars/ThreeBody6666/dsh-im-hub?style=flat&label=stars)](https://github.com/ThreeBody6666/dsh-im-hub/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-qqbot-bridge](https://github.com/wang-22-code/dsh-qqbot-bridge) | Connects DSH to Tencent's official QQ Bot API with persistent sessions, model switching, commands, and remote approval handling. | [![GitHub stars](https://img.shields.io/github/stars/wang-22-code/dsh-qqbot-bridge?style=flat&label=stars)](https://github.com/wang-22-code/dsh-qqbot-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [unity-dsh-bridge](https://github.com/142gg-GZX/unity-dsh-bridge) | Connects DSH to Unity or Tuanjie over a local HTTP bridge for scene editing, C# scripts, compilation, play mode, screenshots, and input simulation. | [![GitHub stars](https://img.shields.io/github/stars/142gg-GZX/unity-dsh-bridge?style=flat&label=stars)](https://github.com/142gg-GZX/unity-dsh-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-openai-gateway](https://github.com/backrooms-yrc/dsh-openai-gateway) | Exposes real DSH agent sessions through an authenticated OpenAI-compatible chat-completions API with streaming and optional persistent sessions. | [![GitHub stars](https://img.shields.io/github/stars/backrooms-yrc/dsh-openai-gateway?style=flat&label=stars)](https://github.com/backrooms-yrc/dsh-openai-gateway/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-plugin-mcp](https://github.com/bobleer/deepseek-harness-plugin-mcp) | Lets MCP-capable agents discover, install, and run DeepSeek Harness plugins. | [![GitHub stars](https://img.shields.io/github/stars/bobleer/deepseek-harness-plugin-mcp?style=flat&label=stars)](https://github.com/bobleer/deepseek-harness-plugin-mcp/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-github-bridge](https://github.com/gaolei-mark43/dsh-github-bridge) | Adds GitHub repository, issue, pull-request, file, and search tools with device-flow login and host-side credential storage. | [![GitHub stars](https://img.shields.io/github/stars/gaolei-mark43/dsh-github-bridge?style=flat&label=stars)](https://github.com/gaolei-mark43/dsh-github-bridge/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [hooks-adapter](https://github.com/JohnXu22786/hooks-adapter) | Runs compatible hooks declared for Claude Code, Codex, OpenCode, or native configurations through shell, webhook, oracle, and proxy handlers. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/hooks-adapter?style=flat&label=stars)](https://github.com/JohnXu22786/hooks-adapter/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-telegram](https://github.com/Kevin66Z0/dsh-telegram) | Controls DSH sessions from Telegram with live streamed replies, session and workspace actions, chat allowlists, environment-held tokens, and no inbound listener. | [![GitHub stars](https://img.shields.io/github/stars/Kevin66Z0/dsh-telegram?style=flat&label=stars)](https://github.com/Kevin66Z0/dsh-telegram/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-grafana-query](https://github.com/maxmilian/dsh-grafana-query) | Adds read-only DSH tools for Grafana health, data sources, PromQL queries, dashboard search, alert rules, and active alert state. | [![GitHub stars](https://img.shields.io/github/stars/maxmilian/dsh-grafana-query?style=flat&label=stars)](https://github.com/maxmilian/dsh-grafana-query/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-odoo](https://github.com/maxmilian/dsh-odoo) | Adds read-only Odoo search, record, schema, and relation tools to DSH, with a separately enabled and model-restricted draft-record creation tool. | [![GitHub stars](https://img.shields.io/github/stars/maxmilian/dsh-odoo?style=flat&label=stars)](https://github.com/maxmilian/dsh-odoo/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-reach](https://github.com/PerryLink/dsh-reach) | Feature-frozen DSH bridge for approvals, questions, and session controls over WeChat, Telegram, and Feishu. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-reach?style=flat&label=stars)](https://github.com/PerryLink/dsh-reach/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-qingagent](https://github.com/void2anything/dsh-qingagent) | Connects DSH to the local QingAgent desktop engine for conversational drafting, staged edit review, rich rendering, annotations, and export in a right-side writing panel. | [![GitHub stars](https://img.shields.io/github/stars/void2anything/dsh-qingagent?style=flat&label=stars)](https://github.com/void2anything/dsh-qingagent/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [obsidian-plugin-deepshian](https://github.com/zhenghaoyang24/obsidian-plugin-deepshian) | Connects an Obsidian sidebar chat to a local DSH profile for streamed replies, visible tool calls, and real edits to files in the current vault. | [![GitHub stars](https://img.shields.io/github/stars/zhenghaoyang24/obsidian-plugin-deepshian?style=flat&label=stars)](https://github.com/zhenghaoyang24/obsidian-plugin-deepshian/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-telegram](https://github.com/ashafizullah/dsh-telegram) | Adds a Telegram front end for DSH with rich replies, remote question and approval handling, and image delivery to vision-capable models. | [![GitHub stars](https://img.shields.io/github/stars/ashafizullah/dsh-telegram?style=flat&label=stars)](https://github.com/ashafizullah/dsh-telegram/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [obsidian-dsh-plugin](https://github.com/ubttttt/obsidian-dsh-plugin) | Embeds DSH chat in Obsidian and sends selected note text to a configurable headless agent workspace. | [![GitHub stars](https://img.shields.io/github/stars/ubttttt/obsidian-dsh-plugin?style=flat&label=stars)](https://github.com/ubttttt/obsidian-dsh-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-webdav-server](https://github.com/weibaohui/dsh-webdav-server) | Shares a configured DSH directory through a WebDAV server with authentication, optional read-only access, and a settings panel. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-webdav-server?style=flat&label=stars)](https://github.com/weibaohui/dsh-webdav-server/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-wechat-maid](https://github.com/Bonny0430/dsh-wechat-maid) | Connects personal WeChat chats to DSH sessions with two-way mirroring, scheduled tasks, proactive messages, and an optional desktop pet. | [![GitHub stars](https://img.shields.io/github/stars/Bonny0430/dsh-wechat-maid?style=flat&label=stars)](https://github.com/Bonny0430/dsh-wechat-maid/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [kicad-mcp-dsh-plugin](https://github.com/chunhuachaolu-art/kicad-mcp-dsh-plugin) | Bridges kicad-mcp-pro into DSH for KiCad schematic/PCB inspection, ERC/DRC, BOM/DFM review, and profile-dependent fabrication workflows. | [![GitHub stars](https://img.shields.io/github/stars/chunhuachaolu-art/kicad-mcp-dsh-plugin?style=flat&label=stars)](https://github.com/chunhuachaolu-art/kicad-mcp-dsh-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [github-mcp](https://github.com/JohnXu22786/github-mcp) | Provides a zero-dependency GitHub MCP server for repositories, issues, pull requests, reviews, search, configurable authentication, and read-only mode. | [![GitHub stars](https://img.shields.io/github/stars/JohnXu22786/github-mcp?style=flat&label=stars)](https://github.com/JohnXu22786/github-mcp/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-wechat](https://github.com/PerryLink/dsh-wechat) | Bridges DSH sessions to WeChat through Tencent iLink with text and media transfer, workspace controls, approval cards, questions, and QR login. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-wechat?style=flat&label=stars)](https://github.com/PerryLink/dsh-wechat/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-herdr](https://github.com/wenhao4126/dsh-herdr) | Connects DSH to an installed Herdr CLI with tools for workspaces, tabs, panes, commands, coding-agent launches, completion waits, and result retrieval. | [![GitHub stars](https://img.shields.io/github/stars/wenhao4126/dsh-herdr?style=flat&label=stars)](https://github.com/wenhao4126/dsh-herdr/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-netshell](https://github.com/xgone/dsh-netshell) | Adds local and SSH terminals to DSH Web with three command-permission levels, approval for risky AI-initiated commands, and stored credentials. | [![GitHub stars](https://img.shields.io/github/stars/xgone/dsh-netshell?style=flat&label=stars)](https://github.com/xgone/dsh-netshell/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+
+## Developer & Operations
+
+| Project | Description | Stars | Referenced by |
+| --- | --- | --- | --- |
+| [dsh-market](https://github.com/dsh-market/dsh-market) | Adds an in-app plugin market for browsing, searching, installing, updating, and removing curated DSH plugins. | [![GitHub stars](https://img.shields.io/github/stars/dsh-market/dsh-market?style=flat&label=stars)](https://github.com/dsh-market/dsh-market/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://dshmarket.com/">dsh-market</a> · <sub>Docs</sub></li></ul></details> |
+| [TokenTracker](https://github.com/xiufengsun/TokenTracker) | Passively reads Harness session logs to include DSH in a local multi-tool token-usage and cost dashboard with desktop applications and widgets. | [![GitHub stars](https://img.shields.io/github/stars/xiufengsun/TokenTracker?style=flat&label=stars)](https://github.com/xiufengsun/TokenTracker/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [cc-safety-net](https://github.com/kenryu42/cc-safety-net) | Adds a DSH pre-execution guard that checks tool calls for destructive commands and sensitive-file access using configurable rules. | [![GitHub stars](https://img.shields.io/github/stars/kenryu42/cc-safety-net?style=flat&label=stars)](https://github.com/kenryu42/cc-safety-net/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://ccsafetynet.com/docs/installation#deepseek-harness-installation">CC Safety Net: DeepSeek Harness installation</a> · <sub>Docs</sub></li></ul></details> |
+| [dsh-cost-meter](https://github.com/Han-1413141/dsh-cost-meter) | Tracks DSH costs, tokens, budgets, provider balances, peak pricing, and coding-plan quotas with historical dashboards and heatmaps. | [![GitHub stars](https://img.shields.io/github/stars/Han-1413141/dsh-cost-meter?style=flat&label=stars)](https://github.com/Han-1413141/dsh-cost-meter/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ios](https://github.com/ZSeven-W/dsh-ios) | Adds macOS-hosted iOS Simulator and USB iPhone tools to DSH for building, running, inspecting, and interacting with apps through a live device panel. | [![GitHub stars](https://img.shields.io/github/stars/ZSeven-W/dsh-ios?style=flat&label=stars)](https://github.com/ZSeven-W/dsh-ios/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-upgrade-skill](https://github.com/oh-my-dsh/dsh-plugin-upgrade-skill) | Provides version-linked DSH migration notes, development and upgrade skills, compatibility checks, and reproducible plugin-migration exercises. | [![GitHub stars](https://img.shields.io/github/stars/oh-my-dsh/dsh-plugin-upgrade-skill?style=flat&label=stars)](https://github.com/oh-my-dsh/dsh-plugin-upgrade-skill/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-damage-pulse](https://github.com/wssfk12138/dsh-damage-pulse) | Visualizes per-call and cumulative token costs with cache-aware charge animations, editable pricing, and optional DeepSeek balance polling. | [![GitHub stars](https://img.shields.io/github/stars/wssfk12138/dsh-damage-pulse?style=flat&label=stars)](https://github.com/wssfk12138/dsh-damage-pulse/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-auto-review](https://github.com/PerryLink/dsh-auto-review) | Uses a second model to decide DSH approval requests with structured verdicts, deterministic rules, audit events, and fail-closed fallbacks. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-auto-review?style=flat&label=stars)](https://github.com/PerryLink/dsh-auto-review/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skills-manager](https://github.com/MichengAI/dsh-skills-manager) | Manages local and project DSH skills with GitHub installation, update previews, backups, rollback, and recoverable deletion. | [![GitHub stars](https://img.shields.io/github/stars/MichengAI/dsh-skills-manager?style=flat&label=stars)](https://github.com/MichengAI/dsh-skills-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-config-manager](https://github.com/xiajiajun516/dsh-config-manager) | Backs up, compares, imports, restores, and migrates DSH configuration through a Web interface and companion CLI. | [![GitHub stars](https://img.shields.io/github/stars/xiajiajun516/dsh-config-manager?style=flat&label=stars)](https://github.com/xiajiajun516/dsh-config-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [TokenLedger](https://github.com/zh667/TokenLedger) | Attributes local DSH token usage to relay sites, projects, and models, and queries configured provider balances and quota windows without exposing credentials to the browser. | [![GitHub stars](https://img.shields.io/github/stars/zh667/TokenLedger?style=flat&label=stars)](https://github.com/zh667/TokenLedger/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-undo-savepoint](https://github.com/lire1131/dsh-undo-savepoint) | Snapshots Harness configuration and plugin code for undo, redo, rollback, redacted export, crash recovery, and an offline safe mode. | [![GitHub stars](https://img.shields.io/github/stars/lire1131/dsh-undo-savepoint?style=flat&label=stars)](https://github.com/lire1131/dsh-undo-savepoint/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [DSH-Plugins-Marketplace](https://github.com/bradeGithub/DSH-Plugins-Marketplace) | Adds a DSH settings marketplace for searching, installing, detecting, and updating GitHub dsh-plugin repositories. | [![GitHub stars](https://img.shields.io/github/stars/bradeGithub/DSH-Plugins-Marketplace?style=flat&label=stars)](https://github.com/bradeGithub/DSH-Plugins-Marketplace/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-usage-stats](https://github.com/Ychris12138/dsh-usage-stats) | Adds a DSH usage dashboard with token heatmaps, provider or model breakdowns, balances, and subscription quotas. | [![GitHub stars](https://img.shields.io/github/stars/Ychris12138/dsh-usage-stats?style=flat&label=stars)](https://github.com/Ychris12138/dsh-usage-stats/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-auto-mode](https://github.com/NanmiCoder/dsh-auto-mode) · <sub>Archived</sub> | Automates permission decisions with deterministic allow and sandbox rules, plus model classification for ambiguous or risky actions. | [![GitHub stars](https://img.shields.io/github/stars/NanmiCoder/dsh-auto-mode?style=flat&label=stars)](https://github.com/NanmiCoder/dsh-auto-mode/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-gating-hub](https://github.com/Noob-stupid/dsh-plugin-gating-hub) | Manages DSH plugins and framework upgrades with compatibility gates, rollback points, recovery controls, and multi-source discovery. | [![GitHub stars](https://img.shields.io/github/stars/Noob-stupid/dsh-plugin-gating-hub?style=flat&label=stars)](https://github.com/Noob-stupid/dsh-plugin-gating-hub/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-github](https://github.com/PivotStackIntelligence/dsh-github) | Adds a GitHub and source-control panel to DSH that mirrors a VS Code-style Git view. | [![GitHub stars](https://img.shields.io/github/stars/PivotStackIntelligence/dsh-github?style=flat&label=stars)](https://github.com/PivotStackIntelligence/dsh-github/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-notification](https://github.com/omdsh-dev/dsh-notification) | Sends desktop notifications for selected turn outcomes with literal or regex include and exclude rules. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-notification?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-notification/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Tokdash](https://github.com/JingbiaoMei/Tokdash) | Reads local DSH session records to visualize token use, model costs, activity, and quota reset schedules alongside other agent clients. | [![GitHub stars](https://img.shields.io/github/stars/JingbiaoMei/Tokdash?style=flat&label=stars)](https://github.com/JingbiaoMei/Tokdash/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-maze](https://github.com/lamost423/dsh-maze) | Visualizes DSH execution timelines, tool activity, token usage, recovery paths, and multi-session comparisons with links back to recorded evidence. | [![GitHub stars](https://img.shields.io/github/stars/lamost423/dsh-maze?style=flat&label=stars)](https://github.com/lamost423/dsh-maze/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-ui-usage-billing](https://github.com/kenz1117/dsh-ui-usage-billing) | Adds a DSH usage and billing dashboard with historical token costs, balances, subscription quotas, provider bills, budgets, and pricing alerts. | [![GitHub stars](https://img.shields.io/github/stars/kenz1117/dsh-ui-usage-billing?style=flat&label=stars)](https://github.com/kenz1117/dsh-ui-usage-billing/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-control-center](https://github.com/feibi-mochi/deepseek-harness-control-center) | Adds local-first balance and usage tracking, peak-price reminders, encrypted account switching, health checks, recharge links, and session controls. | [![GitHub stars](https://img.shields.io/github/stars/feibi-mochi/deepseek-harness-control-center?style=flat&label=stars)](https://github.com/feibi-mochi/deepseek-harness-control-center/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-passwords](https://github.com/slywalker2006/dsh-passwords) | Adds a multi-user DSH Web gateway with remote access, automatic HTTPS, per-user permissions and quotas, sandbox enforcement, encrypted authentication, and audit logs. | [![GitHub stars](https://img.shields.io/github/stars/slywalker2006/dsh-passwords?style=flat&label=stars)](https://github.com/slywalker2006/dsh-passwords/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-web-plugin-manager](https://github.com/LX2000WASD/dsh-web-plugin-manager) | Manages DSH plugins from the Web UI or companion CLI with install, removal, update, health analysis, and rollback safeguards. | [![GitHub stars](https://img.shields.io/github/stars/LX2000WASD/dsh-web-plugin-manager?style=flat&label=stars)](https://github.com/LX2000WASD/dsh-web-plugin-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [plugin-registry](https://github.com/vlln/plugin-registry) · <sub>Archived</sub> | Provides a browser console and agent tools for managing installed DSH plugins. | [![GitHub stars](https://img.shields.io/github/stars/vlln/plugin-registry?style=flat&label=stars)](https://github.com/vlln/plugin-registry/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [oh-my-dsh](https://github.com/LaplaceYoung/oh-my-dsh) | Collects a broad set of seam-based DSH extensions without changing the core agent loop. | [![GitHub stars](https://img.shields.io/github/stars/LaplaceYoung/oh-my-dsh?style=flat&label=stars)](https://github.com/LaplaceYoung/oh-my-dsh/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-doublecheck](https://github.com/PerryLink/dsh-doublecheck) | Enforces a requirements, test, review, and delivery-evidence loop before agents ship changes. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-doublecheck?style=flat&label=stars)](https://github.com/PerryLink/dsh-doublecheck/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-bottom-info-bar](https://github.com/songoao25/dsh-bottom-info-bar) | Adds a composer information row for provider balances, quotas, bills, local spending, and pricing windows alongside DSH's native controls. | [![GitHub stars](https://img.shields.io/github/stars/songoao25/dsh-bottom-info-bar?style=flat&label=stars)](https://github.com/songoao25/dsh-bottom-info-bar/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-context-doctor](https://github.com/Zhenyu98/dsh-context-doctor) | Audits instruction, skill, and tool-schema token costs for duplication and conflicts. | [![GitHub stars](https://img.shields.io/github/stars/Zhenyu98/dsh-context-doctor?style=flat&label=stars)](https://github.com/Zhenyu98/dsh-context-doctor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-pr-review](https://github.com/nexpeakcore/deepseek-harness-pr-review) | Runs headless Harness reviews that check pull-request claims, documentation accuracy, and requirement impact against repository code with file-level evidence. | [![GitHub stars](https://img.shields.io/github/stars/nexpeakcore/deepseek-harness-pr-review?style=flat&label=stars)](https://github.com/nexpeakcore/deepseek-harness-pr-review/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-agent-studio](https://github.com/thissensen/dsh-agent-studio) | Visually configures DSH agents and subagents with prompts, tool and skill visibility, models, presets, and fallback chains. | [![GitHub stars](https://img.shields.io/github/stars/thissensen/dsh-agent-studio?style=flat&label=stars)](https://github.com/thissensen/dsh-agent-studio/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-usage-plugin](https://github.com/feiyang-dev/dsh-usage-plugin) | Adds persistent per-call usage, cache, pricing, balance, and export panels to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/feiyang-dev/dsh-usage-plugin?style=flat&label=stars)](https://github.com/feiyang-dev/dsh-usage-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [skills-management](https://github.com/weibaohui/skills-management) | Adds a DSH skill manager for discovering local agent skills, controlling model visibility, and browsing or installing a skill market. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/skills-management?style=flat&label=stars)](https://github.com/weibaohui/skills-management/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-whale-report](https://github.com/SenmuuuuW/dsh-whale-report) | Generates local daily, weekly, monthly, yearly, or custom-range reports from read-only DSH session events. | [![GitHub stars](https://img.shields.io/github/stars/SenmuuuuW/dsh-whale-report?style=flat&label=stars)](https://github.com/SenmuuuuW/dsh-whale-report/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-toolbox](https://github.com/HiWhaleW/dsh-toolbox) | Bundles local DSH tools for product research, context routing, plugin preflight checks, compatibility monitoring, and profile control. | [![GitHub stars](https://img.shields.io/github/stars/HiWhaleW/dsh-toolbox?style=flat&label=stars)](https://github.com/HiWhaleW/dsh-toolbox/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-session-notification](https://github.com/dingyi222666/dsh-session-notification) | Sends configurable sounds and browser notifications for completed, failed, or blocked sessions. | [![GitHub stars](https://img.shields.io/github/stars/dingyi222666/dsh-session-notification?style=flat&label=stars)](https://github.com/dingyi222666/dsh-session-notification/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin](https://github.com/loongsuite/dsh-plugin) | Emits OpenTelemetry GenAI traces and metrics for turns, model calls, tools, and token usage through standard OTLP exporters. | [![GitHub stars](https://img.shields.io/github/stars/loongsuite/dsh-plugin?style=flat&label=stars)](https://github.com/loongsuite/dsh-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-backup](https://github.com/xiaoyuyu6420/dsh-backup) | Backs up and restores DSH data with scheduled archives, upgrade snapshots, session-log checks and repair, credential redaction, GitHub sync, and an out-of-process rescue console. | [![GitHub stars](https://img.shields.io/github/stars/xiaoyuyu6420/dsh-backup?style=flat&label=stars)](https://github.com/xiaoyuyu6420/dsh-backup/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-balance](https://github.com/crazywoola/dsh-balance) | Adds DeepSeek and StepFun balance queries, model discovery, and provider/model/session usage analytics to DSH, with credentials kept host-side. | [![GitHub stars](https://img.shields.io/github/stars/crazywoola/dsh-balance?style=flat&label=stars)](https://github.com/crazywoola/dsh-balance/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mcp-studio](https://github.com/functy23/dsh-mcp-studio) | Adds a DSH panel for managing MCP servers and skills, including configuration editing and imports from other agent setups. | [![GitHub stars](https://img.shields.io/github/stars/functy23/dsh-mcp-studio?style=flat&label=stars)](https://github.com/functy23/dsh-mcp-studio/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-check](https://github.com/omdsh-dev/dsh-plugin-check) | Checks plugin manifests, patches, builds, and registry readiness without modifying files. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-plugin-check?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-plugin-check/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-workshop](https://github.com/yyyyukari/dsh-plugin-workshop) | Adds a zero-server DSH plugin browser with GitHub search, bilingual discovery, lifecycle actions, and installed-plugin management. | [![GitHub stars](https://img.shields.io/github/stars/yyyyukari/dsh-plugin-workshop?style=flat&label=stars)](https://github.com/yyyyukari/dsh-plugin-workshop/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-recommend](https://github.com/zp-home/dsh-recommend) | Adds a transparent, metadata-based plugin ranking and recommendation panel backed by the public dsh-plugin topic. | [![GitHub stars](https://img.shields.io/github/stars/zp-home/dsh-recommend?style=flat&label=stars)](https://github.com/zp-home/dsh-recommend/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-update-checker](https://github.com/Airmetro/dsh-update-checker) | Checks DSH and installed plugin versions, shows a localized update banner, and supports guarded update and rollback flows. | [![GitHub stars](https://img.shields.io/github/stars/Airmetro/dsh-update-checker?style=flat&label=stars)](https://github.com/Airmetro/dsh-update-checker/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-harmony](https://github.com/memorax-ai/dsh-harmony) | Provides runtime hooks for patching, replacing, and decorating DSH plugins, with a Web interface for managing active modifications. | [![GitHub stars](https://img.shields.io/github/stars/memorax-ai/dsh-harmony?style=flat&label=stars)](https://github.com/memorax-ai/dsh-harmony/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-peak](https://github.com/YMRYMR/deepseek-peak) | Adds a DSH Web status widget and standalone page for DeepSeek API peak or off-peak pricing windows and countdowns. | [![GitHub stars](https://img.shields.io/github/stars/YMRYMR/deepseek-peak?style=flat&label=stars)](https://github.com/YMRYMR/deepseek-peak/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://www.reddit.com/r/DeepSeek/comments/1vo6cvg/tool_tiny_opensource_widget_for_deepseek_v4/">Tiny open-source widget for DeepSeek V4 peak/off-peak status</a> · <sub>Article</sub></li></ul></details> |
+| [agent-body](https://github.com/1420079678-ctrl/agent-body) | Coordinates DSH plugins with intent-based tool exposure, persistent memory, deterministic event handlers, failure attribution, and recovery workflows. | [![GitHub stars](https://img.shields.io/github/stars/1420079678-ctrl/agent-body?style=flat&label=stars)](https://github.com/1420079678-ctrl/agent-body/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-dev](https://github.com/omdsh-dev/dsh-plugin-dev) | Documents tested patterns and common pitfalls for developing DSH plugins. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-plugin-dev?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-plugin-dev/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-harness-ops](https://github.com/fakechris/dsh-harness-ops) | Provides A/B upgrades, watchdog recovery, rollback, and diagnostics for DSH installations. | [![GitHub stars](https://img.shields.io/github/stars/fakechris/dsh-harness-ops?style=flat&label=stars)](https://github.com/fakechris/dsh-harness-ops/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-dev-skills](https://github.com/zimodzh/dsh-plugin-dev-skills) | Packages community-maintained DSH plugin-development skills with Cordis references, lifecycle and packaging guidance, and runnable examples. | [![GitHub stars](https://img.shields.io/github/stars/zimodzh/dsh-plugin-dev-skills?style=flat&label=stars)](https://github.com/zimodzh/dsh-plugin-dev-skills/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-skills](https://github.com/omdsh-dev/dsh-plugin-skills) | Provides reusable skills for scaffolding, building, and testing DSH plugins. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-plugin-skills?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-plugin-skills/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-security-audit](https://github.com/omdsh-dev/dsh-security-audit) | Audits local configuration, plugin sources, sessions, and network exposure safely. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-security-audit?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-security-audit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [Jnpz](https://github.com/pazz11/Jnpz) | Adds Web panels for MCP and skill management, including JSON-to-MCP hot reload and uploaded skill-package parsing. | [![GitHub stars](https://img.shields.io/github/stars/pazz11/Jnpz?style=flat&label=stars)](https://github.com/pazz11/Jnpz/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-trajectory-governor](https://github.com/chunsi-w/dsh-trajectory-governor) | Adds an experimental trajectory policy layer that tracks task phases, information gain, verification debt, bounded continuations, and a local decision ledger. | [![GitHub stars](https://img.shields.io/github/stars/chunsi-w/dsh-trajectory-governor?style=flat&label=stars)](https://github.com/chunsi-w/dsh-trajectory-governor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-fast](https://github.com/PerryLink/dsh-fast) | Reports session-load, spill, compaction, context-injection, and LLM-cache metrics with threshold-based optimization suggestions. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-fast?style=flat&label=stars)](https://github.com/PerryLink/dsh-fast/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-evolve](https://github.com/william-jin-cmu/dsh-evolve) | Lets agents hot-add and reversibly remove Cordis plugins within a session. | [![GitHub stars](https://img.shields.io/github/stars/william-jin-cmu/dsh-evolve?style=flat&label=stars)](https://github.com/william-jin-cmu/dsh-evolve/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [context-vista](https://github.com/GooodWei/context-vista) | Adds a DSH Web context sidebar and command for visualizing token allocation, compaction effects, and estimated cost. | [![GitHub stars](https://img.shields.io/github/stars/GooodWei/context-vista?style=flat&label=stars)](https://github.com/GooodWei/context-vista/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [upstream-radar](https://github.com/MicroMilo/upstream-radar) | Watches DSH and plugin releases and runs agent-supervised compatibility checks on exact artifacts in disposable CI environments. | [![GitHub stars](https://img.shields.io/github/stars/MicroMilo/upstream-radar?style=flat&label=stars)](https://github.com/MicroMilo/upstream-radar/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-permgate](https://github.com/MrWeiCodes/dsh-permgate) | Adds per-category tool-call review rules, project overrides, allow or block exceptions, and approval diffs. | [![GitHub stars](https://img.shields.io/github/stars/MrWeiCodes/dsh-permgate?style=flat&label=stars)](https://github.com/MrWeiCodes/dsh-permgate/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-whale-meter](https://github.com/Shiye-10Pages/dsh-whale-meter) | Adds local token-usage tiers, model-cost estimates, pricing comparisons, and shareable usage cards to DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/Shiye-10Pages/dsh-whale-meter?style=flat&label=stars)](https://github.com/Shiye-10Pages/dsh-whale-meter/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-fail-logger](https://github.com/Areium/dsh-fail-logger) | Collects, deduplicates, and records tool failures as reusable maintenance notes for skills. | [![GitHub stars](https://img.shields.io/github/stars/Areium/dsh-fail-logger?style=flat&label=stars)](https://github.com/Areium/dsh-fail-logger/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-integration](https://github.com/MutaLucem/dsh-plugin-integration) | Inventories installed DSH plugins and exposes rule-based overlap, compatibility, failure, and enablement controls. | [![GitHub stars](https://img.shields.io/github/stars/MutaLucem/dsh-plugin-integration?style=flat&label=stars)](https://github.com/MutaLucem/dsh-plugin-integration/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-budget](https://github.com/PerryLink/dsh-budget) | Feature-frozen DSH budget plugin tracking tokens, estimated costs, carbon, and latency with configurable spending policies. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-budget?style=flat&label=stars)](https://github.com/PerryLink/dsh-budget/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-capability-panel](https://github.com/pure-craft/dsh-capability-panel) | Shows available DSH skills, MCP servers, and tools with live context states and switches scoped to a session or preset. | [![GitHub stars](https://img.shields.io/github/stars/pure-craft/dsh-capability-panel?style=flat&label=stars)](https://github.com/pure-craft/dsh-capability-panel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-studio](https://github.com/Tsqurt/dsh-plugin-studio) | Provides an alpha Web studio for observing DSH events and services, managing plugins and presets, and developing, testing, and publishing tools, skills, and dynamic plugins. | [![GitHub stars](https://img.shields.io/github/stars/Tsqurt/dsh-plugin-studio?style=flat&label=stars)](https://github.com/Tsqurt/dsh-plugin-studio/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tidewatch](https://github.com/proDreams/dsh-tidewatch) | Displays DeepSeek pricing windows, phase countdowns, token usage, and estimated session costs in a localized DSH Web card. | [![GitHub stars](https://img.shields.io/github/stars/proDreams/dsh-tidewatch?style=flat&label=stars)](https://github.com/proDreams/dsh-tidewatch/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-token-viewer](https://github.com/qwert702/dsh-token-viewer) | Shows per-request and aggregate DSH token usage, estimated cost, trends, and account balance without making model calls. | [![GitHub stars](https://img.shields.io/github/stars/qwert702/dsh-token-viewer?style=flat&label=stars)](https://github.com/qwert702/dsh-token-viewer/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-worktree](https://github.com/FlashingChen/dsh-worktree) | Manages persistent Git worktrees through agent tools, chat commands, and repository manifests. | [![GitHub stars](https://img.shields.io/github/stars/FlashingChen/dsh-worktree?style=flat&label=stars)](https://github.com/FlashingChen/dsh-worktree/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-remote-tunnel](https://github.com/Linjiangxian0203/dsh-remote-tunnel) | Manages resilient SSH tunnels, remote port allocation, and service supervision for accessing DSH Web on Linux servers. | [![GitHub stars](https://img.shields.io/github/stars/Linjiangxian0203/dsh-remote-tunnel?style=flat&label=stars)](https://github.com/Linjiangxian0203/dsh-remote-tunnel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-git-identity](https://github.com/LoserFox/dsh-git-identity) | Pins agent-created Git commits to the authenticated environment identity for consistent attribution. | [![GitHub stars](https://img.shields.io/github/stars/LoserFox/dsh-git-identity?style=flat&label=stars)](https://github.com/LoserFox/dsh-git-identity/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-cost-guard](https://github.com/chenzhiyong1994/dsh-cost-guard) | Turns local usage events into a live cost HUD, per-model totals, and editable price estimates without changing agent execution. | [![GitHub stars](https://img.shields.io/github/stars/chenzhiyong1994/dsh-cost-guard?style=flat&label=stars)](https://github.com/chenzhiyong1994/dsh-cost-guard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-notifacation-frame](https://github.com/gameswu/dsh-notifacation-frame) | Provides an extensible notification registry for DSH lifecycle events across Web and system channels. | [![GitHub stars](https://img.shields.io/github/stars/gameswu/dsh-notifacation-frame?style=flat&label=stars)](https://github.com/gameswu/dsh-notifacation-frame/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pref-kit](https://github.com/gameswu/dsh-pref-kit) · <sub>Archived</sub> | Coalesces same-block streaming deltas before DSH logs and broadcasts them, with a configurable window and settings card. | [![GitHub stars](https://img.shields.io/github/stars/gameswu/dsh-pref-kit?style=flat&label=stars)](https://github.com/gameswu/dsh-pref-kit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-design](https://github.com/huabai-flowerwhite/dsh-plugin-design) | Analyzes third-party DSH plugins against engineering rules, generates design documents, and applies approved changes with backup and rollback. | [![GitHub stars](https://img.shields.io/github/stars/huabai-flowerwhite/dsh-plugin-design?style=flat&label=stars)](https://github.com/huabai-flowerwhite/dsh-plugin-design/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-triad](https://github.com/Kr-ATG/dsh-triad) | Combines usage monitoring, Skills and MCP server management, and long-term memory in DSH settings panels. | [![GitHub stars](https://img.shields.io/github/stars/Kr-ATG/dsh-triad?style=flat&label=stars)](https://github.com/Kr-ATG/dsh-triad/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-bell-notify](https://github.com/Laplace-bit/dsh-bell-notify) | Plays configurable Web Audio chimes for DSH lifecycle events, with sound settings grouped in the native plugin settings page. | [![GitHub stars](https://img.shields.io/github/stars/Laplace-bit/dsh-bell-notify?style=flat&label=stars)](https://github.com/Laplace-bit/dsh-bell-notify/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-specflow](https://github.com/lonelymoon87/dsh-specflow) | Adds specification-driven development through native skills, commands, goals, and tools. | [![GitHub stars](https://img.shields.io/github/stars/lonelymoon87/dsh-specflow?style=flat&label=stars)](https://github.com/lonelymoon87/dsh-specflow/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-doctor](https://github.com/PerryLink/dsh-plugin-doctor) | Runs static, contract, packaging, and sandbox smoke checks for DeepSeek Harness plugins. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-plugin-doctor?style=flat&label=stars)](https://github.com/PerryLink/dsh-plugin-doctor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-verification-receipt](https://github.com/030611/dsh-verification-receipt) | Writes privacy-minimal per-turn receipts summarizing recorded tool activity and heuristic verification signals. | [![GitHub stars](https://img.shields.io/github/stars/030611/dsh-verification-receipt?style=flat&label=stars)](https://github.com/030611/dsh-verification-receipt/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-thinking-notifier](https://github.com/6-debug-6/dsh-thinking-notifier) | Shows a desktop popup when DSH finishes reasoning or requests user approval. | [![GitHub stars](https://img.shields.io/github/stars/6-debug-6/dsh-thinking-notifier?style=flat&label=stars)](https://github.com/6-debug-6/dsh-thinking-notifier/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-guardian](https://github.com/cdxiaodong/dsh-guardian) | Audits DSH tool calls for risky commands, sensitive paths, secrets, and SSRF patterns, with configurable blocking or approval. | [![GitHub stars](https://img.shields.io/github/stars/cdxiaodong/dsh-guardian?style=flat&label=stars)](https://github.com/cdxiaodong/dsh-guardian/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-llm-inspector](https://github.com/cdxiaodong/dsh-llm-inspector) | Observes and optionally stores LLM request and response traffic, with reasoning-effort overrides and external-thinking prompts. | [![GitHub stars](https://img.shields.io/github/stars/cdxiaodong/dsh-llm-inspector?style=flat&label=stars)](https://github.com/cdxiaodong/dsh-llm-inspector/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-doctor](https://github.com/d86e/dsh-doctor) | Runs an independent DSH Web watchdog that diagnoses plugin boot failures, starts safe-mode recovery, records tool errors, and nudges stalled live sessions. | [![GitHub stars](https://img.shields.io/github/stars/d86e/dsh-doctor?style=flat&label=stars)](https://github.com/d86e/dsh-doctor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-cost-tracker](https://github.com/lyfZhixing/dsh-cost-tracker) | Tracks local per-request and session token costs with editable prices, historical recalculation, and no additional model calls. | [![GitHub stars](https://img.shields.io/github/stars/lyfZhixing/dsh-cost-tracker?style=flat&label=stars)](https://github.com/lyfZhixing/dsh-cost-tracker/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-codeaudit](https://github.com/Ph03n1xRt/dsh-codeaudit) | Adds a source-code audit workflow with delegated data-flow tracing, evidence-linked findings, replayable records, and Web visualizations. | [![GitHub stars](https://img.shields.io/github/stars/Ph03n1xRt/dsh-codeaudit?style=flat&label=stars)](https://github.com/Ph03n1xRt/dsh-codeaudit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-usage-plugin](https://github.com/Qiongkura/dsh-usage-plugin) | Adds a daily and per-session usage panel by patching a DSH source checkout and replacing the current official usage components. | [![GitHub stars](https://img.shields.io/github/stars/Qiongkura/dsh-usage-plugin?style=flat&label=stars)](https://github.com/Qiongkura/dsh-usage-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-launcher](https://github.com/wishesl/dsh-launcher) | Provides a Wails desktop launcher for managing DSH runtimes, versions, plugins, startup, logs, configuration, and the local Web interface. | [![GitHub stars](https://img.shields.io/github/stars/wishesl/dsh-launcher?style=flat&label=stars)](https://github.com/wishesl/dsh-launcher/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sitemap](https://github.com/deCOLE118/dsh-sitemap) | Adds a searchable host-and-endpoint sitemap to DSH Web with request details and one-click curl copying. | [![GitHub stars](https://img.shields.io/github/stars/deCOLE118/dsh-sitemap?style=flat&label=stars)](https://github.com/deCOLE118/dsh-sitemap/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-manager](https://github.com/huabai-flowerwhite/dsh-plugin-manager) | Adds a settings page for scanning local third-party plugin directories and toggling discovered plugins on or off. | [![GitHub stars](https://img.shields.io/github/stars/huabai-flowerwhite/dsh-plugin-manager?style=flat&label=stars)](https://github.com/huabai-flowerwhite/dsh-plugin-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-usage-monitor](https://github.com/NOirBRight/dsh-usage-monitor) | Charts provider-reported session usage by time range, provider, model, and workspace without fetching subscription quotas. | [![GitHub stars](https://img.shields.io/github/stars/NOirBRight/dsh-usage-monitor?style=flat&label=stars)](https://github.com/NOirBRight/dsh-usage-monitor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-revive](https://github.com/omdsh-dev/dsh-revive) | Resumes interrupted sessions after a DSH restart by sending a controlled continue instruction. | [![GitHub stars](https://img.shields.io/github/stars/omdsh-dev/dsh-revive?style=flat&label=stars)](https://github.com/omdsh-dev/dsh-revive/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-store](https://github.com/sandbaseai/dsh-plugin-store) | Adds a native DSH Settings marketplace with community catalog search, tag filters, plugin installation, and an installed-package view. | [![GitHub stars](https://img.shields.io/github/stars/sandbaseai/dsh-plugin-store?style=flat&label=stars)](https://github.com/sandbaseai/dsh-plugin-store/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-skills-mcp-group-manager](https://github.com/SeverusZh/dsh-skills-mcp-group-manager) | Adds a DSH manager for grouping Skills, filtering the model-visible skill catalog, and independently enabling or disabling MCP servers. | [![GitHub stars](https://img.shields.io/github/stars/SeverusZh/dsh-skills-mcp-group-manager?style=flat&label=stars)](https://github.com/SeverusZh/dsh-skills-mcp-group-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-llm-verifier](https://github.com/Web0926/dsh-llm-verifier) | Runs multiple coding candidates in detached worktrees, tests and ranks their patches, then applies a winner only after approval. | [![GitHub stars](https://img.shields.io/github/stars/Web0926/dsh-llm-verifier?style=flat&label=stars)](https://github.com/Web0926/dsh-llm-verifier/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-git-status](https://github.com/Wongzexu/dsh-git-status) | Adds a DSH Web Git panel with a commit graph, working-tree and stash views, inline diffs, and branch operations. | [![GitHub stars](https://img.shields.io/github/stars/Wongzexu/dsh-git-status?style=flat&label=stars)](https://github.com/Wongzexu/dsh-git-status/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-task-notify](https://github.com/yangzhe1991/dsh-task-notify) | Retired completion-chime and browser-tab alert plugin whose features now ship in dsh-web-enhance. | [![GitHub stars](https://img.shields.io/github/stars/yangzhe1991/dsh-task-notify?style=flat&label=stars)](https://github.com/yangzhe1991/dsh-task-notify/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-telemetry-redactor](https://github.com/030611/dsh-telemetry-redactor) | Redacts supported credential patterns from outbound DSH telemetry copies without rewriting canonical session logs. | [![GitHub stars](https://img.shields.io/github/stars/030611/dsh-telemetry-redactor?style=flat&label=stars)](https://github.com/030611/dsh-telemetry-redactor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-context-lens](https://github.com/1014029855/dsh-context-lens) | Captures provider-neutral model requests per DSH attempt and adds a context inspector with source attribution, size metrics, comparisons, and diagnostic export. | [![GitHub stars](https://img.shields.io/github/stars/1014029855/dsh-context-lens?style=flat&label=stars)](https://github.com/1014029855/dsh-context-lens/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-verify](https://github.com/263311487-ux/dsh-verify) | Runs real-browser acceptance checks for agent-built web applications through a CLI, MCP server, GitHub Action, and DSH bundle. | [![GitHub stars](https://img.shields.io/github/stars/263311487-ux/dsh-verify?style=flat&label=stars)](https://github.com/263311487-ux/dsh-verify/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plain-plugin-menu](https://github.com/4mForAI/dsh-plain-plugin-menu) | Adds a plain-language DSH plugin catalog and manager with search, comparison, install, uninstall, and guarded subprocess operations. | [![GitHub stars](https://img.shields.io/github/stars/4mForAI/dsh-plain-plugin-menu?style=flat&label=stars)](https://github.com/4mForAI/dsh-plain-plugin-menu/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-protect-tests](https://github.com/acus9345/dsh-protect-tests) | Checks DSH agent edits for skipped tests, removed or weakened assertions, and deleted test files, with configurable detection rules. | [![GitHub stars](https://img.shields.io/github/stars/acus9345/dsh-protect-tests?style=flat&label=stars)](https://github.com/acus9345/dsh-protect-tests/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-nuke-plugin](https://github.com/beijingwahw/dsh-nuke-plugin) | Plans and executes DSH plugin cleanup across profile dependencies, patches, files, and hooks with dry runs, backups, rollback, and audit records. | [![GitHub stars](https://img.shields.io/github/stars/beijingwahw/dsh-nuke-plugin?style=flat&label=stars)](https://github.com/beijingwahw/dsh-nuke-plugin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-toolbox](https://github.com/c-ling/dsh-plugin-toolbox) | Adds workspace-folder opening and session pinning controls to DeepSeek Harness Web. | [![GitHub stars](https://img.shields.io/github/stars/c-ling/dsh-plugin-toolbox?style=flat&label=stars)](https://github.com/c-ling/dsh-plugin-toolbox/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-doctor](https://github.com/ciceroyang/dsh-doctor) | Runs a zero-dependency offline DSH health check covering runtimes, profiles, ports, duplicate packages, and multi-frame session logs. | [![GitHub stars](https://img.shields.io/github/stars/ciceroyang/dsh-doctor?style=flat&label=stars)](https://github.com/ciceroyang/dsh-doctor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-usage](https://github.com/GHJIVHIDD/dsh-plugin-usage) | Tracks live token usage, estimated cost, account quotas, custom prices, and CSV or JSON exports in DeepSeek Harness Web. | [![GitHub stars](https://img.shields.io/github/stars/GHJIVHIDD/dsh-plugin-usage?style=flat&label=stars)](https://github.com/GHJIVHIDD/dsh-plugin-usage/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-repo-setup](https://github.com/gongyijie85/dsh-repo-setup) | Adds a read-only repo_setup_scan tool that inspects project setup and recommends DSH skills and MCP servers. | [![GitHub stars](https://img.shields.io/github/stars/gongyijie85/dsh-repo-setup?style=flat&label=stars)](https://github.com/gongyijie85/dsh-repo-setup/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-foundry](https://github.com/hellosky983/dsh-foundry) | Scaffolds and validates DSH runtime plugins from extensible blueprints exposed as agent tools and a settings gallery. | [![GitHub stars](https://img.shields.io/github/stars/hellosky983/dsh-foundry?style=flat&label=stars)](https://github.com/hellosky983/dsh-foundry/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-butler](https://github.com/imtanhui/dsh-plugin-butler) | Adds installed-plugin grouping, health status, update checks, marketplace search, and guarded install or removal actions. | [![GitHub stars](https://img.shields.io/github/stars/imtanhui/dsh-plugin-butler?style=flat&label=stars)](https://github.com/imtanhui/dsh-plugin-butler/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-credentials-keyring](https://github.com/irisnb/dsh-credentials-keyring) | Stores DeepSeek Harness credentials in Windows Credential Manager, macOS Keychain, or Linux Secret Service. | [![GitHub stars](https://img.shields.io/github/stars/irisnb/dsh-credentials-keyring?style=flat&label=stars)](https://github.com/irisnb/dsh-credentials-keyring/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-guardrail](https://github.com/jypjypjypjyp/dsh-guardrail) | Adds configurable deny-or-warn pattern checks before DSH tool calls, with a rule editor, match tester, optional audit log, and fail-open error handling. | [![GitHub stars](https://img.shields.io/github/stars/jypjypjypjyp/dsh-guardrail?style=flat&label=stars)](https://github.com/jypjypjypjyp/dsh-guardrail/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-task-graph](https://github.com/KevinZhangNothing/dsh-task-graph) | Adds an interactive DSH task-execution graph for agents, tools, skills, subtasks, code changes, tests, retries, live status, and historical drill-down. | [![GitHub stars](https://img.shields.io/github/stars/KevinZhangNothing/dsh-task-graph?style=flat&label=stars)](https://github.com/KevinZhangNothing/dsh-task-graph/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-market](https://github.com/kimiya1010/dsh-plugin-market) | Adds a DSH settings market for searching GitHub plugins and installing or removing them from the Web profile. | [![GitHub stars](https://img.shields.io/github/stars/kimiya1010/dsh-plugin-market?style=flat&label=stars)](https://github.com/kimiya1010/dsh-plugin-market/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-profilespanel](https://github.com/lingxin-maz/dsh-profilespanel) | Adds a profile operations console for bundle status, restart detection, multi-profile installation, previews, rollback, health checks, diffs, and audit logs. | [![GitHub stars](https://img.shields.io/github/stars/lingxin-maz/dsh-profilespanel?style=flat&label=stars)](https://github.com/lingxin-maz/dsh-profilespanel/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-market-github](https://github.com/loker66fan/dsh-market-github) | Adds a GitHub-backed DSH Web plugin market with search, install, update, enable, disable, and restart controls. | [![GitHub stars](https://img.shields.io/github/stars/loker66fan/dsh-market-github?style=flat&label=stars)](https://github.com/loker66fan/dsh-market-github/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sentry](https://github.com/maxmilian/dsh-sentry) | Adds read-only DSH tools for listing Sentry projects, searching issues, and retrieving trimmed event stack traces without local variables, request data, or secret-looking tags. | [![GitHub stars](https://img.shields.io/github/stars/maxmilian/dsh-sentry?style=flat&label=stars)](https://github.com/maxmilian/dsh-sentry/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sonarqube](https://github.com/maxmilian/dsh-sonarqube) | Adds read-only DSH tools for SonarQube status, quality gates, issues, security hotspots, and project measures. | [![GitHub stars](https://img.shields.io/github/stars/maxmilian/dsh-sonarqube?style=flat&label=stars)](https://github.com/maxmilian/dsh-sonarqube/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-upgrade](https://github.com/PerryLink/dsh-plugin-upgrade) | Routes DSH plugin migrations through version-specific skill guides and a CLI scanner for documented compatibility changes. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-plugin-upgrade?style=flat&label=stars)](https://github.com/PerryLink/dsh-plugin-upgrade/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-token-stats](https://github.com/caiyfa/dsh-token-stats) | Adds a cross-session token dashboard with model, time-bucket, root-session, and anomaly breakdowns. | [![GitHub stars](https://img.shields.io/github/stars/caiyfa/dsh-token-stats?style=flat&label=stars)](https://github.com/caiyfa/dsh-token-stats/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-maestro-core](https://github.com/ddtcorex/dsh-maestro-core) | Combines DSH crash supervision, rollback, session resume, permission gating, configuration storage, and cross-machine synchronization in one plugin stack. | [![GitHub stars](https://img.shields.io/github/stars/ddtcorex/dsh-maestro-core?style=flat&label=stars)](https://github.com/ddtcorex/dsh-maestro-core/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-work-report](https://github.com/Elpsycoogroo/dsh-work-report) | Turns local DSH sessions into a visual work ledger with token analytics, trends, workspace breakdowns, distilled context exports, and daily, weekly, or monthly reports. | [![GitHub stars](https://img.shields.io/github/stars/Elpsycoogroo/dsh-work-report?style=flat&label=stars)](https://github.com/Elpsycoogroo/dsh-work-report/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-mounts](https://github.com/fuguangbeta/dsh-mounts) | Adds a read-only DSH panel listing configured instructions, memory directories, skills, MCP servers, and agent presets. | [![GitHub stars](https://img.shields.io/github/stars/fuguangbeta/dsh-mounts?style=flat&label=stars)](https://github.com/fuguangbeta/dsh-mounts/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-repoflow](https://github.com/GHJIVHIDD/dsh-plugin-repoflow) | Adds visual Git and GitHub status, branch, commit, push, and repository-creation controls plus agent tools. | [![GitHub stars](https://img.shields.io/github/stars/GHJIVHIDD/dsh-plugin-repoflow?style=flat&label=stars)](https://github.com/GHJIVHIDD/dsh-plugin-repoflow/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-autocompose](https://github.com/Han-1413141/dsh-autocompose) | Finds and installs task-specific plugin combinations into the current profile or an isolated DSH environment. | [![GitHub stars](https://img.shields.io/github/stars/Han-1413141/dsh-autocompose?style=flat&label=stars)](https://github.com/Han-1413141/dsh-autocompose/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-compat-guardian](https://github.com/Han-1413141/dsh-compat-guardian) | Checks DSH plugin compatibility and loading failures, with quarantine, configuration backups, recovery, and an offline rescue CLI. | [![GitHub stars](https://img.shields.io/github/stars/Han-1413141/dsh-compat-guardian?style=flat&label=stars)](https://github.com/Han-1413141/dsh-compat-guardian/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-pnpm-build-control](https://github.com/Han-1413141/dsh-pnpm-build-control) | Adds a toggle for pnpm build-script approval across DSH profiles and repairs repeated installation from the same Git address. | [![GitHub stars](https://img.shields.io/github/stars/Han-1413141/dsh-pnpm-build-control?style=flat&label=stars)](https://github.com/Han-1413141/dsh-pnpm-build-control/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-peak-hours](https://github.com/lco117/dsh-peak-hours) | Adds a session-header badge showing the current DeepSeek API peak or off-peak pricing window. | [![GitHub stars](https://img.shields.io/github/stars/lco117/dsh-peak-hours?style=flat&label=stars)](https://github.com/lco117/dsh-peak-hours/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-gitflow](https://github.com/lonelymoon87/dsh-gitflow) | Adds Git status, diff, commit, branch, and optional restore-point tools to DSH. | [![GitHub stars](https://img.shields.io/github/stars/lonelymoon87/dsh-gitflow?style=flat&label=stars)](https://github.com/lonelymoon87/dsh-gitflow/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-quota](https://github.com/Lottle7/dsh-quota) | Adds a movable DSH Web dashboard for provider balances and quotas, session and historical token usage, estimated CNY costs, trends, and route diagnostics. | [![GitHub stars](https://img.shields.io/github/stars/Lottle7/dsh-quota?style=flat&label=stars)](https://github.com/Lottle7/dsh-quota/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-manager](https://github.com/Mg-K-Mn/dsh-plugin-manager) | Lists installed DSH plugins and provides hot enable or disable controls with runtime entry details. | [![GitHub stars](https://img.shields.io/github/stars/Mg-K-Mn/dsh-plugin-manager?style=flat&label=stars)](https://github.com/Mg-K-Mn/dsh-plugin-manager/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-kit](https://github.com/PerryLink/dsh-plugin-kit) | Provides reusable provider seams, fail-closed gates, verification scripts, and shared utility modules for DSH plugin authors. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-plugin-kit?style=flat&label=stars)](https://github.com/PerryLink/dsh-plugin-kit/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-darwin](https://github.com/que3sui/dsh-darwin) | Provides a two-plugin DSH self-evolution loop that mines session issues, gates candidate fixes, and supports deterministic rollback. | [![GitHub stars](https://img.shields.io/github/stars/que3sui/dsh-darwin?style=flat&label=stars)](https://github.com/que3sui/dsh-darwin/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-git-chain](https://github.com/ShinonomeAya/dsh-git-chain) | Adds a Cursor-style Git commit graph to DSH Web with SVG lanes, commit details, diffs, filtering, and guarded branch switching. | [![GitHub stars](https://img.shields.io/github/stars/ShinonomeAya/dsh-git-chain?style=flat&label=stars)](https://github.com/ShinonomeAya/dsh-git-chain/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-version-guard](https://github.com/skyjjgw/dsh-version-guard) | Snapshots DSH plugin versions and profile configuration, with a separate recovery page for restoring configuration when the host cannot start. | [![GitHub stars](https://img.shields.io/github/stars/skyjjgw/dsh-version-guard?style=flat&label=stars)](https://github.com/skyjjgw/dsh-version-guard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-live-notify](https://github.com/thuang3316/dsh-live-notify) | Shows DSH completion or error toasts and browser notifications with session links and missed-event replay. | [![GitHub stars](https://img.shields.io/github/stars/thuang3316/dsh-live-notify?style=flat&label=stars)](https://github.com/thuang3316/dsh-live-notify/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-trace](https://github.com/vibeinging/dsh-trace) | Exports DSH turn, step, and tool telemetry to yiTrace over HTTP. | [![GitHub stars](https://img.shields.io/github/stars/vibeinging/dsh-trace?style=flat&label=stars)](https://github.com/vibeinging/dsh-trace/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-tool-squeeze](https://github.com/w2829562572-dev/dsh-tool-squeeze) | Compresses oversized log, JSON, HTML, and text tool results locally while preserving prioritized evidence and retaining the full original output. | [![GitHub stars](https://img.shields.io/github/stars/w2829562572-dev/dsh-tool-squeeze?style=flat&label=stars)](https://github.com/w2829562572-dev/dsh-tool-squeeze/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-dashboard](https://github.com/weibaohui/dsh-dashboard) | Builds configurable dashboards from local DSH session logs for token usage, estimated costs, model activity, and errors. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-dashboard?style=flat&label=stars)](https://github.com/weibaohui/dsh-dashboard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [user-management](https://github.com/weibaohui/user-management) | Adds an HTTPS login gateway, roles, TOTP, registration approval, access logs, and IP blocking in front of DSH Web. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/user-management?style=flat&label=stars)](https://github.com/weibaohui/user-management/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-shortcut-creator](https://github.com/Yvesgao/dsh-shortcut-creator) | Creates Windows desktop shortcuts that launch a configured local DSH service and open it in the browser. | [![GitHub stars](https://img.shields.io/github/stars/Yvesgao/dsh-shortcut-creator?style=flat&label=stars)](https://github.com/Yvesgao/dsh-shortcut-creator/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-sound-notify](https://github.com/Zyy1997/dsh-sound-notify) | Plays configurable host-side sounds when DSH turns finish or agents begin waiting for approval. | [![GitHub stars](https://img.shields.io/github/stars/Zyy1997/dsh-sound-notify?style=flat&label=stars)](https://github.com/Zyy1997/dsh-sound-notify/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-postmortem](https://github.com/zzh-newlearner/dsh-postmortem) | Builds local-first, evidence-linked postmortems from failed DSH sessions. | [![GitHub stars](https://img.shields.io/github/stars/zzh-newlearner/dsh-postmortem?style=flat&label=stars)](https://github.com/zzh-newlearner/dsh-postmortem/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-agent-insights](https://github.com/Claven07/dsh-plugin-agent-insights) | Collects session-scoped tool timings, failures, model-request counts, agent steps, and lifecycle summaries through a Cordis service. | [![GitHub stars](https://img.shields.io/github/stars/Claven07/dsh-plugin-agent-insights?style=flat&label=stars)](https://github.com/Claven07/dsh-plugin-agent-insights/stargazers) | <details><summary>1 page</summary><ul><li><a href="https://dev.to/claven07/building-session-level-observability-for-deepseek-harness-with-a-community-plugin-19n6">Building session-level observability for DeepSeek Harness</a> · <sub>Blog</sub></li></ul></details> |
+| [dsh-plugin-dew](https://github.com/cinderzhan/dsh-plugin-dew) | Adds read-only DSH tools for inspecting active and recent Claude Code, Codex, Cursor, and DSH sessions plus their scheduled tasks and inferred states. | [![GitHub stars](https://img.shields.io/github/stars/cinderzhan/dsh-plugin-dew?style=flat&label=stars)](https://github.com/cinderzhan/dsh-plugin-dew/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-governor-extension](https://github.com/Ghost011118/dsh-plugin-governor-extension) | Adds patch-based plugin governance to DSH with inventory, allowlists, user priorities, policy trials, runtime tool-call admission, and supervised restart rollback. | [![GitHub stars](https://img.shields.io/github/stars/Ghost011118/dsh-plugin-governor-extension?style=flat&label=stars)](https://github.com/Ghost011118/dsh-plugin-governor-extension/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-benchup](https://github.com/Muredsa/dsh-benchup) | Runs reproducible, profile-aware DSH benchmarks that compare models, plugins, prompts, and agent strategies across efficiency, quality, and plugin diagnostics. | [![GitHub stars](https://img.shields.io/github/stars/Muredsa/dsh-benchup?style=flat&label=stars)](https://github.com/Muredsa/dsh-benchup/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-adaptive-update](https://github.com/niushuanan/dsh-adaptive-update) | Provides a source-integrated DSH updater that checks upstream, assigns narrowly scoped compatibility work to an agent, and switches atomically with rollback. | [![GitHub stars](https://img.shields.io/github/stars/niushuanan/dsh-adaptive-update?style=flat&label=stars)](https://github.com/niushuanan/dsh-adaptive-update/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-openrouter-monitor](https://github.com/Oliver0804/dsh-openrouter-monitor) | Adds an OpenRouter account monitor below the DSH composer with balance, per-key spend, alert thresholds, and trend charts. | [![GitHub stars](https://img.shields.io/github/stars/Oliver0804/dsh-openrouter-monitor?style=flat&label=stars)](https://github.com/Oliver0804/dsh-openrouter-monitor/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-cert-mcp](https://github.com/PerryLink/dsh-cert-mcp) | Exposes a public DSH plugin-certification registry through a read-only MCP server and installable Harness bundle. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-cert-mcp?style=flat&label=stars)](https://github.com/PerryLink/dsh-cert-mcp/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-plugin-upgrade-015](https://github.com/PerryLink/dsh-plugin-upgrade-015) | Retired DSH plugin migration skill for the 0.1.3-alpha.1 to 0.1.5-rc.1 path; its upgrade guidance now lives in dsh-plugin-upgrade. | [![GitHub stars](https://img.shields.io/github/stars/PerryLink/dsh-plugin-upgrade-015?style=flat&label=stars)](https://github.com/PerryLink/dsh-plugin-upgrade-015/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-compat-guard](https://github.com/Shizuku-keop/dsh-compat-guard) | Adds a dsh-guard upgrade wrapper with preflight checks, storage fingerprints, backups, session migration, profile locks, compatibility matrices, and drift warnings. | [![GitHub stars](https://img.shields.io/github/stars/Shizuku-keop/dsh-compat-guard?style=flat&label=stars)](https://github.com/Shizuku-keop/dsh-compat-guard/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-health](https://github.com/Shizuku-keop/dsh-health) | Diagnoses DSH session-loop health from logs or live events, scoring oscillation, stalls, argument drift, tool failures, token use, and compaction with auditable evidence. | [![GitHub stars](https://img.shields.io/github/stars/Shizuku-keop/dsh-health?style=flat&label=stars)](https://github.com/Shizuku-keop/dsh-health/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [deepseek-harness-usage](https://github.com/syncended/deepseek-harness-usage) | Adds a local DSH usage dashboard for tokens, estimated model costs, trends, and activity heatmaps from session records, with configurable pricing overrides. | [![GitHub stars](https://img.shields.io/github/stars/syncended/deepseek-harness-usage?style=flat&label=stars)](https://github.com/syncended/deepseek-harness-usage/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+| [dsh-flow](https://github.com/weibaohui/dsh-flow) | Visualizes DSH session events as a live execution flow with tool calls, approvals, retries, and compaction events. | [![GitHub stars](https://img.shields.io/github/stars/weibaohui/dsh-flow?style=flat&label=stars)](https://github.com/weibaohui/dsh-flow/stargazers) | <details><summary>0 pages</summary><sub>No verified references yet.</sub></details> |
+
+## Contributing
+
+Open a pull request, or add the [`dsh-plugin`](https://github.com/topics/dsh-plugin) topic to your repository so the curator can find it.
+
+## Maintenance
+
+This list is reviewed daily by a local Codex scheduled task using public sources only.
+
+## License
+
+[MIT](LICENSE)
