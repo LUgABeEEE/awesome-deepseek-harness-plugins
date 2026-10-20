@@ -1,0 +1,12 @@
+{
+  "$schema": "../schema/plugin.schema.json",
+  "id": "LUgABeEEE/dsh-global-todo",
+  "name": "dsh-global-todo",
+  "repository": "https://github.com/LUgABeEEE/dsh-global-todo",
+  "category": "tools",
+  "description": {
+    "en": "Global, cross-session todo list where a person and an agent write to the same items: each entry records when it was added, accepts attached documents and links, and can be handed to an agent session. Ships as a sidebar panel plus ten agent tools, stored as one JSON file.",
+    "zh": "全局待办：人与 Agent 共用同一份跨会话清单，每条记录加入时间，可挂文档与地址，并可一键交给 Agent 会话继续处理；提供侧边栏面板与十个 agent 工具，数据存为一个 JSON 文件。"
+  },
+  "added": "2026-10-20"
+}
